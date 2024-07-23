@@ -84,6 +84,14 @@ typedef struct
 
 } Token;
 
+// Token *createToken(char *lexme, TokenValue value,Position pos){
+//     Token *t = (Token *)malloc(sizeof(Token));
+//     strcpy(t->lexeme,lexme);
+//     t->pos = pos;
+//     t->value = value;
+//     return t;
+// }
+
 static int getTokenIntCodeValue(char *token);
 char *getTokenStringValue(int token);
 

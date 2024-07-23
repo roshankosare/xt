@@ -2,7 +2,7 @@
 #define AST
 #include<stdio.h>
 #include<stdlib.h>
-#include "../tokens.h"
+#include "../tokens/tokens.h"
 
 typedef struct ASTNode
 {

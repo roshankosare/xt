@@ -3,7 +3,8 @@
 #include <string.h>
 #include "tokens/tokens.h"
 #include "lexer/lexer.h"
-// #include "lexer.h"
+#include "parser/ast.h"
+#include "parser/parser.h"
 // #include "parser.h"
 
 #define MAX_LINE_LENGTH 1024
@@ -60,9 +61,9 @@ int main(int argc, char *argv[])
     Token *tokens = tokenize(fp, &tokenCount);
 
 
-    // // int index = 0;
+    int index = 0;
     printTokens(tokens, tokenCount);
-    // ASTNode *start = parseProgram(tokens, &index, tokenCount);
+    ASTNode *start = parseProgram(tokens, &index, tokenCount);
 
     // for (int i = 0; i < tokenCount; i++)
     // {
@@ -73,8 +74,8 @@ int main(int argc, char *argv[])
     //     }
     // }
 
-    // printf("\nLexical anaysis completed without any error\n");
-    // printAST(start, 0);
+    printf("\nLexical anaysis completed without any error\n");
+    printAST(start, 0);
 
     // Read and print file contents line by line
 

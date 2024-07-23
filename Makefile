@@ -2,7 +2,7 @@
 CC = gcc
 
 # Compiler flags
-CFLAGS = -Wall -Wextra -std=c11 -I./tokens -I./lexer
+CFLAGS = -Wall -Wextra -std=c11 -I./tokens -I./lexer -I./parser -I./symboltable
 
 # Target executable
 TARGET = clang
@@ -14,7 +14,7 @@ SRCS = main.c
 OBJS = $(SRCS:.c=.o)
 
 # Header files
-DEPS = tokens/tokens.h  tokens/tokens_fill.h tokens/tokens_val.h lexer/lexer.h  parser.h symboltable.h
+DEPS = tokens/tokens.h  tokens/tokens_fill.h tokens/tokens_val.h lexer/lexer.h parser/parser.h parser/ast.h parser/exp_stmt.h symboltable/symboltable.h
 
 # Build target
 $(TARGET): $(OBJS)
