@@ -1,8 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "lexer.h"
-#include "parser.h"
+#include "tokens/tokens.h"
+#include "lexer/lexer.h"
+// #include "lexer.h"
+// #include "parser.h"
 
 #define MAX_LINE_LENGTH 1024
 void usage(char *programName)
@@ -54,24 +56,25 @@ int main(int argc, char *argv[])
 
     // Open file for reading
     fp = fopen(inputfile, "r");
+
     Token *tokens = tokenize(fp, &tokenCount);
 
-    printf("\n token: %d", tokenCount);
-    int index = 0;
+
+    // // int index = 0;
     printTokens(tokens, tokenCount);
-    ASTNode *start = parseProgram(tokens, &index, tokenCount);
+    // ASTNode *start = parseProgram(tokens, &index, tokenCount);
 
-    for (int i = 0; i < tokenCount; i++)
-    {
-        if (tokens[i].value == UNKNOWN)
-        {
-            printf("\nERROR: at line %d and col %d [unknown token]-> '%s'\n", tokens[i].pos.line, tokens[i].pos.col, tokens[i].lexeme);
-            exit(1);
-        }
-    }
+    // for (int i = 0; i < tokenCount; i++)
+    // {
+    //     if (tokens[i].value == UNKNOWN)
+    //     {
+    //         printf("\nERROR: at line %d and col %d [unknown token]-> '%s'\n", tokens[i].pos.line, tokens[i].pos.col, tokens[i].lexeme);
+    //         exit(1);
+    //     }
+    // }
 
-    printf("\nLexical anaysis completed without any error\n");
-    printAST(start, 0);
+    // printf("\nLexical anaysis completed without any error\n");
+    // printAST(start, 0);
 
     // Read and print file contents line by line
 

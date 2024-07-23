@@ -5,8 +5,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include "tokens.h"
-#include "lex_helper.h"
+#include "../tokens/tokens.h"
+#include "../tokens/tokens_fill.h"
+#include "../tokens/tokens_val.h"
+
 
 // Function declarations
 Token *tokenize(FILE *fp, int *tokenCount);

@@ -10,23 +10,7 @@
 
 #define PARSER_IMPLEMENTATION
 
-typedef struct ASTNode
-{
-    Token token;
-    struct ASTNode *left;
-    struct ASTNode *right;
-    struct ASTNode *next;
 
-} ASTNode;
-
-ASTNode *createASTNode(Token token)
-{
-    printf("\nCreated AST Node: %s", token.lexeme);
-    ASTNode *node = (ASTNode *)malloc(sizeof(ASTNode));
-    node->token = token;
-    node->left = node->right = node->next = NULL;
-    return node;
-}
 ASTNode *parseExpression(Token *tokens, int *index, SymbolTableStack *stack);
 ASTNode *parseAssignmentExpression(Token *tokens, int *index, SymbolTableStack *stack);
 ASTNode *parseAdditiveExpression(Token *tokens, int *index, SymbolTableStack *stack);
@@ -107,9 +91,15 @@ ASTNode *parsePrimaryExpression(Token *tokens, int *index, SymbolTableStack *sta
 
         if (entry == NULL)
         { // create symbol entry in stack if there is no same symbol
+         printf("\nthis runs");
             insertSymbol(stack, tokens[*index].lexeme, stack->scope);
         }
-        else if (entry->scope == stack->scope)
+        else if (entry->scope != stack->scope)
+        {
+           
+            insertSymbol(stack, tokens[*index].lexeme, stack->scope);
+        }
+        else
         {
             printf("\nERROR: multiple decleration of variable `%s`  at line %d and col %d\n", tokens[*index].lexeme, tokens[*index].pos.line, tokens[*index].pos.col);
             exit(1);
@@ -208,10 +198,16 @@ ASTNode *parseFunDefParameterList(Token *tokens, int *index, SymbolTableStack *s
         SymbolTableEntry *entry = lookupSymbol(stack, tokens[*index].lexeme);
 
         if (entry == NULL)
+
         { // create symbol entry in stack if there is no same symbol
             insertSymbol(stack, tokens[*index].lexeme, stack->scope);
+                }
+        else if (entry->scope != stack->scope)
+        {
+            insertSymbol(stack, tokens[*index].lexeme, stack->scope);
         }
-        else if (entry->scope == stack->scope)
+
+        else
         {
             printf("\nERROR: multiple decleration of variable `%s`  at line %d and col %d\n", tokens[*index].lexeme, tokens[*index].pos.line, tokens[*index].pos.col);
             exit(1);
