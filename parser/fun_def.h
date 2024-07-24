@@ -28,6 +28,8 @@ ASTNode *parseFunDefParameterList(Token *tokens, int *index, SymbolTableStack *s
 
         { // create symbol entry in stack if there is no same symbol
             insertSymbol(stack, tokens[*index].lexeme, stack->scope);
+            entry = lookupSymbol(stack,tokens[*index].lexeme);
+            entry->isDefined = 1;
         }
         else if (entry->scope != stack->scope)
         {
@@ -136,7 +138,7 @@ ASTNode *parseFunctionDefinitionOrCall(Token *tokens, int *index, SymbolTableSta
     (*index)++; // Move to the function body (compound statement).
 
     // Parse function body
-    // funcNode->right = parseBlockStatement(tokens, index, stack);
+    funcNode->right = parseBlockStatement(tokens, index, stack);
 
     // pop value from symbol table of cuurent funtional scope symbol table
     popSymbolTable(stack);

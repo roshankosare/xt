@@ -24,7 +24,6 @@ ASTNode *parseBlockStatement(Token *tokens, int *index, SymbolTableStack *stack)
     ASTNode *current = compoundNode;
     while (tokens[*index].value != CLOSE_CURLY_PAREN && tokens[*index].value != TEOF)
     {
-        printf("\n last token: %s", tokens[*index].lexeme);
         current->next = parseExpressionStatement(tokens, index, stack);
         current = current->next;
     }

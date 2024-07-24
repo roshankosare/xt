@@ -9,7 +9,8 @@
 typedef struct SymbolTableEntry
 {
     char name[100];                    // Identifier name              // Type of the identifier (e.g., int, float)
-    int scope;                     // Scope level
+    int scope;  
+    int isDefined;                   // Scope level
     struct SymbolTableEntry *next; // Pointer to the next entry (for handling collisions in the hash table)
 } SymbolTableEntry;
 
@@ -84,6 +85,7 @@ SymbolTableEntry *createEntry(char *name, int scope)
     strcpy(newEntry->name,name);
     newEntry->scope = scope;
     newEntry->next = NULL;
+    newEntry->isDefined = 0;
     return newEntry;
 }
 

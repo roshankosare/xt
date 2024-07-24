@@ -3,7 +3,6 @@
 #include "ast.h"
 #include "../symboltable/symboltable.h"
 
-
 ASTNode *parseExpression(Token *tokens, int *index, SymbolTableStack *stack);
 ASTNode *parseAssignmentExpression(Token *tokens, int *index, SymbolTableStack *stack);
 ASTNode *parseAdditiveExpression(Token *tokens, int *index, SymbolTableStack *stack);
@@ -13,23 +12,33 @@ ASTNode *parseExpressionStatement(Token *tokens, int *index, SymbolTableStack *s
 
 ASTNode *parseExpression(Token *tokens, int *index, SymbolTableStack *stack)
 {
-
     return parseAssignmentExpression(tokens, index, stack);
 }
 
 ASTNode *parseAssignmentExpression(Token *tokens, int *index, SymbolTableStack *stack)
 {
+
+    //store index value to update variable defined flag to set to true
+    int *count = (int *)malloc(sizeof(int));
+    *count = *index;
+    
     ASTNode *left = parsePrimaryExpression(tokens, index, stack);
 
     if (tokens[*index].value == ASSIGN)
     {
         Token assignToken = tokens[(*index)++];
+
         ASTNode *right = parseAdditiveExpression(tokens, index, stack);
         ASTNode *assignNode = createASTNode(assignToken);
+        // this block of code will run to set var x = exp; statement x->isDefined flag to true
+        parsePrimaryExpression(tokens, count, stack);
         assignNode->left = left;
         assignNode->right = right;
         return assignNode;
     }
+
+    // this block of code will run to set var x; statement x->isDefined flag to true
+    parsePrimaryExpression(tokens, index, stack);
 
     return left;
 }
@@ -75,11 +84,21 @@ ASTNode *parsePrimaryExpression(Token *tokens, int *index, SymbolTableStack *sta
         if (entry == NULL)
         { // create symbol entry in stack if there is no same symbol
             insertSymbol(stack, tokens[*index].lexeme, stack->scope);
+            Token token = tokens[(*index)++];
+            return createASTNode(token);
         }
         else if (entry->scope != stack->scope)
         {
-           
+
             insertSymbol(stack, tokens[*index].lexeme, stack->scope);
+            Token token = tokens[(*index)++];
+            return createASTNode(token);
+        }
+        else if (entry->isDefined == 0)
+        {
+            printf("\n variable set to def");
+            entry->isDefined = 1;
+            return NULL;
         }
         else
         {
@@ -89,9 +108,14 @@ ASTNode *parsePrimaryExpression(Token *tokens, int *index, SymbolTableStack *sta
     }
     SymbolTableEntry *entry = lookupSymbol(stack, tokens[*index].lexeme);
 
-    if (tokens[*index].value == IDENTIFIER && (lookupSymbol(stack, tokens[*index].lexeme) == NULL))
+    if (tokens[*index].value == IDENTIFIER && entry == NULL)
     {
-        printf("\nERROR: undecleared variable `%s` at line %d and col %d\n", tokens[*index].lexeme, tokens[*index].pos.line, tokens[*index].pos.col);
+        printf("\nERROR: undefined variable `%s` at line %d and col %d\n", tokens[*index].lexeme, tokens[*index].pos.line, tokens[*index].pos.col);
+        exit(1);
+    }
+    else if (tokens[*index].value == IDENTIFIER && entry->isDefined == 0)
+    {
+        printf("\nERROR: variable used before its defined `%s` at line %d and col %d\n", tokens[*index].lexeme, tokens[*index].pos.line, tokens[*index].pos.col);
         exit(1);
     }
 
@@ -113,6 +137,5 @@ ASTNode *parseExpressionStatement(Token *tokens, int *index, SymbolTableStack *s
     (*index)++;
     return exprNode;
 }
-
 
 #endif
