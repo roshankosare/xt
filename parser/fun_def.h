@@ -3,13 +3,12 @@
 #include "ast.h"
 #include "../symboltable/symboltable.h"
 #include "../tokens/tokens.h"
+#include "stmt.h"
 #include <stdio.h>
-
 
 ASTNode *parseFunctionDefinitionOrCall(Token *tokens, int *index, SymbolTableStack *stack);
 ASTNode *parseFunCallParameterList(Token *tokens, int *index, SymbolTableStack *stack);
 ASTNode *parseFunDefParameterList(Token *tokens, int *index, SymbolTableStack *stack);
-
 
 ASTNode *parseFunDefParameterList(Token *tokens, int *index, SymbolTableStack *stack)
 {
@@ -29,7 +28,7 @@ ASTNode *parseFunDefParameterList(Token *tokens, int *index, SymbolTableStack *s
 
         { // create symbol entry in stack if there is no same symbol
             insertSymbol(stack, tokens[*index].lexeme, stack->scope);
-                }
+        }
         else if (entry->scope != stack->scope)
         {
             insertSymbol(stack, tokens[*index].lexeme, stack->scope);
@@ -88,64 +87,60 @@ ASTNode *parseFunCallParameterList(Token *tokens, int *index, SymbolTableStack *
 ASTNode *parseFunctionDefinitionOrCall(Token *tokens, int *index, SymbolTableStack *stack)
 {
 
-    if (tokens[*index].value == IDENTIFIER)
+    // Check for identifier (function name)
+    ASTNode *funcNode = createASTNode(tokens[*index]);
+    // printf("\nTooken:%s",tokens[*index].lexeme);
+    (*index)++; // Move to the opening parenthesis
+    (*index)++; // Move to the parameter list or closing parenthesis
+
+    // Parse parameter list
+    if (tokens[*index].value != CLOSE_PAREN)
     {
-        // Check for identifier (function name)
-        ASTNode *funcNode = createASTNode(tokens[*index]);
-        // printf("\nTooken:%s",tokens[*index].lexeme);
-        (*index)++; // Move to the opening parenthesis
-        (*index)++; // Move to the parameter list or closing parenthesis
+        int count = *index;
 
-        // Parse parameter list
-        if (tokens[*index].value != CLOSE_PAREN)
+        while (tokens[count].value != CLOSE_PAREN && tokens[count].value != TEOF)
         {
-            int count = *index;
-
-            while (tokens[count].value != CLOSE_PAREN && tokens[count].value != TEOF)
-            {
-                count++;
-            }
-
-            if (tokens[count].value == TEOF)
-            {
-                printf("\nERROR: Expected ) at line %d ", tokens[*index].pos.line);
-                exit(1);
-            }
             count++;
-
-            if (tokens[count].value == SEMI_COLAN)
-            {
-                funcNode->left = parseFunCallParameterList(tokens, index, stack);
-                if (tokens[*index].value == SEMI_COLAN)
-                {
-                    (*index)++;
-                    return funcNode;
-                }
-            }
-
-            // change scope to funtion to create new funtion scope symbol table
-            pushSymbolTable(stack);
-
-            if (tokens[count].value == OPEN_CURLY_PAREN)
-                funcNode->left = parseFunDefParameterList(tokens, index, stack);
-            // funcNode->left = parseFunCallParameterList(tokens, index);
         }
 
-        // Check for closing parenthesis
-        if (tokens[*index].value != CLOSE_PAREN)
+        if (tokens[count].value == TEOF)
         {
-            printf("\nExpected ')' after parameter list at line %d and col %d", tokens[*index].pos.line, tokens[*index].pos.col);
+            printf("\nERROR: Expected ) at line %d ", tokens[*index].pos.line);
+            exit(1);
         }
-        (*index)++; // Move to the function body (compound statement).
+        count++;
 
-        // Parse function body
-        funcNode->right = parseBlockStatement(tokens, index, stack);
+        if (tokens[count].value == SEMI_COLAN)
+        {
+            funcNode->left = parseFunCallParameterList(tokens, index, stack);
+            if (tokens[*index].value == SEMI_COLAN)
+            {
+                (*index)++;
+                return funcNode;
+            }
+        }
 
-        // pop value from symbol table of cuurent funtional scope symbol table
-        popSymbolTable(stack);
+        // change scope to funtion to create new funtion scope symbol table
+        pushSymbolTable(stack);
 
-        return funcNode;
+        if (tokens[count].value == OPEN_CURLY_PAREN)
+            funcNode->left = parseFunDefParameterList(tokens, index, stack);
+        // funcNode->left = parseFunCallParameterList(tokens, index);
     }
-    return NULL;
+
+    // Check for closing parenthesis
+    if (tokens[*index].value != CLOSE_PAREN)
+    {
+        printf("\nExpected ')' after parameter list at line %d and col %d", tokens[*index].pos.line, tokens[*index].pos.col);
+    }
+    (*index)++; // Move to the function body (compound statement).
+
+    // Parse function body
+    // funcNode->right = parseBlockStatement(tokens, index, stack);
+
+    // pop value from symbol table of cuurent funtional scope symbol table
+    popSymbolTable(stack);
+
+    return funcNode;
 }
 #endif

@@ -1,12 +1,14 @@
-#ifndef PARSE_BLOCK_STMT
-#define PARSE_BLOCK_STMT
+#ifndef PARSE_STMT
+#define PARSE_STMT
+
 #include "ast.h"
 #include "../symboltable/symboltable.h"
 #include "exp_stmt.h"
 #include "../tokens/tokens.h"
+#include "all_stmt.h"
 
-ASTNode *parseBlockStatement(Token *tokens, int *index, SymbolTableStack *stack);
 ASTNode *parseStatement(Token *tokens, int *index, SymbolTableStack *stack);
+ASTNode *parseBlockStatement(Token *tokens, int *index, SymbolTableStack *stack);
 
 ASTNode *parseBlockStatement(Token *tokens, int *index, SymbolTableStack *stack)
 {
@@ -42,12 +44,12 @@ ASTNode *parseStatement(Token *tokens, int *index, SymbolTableStack *stack)
     {
         switch (getTokenIntCodeValue(tokens[*index].lexeme))
         {
-        // case INT_TOKEN_IF:
-        //     return parseSelectionStatement(tokens, index);
-        // case INT_TOKEN_WHILE:
-        //     return parseIterationStatement(tokens, index);
-        // case INT_TOKEN_RETURN:
-        //     return parseJumpStatement(tokens, index);
+        case INT_TOKEN_IF:
+            return parseSelectionStatement(tokens, index, stack);
+        case INT_TOKEN_WHILE:
+            return parseIterationStatement(tokens, index, stack);
+        case INT_TOKEN_RETURN:
+            return parseJumpStatement(tokens, index, stack);
         default:
             return parseExpressionStatement(tokens, index, stack);
         }

@@ -12,7 +12,7 @@ void usage(char *programName)
 {
     printf("Usage: %s [options]\n", programName);
     printf("Options:\n");
-    printf("  -f <inputfile.cl>  provide file to compiler\n");
+    printf("  -f <inputfile.xt>  provide file to compiler\n");
     printf("  -o <outputfile.o>  provide file to compiler\n");
 
     // Add more options as needed
@@ -57,27 +57,30 @@ int main(int argc, char *argv[])
 
     // Open file for reading
     fp = fopen(inputfile, "r");
+    if(fp == NULL){
+        printf("\nERROR: %s file not found\n",inputfile);
+        exit(1);
+    }
 
     Token *tokens = tokenize(fp, &tokenCount);
-
+     for (int i = 0; i < tokenCount; i++)
+    {
+        if (tokens[i].value == UNKNOWN)
+        {
+            printf("\nERROR: at line %d and col %d [unknown token]-> '%s'\n", tokens[i].pos.line, tokens[i].pos.col, tokens[i].lexeme);
+            exit(1);
+        }
+    }
 
     int index = 0;
     printTokens(tokens, tokenCount);
     ASTNode *start = parseProgram(tokens, &index, tokenCount);
 
-    // for (int i = 0; i < tokenCount; i++)
-    // {
-    //     if (tokens[i].value == UNKNOWN)
-    //     {
-    //         printf("\nERROR: at line %d and col %d [unknown token]-> '%s'\n", tokens[i].pos.line, tokens[i].pos.col, tokens[i].lexeme);
-    //         exit(1);
-    //     }
-    // }
+   
 
     printf("\nLexical anaysis completed without any error\n");
     printAST(start, 0);
 
-    // Read and print file contents line by line
 
     return 0;
 }

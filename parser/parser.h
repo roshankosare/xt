@@ -8,7 +8,6 @@
 #include "../symboltable/symboltable.h"
 #include "ast.h"
 #include "fun_def.h"
-#include "all_stmt.h"
 #include "stmt.h"
 
 #define PARSER_IMPLEMENTATION
@@ -48,6 +47,7 @@ ASTNode *parseProgram(Token *tokens, int *index, int token_count)
         {
             current->right = stmt;
             current = stmt;
+            continue;
         }
 
         current->next = stmt;
@@ -59,10 +59,11 @@ ASTNode *parseProgram(Token *tokens, int *index, int token_count)
 
 void printAST(ASTNode *node, int depth)
 {
-
-    if (node == NULL)
+   
+    if (node == NULL){
         return;
-
+    }
+        
     // Print indentation
     for (int i = 0; i < depth; ++i)
     {

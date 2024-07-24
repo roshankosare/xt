@@ -74,7 +74,6 @@ ASTNode *parsePrimaryExpression(Token *tokens, int *index, SymbolTableStack *sta
 
         if (entry == NULL)
         { // create symbol entry in stack if there is no same symbol
-         printf("\nthis runs");
             insertSymbol(stack, tokens[*index].lexeme, stack->scope);
         }
         else if (entry->scope != stack->scope)
