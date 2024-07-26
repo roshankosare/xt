@@ -1,4 +1,4 @@
-#include "../../includes/parser/ast.h"
+#include "../../include/parser/ast.h"
 
 ASTNode *createASTNode(Token token)
 {

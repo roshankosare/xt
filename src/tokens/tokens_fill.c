@@ -1,5 +1,5 @@
-#include "../../includes/tokens/tokens_fill.h"
-#include "../../includes/tokens/tokens.h"
+#include "../../include/tokens/tokens_fill.h"
+#include "../../include/tokens/tokens.h"
 
 void fillKeywordTokenValue(Token *token)
 {

@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Wall -Wextra $(addprefix -I,$(shell find includes -type d))
+CFLAGS = -Wall -Wextra $(addprefix -I,$(shell find include -type d))
 SRC_DIR = src
 BUILD_DIR = build
 TEST_DIR = test

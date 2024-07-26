@@ -1,10 +1,14 @@
 
-#include "../../includes/parser/all_stmt.h"
-#include "../../includes/parser/ast.h"
+#include "../../include/parser/all_stmt.h"
+#include "../../include/parser/ast.h"
+#include "../../include/parser/exp_stmt.h" /
+#include "../../include/symboltable/functiontable.h"
+#include "../../include/symboltable/symboltable.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 
-ASTNode *parseSelectionStatement(Token *tokens, int *index, SymbolTableStack *stack)
+ASTNode *parseSelectionStatement(Token *tokens, int *index, SymbolTableStack *stack, FunctionTable *table)
 {
 
     // tokens[*index].lexme = if
@@ -19,7 +23,7 @@ ASTNode *parseSelectionStatement(Token *tokens, int *index, SymbolTableStack *st
     (*index)++; // skip ( character
 
     // parse expression stmt or conditional stmt
-    ASTNode *left = parseExpression(tokens, index, stack);
+    ASTNode *left = parseExpression(tokens, index, stack, table);
     if (tokens[*index].value != CLOSE_PAREN)
     {
         printf("\nERROR: expected ) token at if block at line %d ", tokens[*index].pos.line);
@@ -28,18 +32,18 @@ ASTNode *parseSelectionStatement(Token *tokens, int *index, SymbolTableStack *st
     (*index)++; // skip ) chracter
     if (tokens[*index].value != OPEN_CURLY_PAREN)
     {
-        ASTNode *right = parseExpressionStatement(tokens, index, stack);
+        ASTNode *right = parseExpressionStatement(tokens, index, stack, table);
         ifNode->right = right;
         ifNode->left = left;
         return ifNode;
     }
-    ASTNode *right = parseBlockStatement(tokens, index, stack);
+    ASTNode *right = parseBlockStatement(tokens, index, stack, table);
     ifNode->right = right;
     ifNode->left = left;
     return ifNode;
 }
 
-ASTNode *parseIterationStatement(Token *tokens, int *index, SymbolTableStack *stack)
+ASTNode *parseIterationStatement(Token *tokens, int *index, SymbolTableStack *stack, FunctionTable *table)
 {
     if (tokens[*index].value == WHILE)
     {
@@ -55,7 +59,7 @@ ASTNode *parseIterationStatement(Token *tokens, int *index, SymbolTableStack *st
         (*index)++; // skip ( character
 
         // parse expression stmt or conditional stmt
-        ASTNode *left = parseExpression(tokens, index, stack);
+        ASTNode *left = parseExpression(tokens, index, stack, table);
         if (tokens[*index].value != CLOSE_PAREN)
         {
             printf("\nERROR: expected ) token at if block at line %d ", tokens[*index].pos.line);
@@ -64,19 +68,19 @@ ASTNode *parseIterationStatement(Token *tokens, int *index, SymbolTableStack *st
         (*index)++; // skip ) chracter
         if (tokens[*index].value != OPEN_CURLY_PAREN)
         {
-            ASTNode *right = parseExpressionStatement(tokens, index, stack);
+            ASTNode *right = parseExpressionStatement(tokens, index, stack, table);
             whileNode->right = right;
             whileNode->left = left;
             return whileNode;
         }
-        ASTNode *right = parseBlockStatement(tokens, index, stack);
+        ASTNode *right = parseBlockStatement(tokens, index, stack, table);
         whileNode->right = right;
         whileNode->left = left;
         return whileNode;
     }
 }
 
-ASTNode *parseJumpStatement(Token *tokens, int *index, SymbolTableStack *stack)
+ASTNode *parseJumpStatement(Token *tokens, int *index, SymbolTableStack *stack, FunctionTable *table)
 {
     ASTNode *returnNode = createASTNode(tokens[*index]);
     (*index)++;
@@ -90,7 +94,12 @@ ASTNode *parseJumpStatement(Token *tokens, int *index, SymbolTableStack *stack)
     //     }
     //     return returnNode;
     // }
-    returnNode->right = parseExpressionStatement(tokens, index, stack);
+    if (tokens[*index].value == SEMI_COLAN)
+    {
+        (*index)++;
+        return returnNode;
+    }
+    returnNode->right = parseExpressionStatement(tokens, index, stack, table);
     if (tokens[*index].value != SEMI_COLAN)
     {
         printf("\nERROR: expected ; at line %d and col %d", tokens[*index].pos.line, tokens[*index].pos.col + 1);
@@ -99,7 +108,7 @@ ASTNode *parseJumpStatement(Token *tokens, int *index, SymbolTableStack *stack)
     return returnNode;
 }
 
-ASTNode *parseBlockStatement(Token *tokens, int *index, SymbolTableStack *stack)
+ASTNode *parseBlockStatement(Token *tokens, int *index, SymbolTableStack *stack, FunctionTable *table)
 {
     if (tokens[*index].value != OPEN_CURLY_PAREN)
     {
@@ -118,23 +127,23 @@ ASTNode *parseBlockStatement(Token *tokens, int *index, SymbolTableStack *stack)
         {
 
         case INT_TOKEN_IF:
-            current->next = parseSelectionStatement(tokens, index, stack);
+            current->next = parseSelectionStatement(tokens, index, stack, table);
             current = current->next;
             break;
         case INT_TOKEN_WHILE:
-            current->next = parseIterationStatement(tokens, index, stack);
+            current->next = parseIterationStatement(tokens, index, stack, table);
             current = current->next;
             break;
         case INT_TOKEN_RETURN:
-            current->next = parseJumpStatement(tokens, index, stack);
+            current->next = parseJumpStatement(tokens, index, stack, table);
             current = current->next;
             break;
         case INT_TOKEN_VAR:
-            current->next = parseExpressionStatement(tokens, index, stack);
+            current->next = parseExpressionStatement(tokens, index, stack, table);
             current = current->next;
             break;
         case INT_TOKEN_IDENTIFIER:
-            current->next = parseExpressionStatement(tokens, index, stack);
+            current->next = parseExpressionStatement(tokens, index, stack, table);
             current = current->next;
             break;
         default:

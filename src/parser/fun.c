@@ -1,9 +1,11 @@
 
-#include "../../includes/parser/all_stmt.h";
-#include "../../includes/parser/fun.h";
-#include "../../includes/parser/ast.h"
+#include "../../include/parser/all_stmt.h";
+#include "../../include/parser/fun.h";
+#include "../../include/parser/ast.h"
+#include "../../include/symboltable/functiontable.h"
+#include "../../include/symboltable/symboltable.h"
 #include <stdio.h>
-#include<stdlib.h>
+#include <stdlib.h>
 
 ASTNode *parseFunDefParameterList(Token *tokens, int *index, SymbolTableStack *stack)
 {
@@ -84,11 +86,20 @@ ASTNode *parseFunCallParameterList(Token *tokens, int *index, SymbolTableStack *
     return paramList;
 }
 
-ASTNode *parseFunctionDefinitionOrCall(Token *tokens, int *index, SymbolTableStack *stack)
+ASTNode *parseFunctionDefinitionOrCall(Token *tokens, int *index, SymbolTableStack *stack, FunctionTable *table)
 {
 
     // Check for identifier (function name)
     ASTNode *funcNode = createASTNode(tokens[*index]);
+    FunctionTableEntry *funtionEntry = lookupFuntionSymbol(table, tokens[*index].lexeme);
+    SymbolTableEntry *symbolEntry = lookupSymbol(stack, tokens[*index].lexeme);
+    if (funtionEntry || symbolEntry)
+    {
+        printf("\nERROR: fution name `%s` is alredy in use \n", tokens[*index].lexeme);
+        exit(1);
+    }
+    insertFuntionSymbol(table, tokens[*index].lexeme);
+    insertSymbol(stack, tokens[*index].lexeme, 0);
     // printf("\nTooken:%s",tokens[*index].lexeme);
     (*index)++; // Move to the opening parenthesis
     (*index)++; // Move to the parameter list or closing parenthesis
@@ -136,17 +147,24 @@ ASTNode *parseFunctionDefinitionOrCall(Token *tokens, int *index, SymbolTableSta
     (*index)++; // Move to the function body (compound statement).
 
     // Parse function body
-    funcNode->right = parseBlockStatement(tokens, index, stack);
+    funcNode->right = parseBlockStatement(tokens, index, stack, table);
 
     // pop value from symbol table of cuurent funtional scope symbol table
     popSymbolTable(stack);
 
     return funcNode;
 }
-ASTNode *parseFunCall(Token *tokens, int *index, SymbolTableStack *stack)
+ASTNode *parseFunCall(Token *tokens, int *index, SymbolTableStack *stack, FunctionTable *table)
 {
     // Check for identifier (function name)
+    FunctionTableEntry *funtionEntry = lookupFuntionSymbol(table, tokens[*index].lexeme);
+    if (funtionEntry == NULL)
+    {
+        printf("\nERROR: funtion is used before its defination at line %d and col %d \n", tokens[*index].pos.line, tokens[*index].pos.col);
+        exit(1);
+    }
     ASTNode *funcNode = createASTNode(tokens[*index]);
+
     // printf("\nTooken:%s",tokens[*index].lexeme);
     (*index)++; // Move to the opening parenthesis
     (*index)++; // Move to the parameter list or closing parenthesis
@@ -161,17 +179,7 @@ ASTNode *parseFunCall(Token *tokens, int *index, SymbolTableStack *stack)
             printf("\nExpected ')' after parameter list at line %d and col %d", tokens[*index].pos.line, tokens[*index].pos.col);
         }
         (*index)++; // skip to  semicolan
-        if (tokens[*index].value != SEMI_COLAN)
-        {
-            printf("\nERROR: expected ; at line %d and col %d\n", tokens[*index].pos.line, tokens[*index].pos.col + 1);
-            exit(1);
-        }
-        (*index)++;
-        if (tokens[*index].value != SEMI_COLAN)
-        {
-            printf("\nERROR: expected ; at line %d and col %d\n", tokens[*index].pos.line, tokens[*index].pos.col + 1);
-            exit(1);
-        }
+
         return funcNode;
     }
     (*index)++; // skip to semicolan;

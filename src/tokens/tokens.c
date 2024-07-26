@@ -1,5 +1,5 @@
 
-#include "../../includes/tokens/tokens.h"
+#include "../../include/tokens/tokens.h"
 #include <string.h>
 
 char *getTokenStringValue(int token)

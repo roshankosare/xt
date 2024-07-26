@@ -1,59 +1,61 @@
-#include "../../includes/parser/all_stmt.h"
-// #include "../../includes/parser/fun.h"
-#include "../../includes/parser/exp_stmt.h"
-#include "../../includes/parser/ast.h"
+#include "../../include/parser/all_stmt.h"
+#include "../../include/parser/fun.h"
+#include "../../include/parser/exp_stmt.h"
+#include "../../include/parser/ast.h"
+#include "../../include/symboltable/symboltable.h"
+#include "../../include/symboltable/functiontable.h"
 #include <stdio.h>
 #include <stdlib.h>
 
-ASTNode *parseExpression(Token *tokens, int *index, SymbolTableStack *stack)
+ASTNode *parseExpression(Token *tokens, int *index, SymbolTableStack *stack, FunctionTable *table)
 {
 
     if (isConditionalOperatorToken(tokens[*index + 1].lexeme))
     {
-        return parseConditionalExpression(tokens, index, stack);
+        return parseConditionalExpression(tokens, index, stack, table);
     }
-    // if (tokens[*index + 1].value == OPEN_PAREN)
-    // {
-    //     return parseFunCall(tokens, index, stack);
-    // }
-    return parseAssignmentExpression(tokens, index, stack);
+    if (tokens[*index + 1].value == OPEN_PAREN)
+    {
+        return parseFunCall(tokens, index, stack, table);
+    }
+    return parseAssignmentExpression(tokens, index, stack, table);
 }
 
-ASTNode *parseAssignmentExpression(Token *tokens, int *index, SymbolTableStack *stack)
+ASTNode *parseAssignmentExpression(Token *tokens, int *index, SymbolTableStack *stack, FunctionTable *table)
 {
 
     // store index value to update variable defined flag to set to true
     int *count = (int *)malloc(sizeof(int));
     *count = *index;
 
-    ASTNode *left = parsePrimaryExpression(tokens, index, stack);
+    ASTNode *left = parsePrimaryExpression(tokens, index, stack, table);
 
     if (tokens[*index].value == ASSIGN)
     {
         Token assignToken = tokens[(*index)++];
 
-        ASTNode *right = parseAdditiveExpression(tokens, index, stack);
+        ASTNode *right = parseAdditiveExpression(tokens, index, stack, table);
         ASTNode *assignNode = createASTNode(assignToken);
         // this block of code will run to set var x = exp; statement x->isDefined flag to true
-        parsePrimaryExpression(tokens, count, stack);
+        parsePrimaryExpression(tokens, count, stack, table);
         assignNode->left = left;
         assignNode->right = right;
         return assignNode;
     }
 
     // this block of code will run to set var x; statement x->isDefined flag to true
-    parsePrimaryExpression(tokens, index, stack);
+    parsePrimaryExpression(tokens, index, stack, table);
 
     return left;
 }
 
-ASTNode *parseAdditiveExpression(Token *tokens, int *index, SymbolTableStack *stack)
+ASTNode *parseAdditiveExpression(Token *tokens, int *index, SymbolTableStack *stack, FunctionTable *table)
 {
-    ASTNode *left = parseMultiplicativeExpression(tokens, index, stack);
+    ASTNode *left = parseMultiplicativeExpression(tokens, index, stack, table);
     while (tokens[*index].value == PLUS || tokens[*index].value == MINUS)
     {
         Token opToken = tokens[(*index)++];
-        ASTNode *right = parseMultiplicativeExpression(tokens, index, stack);
+        ASTNode *right = parseMultiplicativeExpression(tokens, index, stack, table);
         ASTNode *opNode = createASTNode(opToken);
         opNode->left = left;
         opNode->right = right;
@@ -62,13 +64,13 @@ ASTNode *parseAdditiveExpression(Token *tokens, int *index, SymbolTableStack *st
     return left;
 }
 
-ASTNode *parseMultiplicativeExpression(Token *tokens, int *index, SymbolTableStack *stack)
+ASTNode *parseMultiplicativeExpression(Token *tokens, int *index, SymbolTableStack *stack, FunctionTable *table)
 {
-    ASTNode *left = parsePrimaryExpression(tokens, index, stack);
+    ASTNode *left = parsePrimaryExpression(tokens, index, stack, table);
     while (tokens[*index].value == MUL || tokens[*index].value == DIV)
     {
         Token opToken = tokens[(*index)++];
-        ASTNode *right = parsePrimaryExpression(tokens, index, stack);
+        ASTNode *right = parsePrimaryExpression(tokens, index, stack, table);
         ASTNode *opNode = createASTNode(opToken);
         opNode->left = left;
         opNode->right = right;
@@ -77,13 +79,19 @@ ASTNode *parseMultiplicativeExpression(Token *tokens, int *index, SymbolTableSta
     return left;
 }
 
-ASTNode *parsePrimaryExpression(Token *tokens, int *index, SymbolTableStack *stack)
+ASTNode *parsePrimaryExpression(Token *tokens, int *index, SymbolTableStack *stack, FunctionTable *table)
 {
 
     if (tokens[*index].value == VAR)
     {
         (*index)++;
         SymbolTableEntry *entry = lookupSymbol(stack, tokens[*index].lexeme);
+        FunctionTableEntry *functionEntry = lookupFuntionSymbol(table, tokens[*index].lexeme);
+        if (functionEntry != NULL)
+        {
+            printf("\nERROR: multiple decleration of variable `%s`  at line %d and col %d\n", tokens[*index].lexeme, tokens[*index].pos.line, tokens[*index].pos.col);
+            exit(1);
+        }
 
         if (entry == NULL)
         { // create symbol entry in stack if there is no same symbol
@@ -125,10 +133,10 @@ ASTNode *parsePrimaryExpression(Token *tokens, int *index, SymbolTableStack *sta
     Token token = tokens[(*index)++];
     return createASTNode(token);
 }
-ASTNode *parseExpressionStatement(Token *tokens, int *index, SymbolTableStack *stack)
+ASTNode *parseExpressionStatement(Token *tokens, int *index, SymbolTableStack *stack, FunctionTable *table)
 {
 
-    ASTNode *exprNode = parseExpression(tokens, index, stack);
+    ASTNode *exprNode = parseExpression(tokens, index, stack, table);
 
     if (tokens[*index].value != SEMI_COLAN)
     {
@@ -141,9 +149,9 @@ ASTNode *parseExpressionStatement(Token *tokens, int *index, SymbolTableStack *s
     return exprNode;
 }
 
-ASTNode *parseConditionalExpression(Token *tokens, int *index, SymbolTableStack *stack)
+ASTNode *parseConditionalExpression(Token *tokens, int *index, SymbolTableStack *stack, FunctionTable *table)
 {
-    ASTNode *left = parsePrimaryExpression(tokens, index, stack);
+    ASTNode *left = parsePrimaryExpression(tokens, index, stack, table);
 
     if (!isOperatorToken(tokens[*index].lexeme))
     {
@@ -151,7 +159,7 @@ ASTNode *parseConditionalExpression(Token *tokens, int *index, SymbolTableStack 
         exit(1);
     }
     ASTNode *condition = createASTNode(tokens[(*index)++]);
-    ASTNode *right = parsePrimaryExpression(tokens, index, stack);
+    ASTNode *right = parsePrimaryExpression(tokens, index, stack, table);
     condition->right = right;
     condition->left = left;
     return condition;

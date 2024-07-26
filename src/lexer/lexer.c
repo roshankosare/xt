@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include "../../includes/lexer/lexer.h"
+#include "../../include/lexer/lexer.h"
 
 Token *tokenize(FILE *fp, int *tokenCount)
 {

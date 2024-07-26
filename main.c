@@ -1,10 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "includes/tokens/tokens.h"
-#include "includes/lexer/lexer.h"
-#include "includes/parser/ast.h"
-#include "includes/parser/parser.h"
+#include "include/tokens/tokens.h"
+#include "include/lexer/lexer.h"
+#include "include/parser/ast.h"
+#include "include/parser/parser.h"
 
 
 #define MAX_LINE_LENGTH 1024

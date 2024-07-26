@@ -1,5 +1,5 @@
 
-#include "../../includes/symboltable/symboltable.h"
+#include "../../include/symboltable/symboltable.h"
 
 #include <stdio.h>
 #include <stdlib.h>
