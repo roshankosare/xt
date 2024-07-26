@@ -1,30 +1,27 @@
-# Compiler
 CC = gcc
+CFLAGS = -Wall -Wextra $(addprefix -I,$(shell find includes -type d))
+SRC_DIR = src
+BUILD_DIR = build
+TEST_DIR = test
+SOURCES = $(wildcard $(SRC_DIR)/*/*.c) main.c
+OBJECTS = $(patsubst %.c,$(BUILD_DIR)/%.o,$(SOURCES))
+EXECUTABLE = xt
 
-# Compiler flags
-CFLAGS = -Wall -Wextra -std=c11 -I./tokens -I./lexer -I./parser -I./symboltable
+all: $(EXECUTABLE)
 
-# Target executable
-TARGET = xt
+$(EXECUTABLE): $(OBJECTS)
+	mkdir -p $(BUILD_DIR)
+	$(CC) $(CFLAGS) -o $@ $^
 
-# Source files
-SRCS = main.c 
-
-# Object files
-OBJS = $(SRCS:.c=.o)
-
-# Header files
-DEPS = tokens/tokens.h  tokens/tokens_fill.h tokens/tokens_val.h lexer/lexer.h parser/parser.h parser/ast.h parser/exp_stmt.h parser/fun_def.h parser/stmt.h parser/all_stmt.h symboltable/symboltable.h 
-
-# Build target
-$(TARGET): $(OBJS)
-	$(CC) $(CFLAGS) -o $(TARGET) $(OBJS)
-
-# Compile source files into object files
-%.o: %.c $(DEPS)
+$(BUILD_DIR)/%.o: %.c
+	mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-# Clean target
-.PHONY: clean
 clean:
-	rm -f $(TARGET) $(OBJS)
+	rm -rf $(BUILD_DIR)/*.o $(EXECUTABLE)
+
+test: $(EXECUTABLE)
+	$(CC) $(CFLAGS) -o $(BUILD_DIR)/test_a $(TEST_DIR)/test_a.c -L$(BUILD_DIR) -lprogram
+	$(BUILD_DIR)/test_a
+
+.PHONY: all clean test

@@ -1,7 +1,10 @@
-var x = 12;
-var y = 12;
-var z = 12;
+var x = 12 ;
+var y = 12 ;
 
-print(x,y){
-      var z = z + y;
+
+while(x < y){
+      x = x+1;
+      if(x < 10){
+           x = 10;
+      }
 }

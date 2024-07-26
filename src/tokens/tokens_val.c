@@ -1,22 +1,8 @@
-#ifndef TOKENS_VAL
-#define TOKENS_VAL
+#include "../../includes/tokens/tokens_val.h"
 #include <string.h>
 #include <ctype.h>
 
-// characters checking funtions
- int isOperator(char ch);
- int ispunctChar(char ch);
- int isIdentifierChar(char ch);
-
-//tokens checking funtion
- int isOperatorToken(char *token);
- int isKeywordToken(char *token);
- int isPunctuationToken(char *token);
- int isIdentifierToken(char *token);
- int isConstantToken(char *token);
-
-
- int isOperator(char ch)
+int isOperator(char ch)
 {
     switch (ch)
     {
@@ -48,7 +34,7 @@
     }
 }
 
- int ispunctChar(char ch)
+int ispunctChar(char ch)
 {
     switch (ch)
     {
@@ -80,24 +66,44 @@
     }
 }
 
- int isIdentifierChar(char ch)
+int isIdentifierChar(char ch)
 {
     return isalnum(ch) || ch == '_';
 }
 
- int isOperatorToken(char *token)
+int isOperatorToken(char *token)
 {
-    while (*token != '\0')
-    {
-        if (!isOperator(*token))
-        {
-            return 0;
-        }
-        token++;
-    }
-    return 1;
+    // clang-format off
+   if(strcmp(token,"+") == 0) return 1;
+   if(strcmp(token,"-") == 0) return 1;
+   if(strcmp(token,"*") == 0) return 1;
+   if(strcmp(token,"/") == 0) return 1;
+   if(strcmp(token,"++") == 0) return 1;
+   if(strcmp(token,"--") == 0) return 1;
+   if(strcmp(token,"<") == 0) return 1;
+   if(strcmp(token,">") == 0) return 1;
+   if(strcmp(token,"<=") == 0) return 1;
+   if(strcmp(token,">=") == 0) return 1;
+   if(strcmp(token,"==") == 0) return 1;
+   if(strcmp(token,"=") == 0) return 1;
+    return 0;
+
+    // clang-format on
 }
- int isKeywordToken(char *token)
+
+int isConditionalOperatorToken(char *token)
+{
+    // clang-format off
+    if(strcmp(token,"<") == 0) return 1;
+    if(strcmp(token,">") == 0) return 1;
+    if(strcmp(token,"<=") == 0) return 1;
+    if(strcmp(token,">=") == 0) return 1;
+    if(strcmp(token,"==") == 0) return 1;
+    return 0;
+    // clang-format on
+}
+
+int isKeywordToken(char *token)
 {
     // clang-format off
     if(strcmp("var",token) == 0)         return 1;
@@ -110,7 +116,7 @@
     return 0;
     // clang-format on
 }
- int isPunctuationToken(char *token)
+int isPunctuationToken(char *token)
 {
 
     if (!ispunctChar(*token))
@@ -128,7 +134,7 @@
     }
     return 1;
 }
- int isIdentifierToken(char *token)
+int isIdentifierToken(char *token)
 {
 
     if (!isalpha(*token) && *token != '_' && !ispunct(*token))
@@ -148,7 +154,7 @@
     return 1;
 }
 
- int isConstantToken(char *token)
+int isConstantToken(char *token)
 {
     char *firstChar = token;
 
@@ -183,5 +189,3 @@
     }
     return 0;
 }
-
-#endif

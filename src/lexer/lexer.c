@@ -1,18 +1,9 @@
-#ifndef LEXER_H
-#define LEXER_H
-#include <stdio.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include "../tokens/tokens.h"
-#include "../tokens/tokens_fill.h"
-#include "../tokens/tokens_val.h"
-
-
-// Function declarations
-Token *tokenize(FILE *fp, int *tokenCount);
-void printTokens(Token *tokens, int tokenCount);
+#include "../../includes/lexer/lexer.h"
 
 Token *tokenize(FILE *fp, int *tokenCount)
 {
@@ -241,6 +232,3 @@ void printTokens(Token *tokens, int tokenCount)
         printf("\n----------------------------------------------------------");
     }
 }
-
-#endif
-/* LEXER_H */

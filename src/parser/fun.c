@@ -1,14 +1,9 @@
-#ifndef PARSE_FUN_DEF
-#define PARSE_FUN_DEF
-#include "ast.h"
-#include "../symboltable/symboltable.h"
-#include "../tokens/tokens.h"
-#include "stmt.h"
-#include <stdio.h>
 
-ASTNode *parseFunctionDefinitionOrCall(Token *tokens, int *index, SymbolTableStack *stack);
-ASTNode *parseFunCallParameterList(Token *tokens, int *index, SymbolTableStack *stack);
-ASTNode *parseFunDefParameterList(Token *tokens, int *index, SymbolTableStack *stack);
+#include "../../includes/parser/all_stmt.h";
+#include "../../includes/parser/fun.h";
+#include "../../includes/parser/ast.h"
+#include <stdio.h>
+#include<stdlib.h>
 
 ASTNode *parseFunDefParameterList(Token *tokens, int *index, SymbolTableStack *stack)
 {
@@ -28,12 +23,15 @@ ASTNode *parseFunDefParameterList(Token *tokens, int *index, SymbolTableStack *s
 
         { // create symbol entry in stack if there is no same symbol
             insertSymbol(stack, tokens[*index].lexeme, stack->scope);
-            entry = lookupSymbol(stack,tokens[*index].lexeme);
+            entry = lookupSymbol(stack, tokens[*index].lexeme);
             entry->isDefined = 1;
         }
         else if (entry->scope != stack->scope)
         {
+            // entry is found but out of scope then create entry and set isDefined to true;
             insertSymbol(stack, tokens[*index].lexeme, stack->scope);
+            entry = lookupSymbol(stack, tokens[*index].lexeme);
+            entry->isDefined = 1;
         }
 
         else
@@ -145,4 +143,42 @@ ASTNode *parseFunctionDefinitionOrCall(Token *tokens, int *index, SymbolTableSta
 
     return funcNode;
 }
-#endif
+ASTNode *parseFunCall(Token *tokens, int *index, SymbolTableStack *stack)
+{
+    // Check for identifier (function name)
+    ASTNode *funcNode = createASTNode(tokens[*index]);
+    // printf("\nTooken:%s",tokens[*index].lexeme);
+    (*index)++; // Move to the opening parenthesis
+    (*index)++; // Move to the parameter list or closing parenthesis
+
+    // Parse parameter list
+    if (tokens[*index].value != CLOSE_PAREN)
+    {
+
+        funcNode->left = parseFunCallParameterList(tokens, index, stack);
+        if (tokens[*index].value != CLOSE_PAREN)
+        {
+            printf("\nExpected ')' after parameter list at line %d and col %d", tokens[*index].pos.line, tokens[*index].pos.col);
+        }
+        (*index)++; // skip to  semicolan
+        if (tokens[*index].value != SEMI_COLAN)
+        {
+            printf("\nERROR: expected ; at line %d and col %d\n", tokens[*index].pos.line, tokens[*index].pos.col + 1);
+            exit(1);
+        }
+        (*index)++;
+        if (tokens[*index].value != SEMI_COLAN)
+        {
+            printf("\nERROR: expected ; at line %d and col %d\n", tokens[*index].pos.line, tokens[*index].pos.col + 1);
+            exit(1);
+        }
+        return funcNode;
+    }
+    (*index)++; // skip to semicolan;
+    if (tokens[*index].value != SEMI_COLAN)
+    {
+        printf("\nERROR: expected ; at line %d and col %d\n", tokens[*index].pos.line, tokens[*index].pos.col + 1);
+        exit(1);
+    }
+    return funcNode;
+}

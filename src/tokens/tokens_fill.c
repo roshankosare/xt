@@ -1,13 +1,5 @@
-#ifndef TOKENS_FILL
-#define TOKENS_FILL
-#include "tokens.h"
-
-
-void fillKeywordTokenValue(Token *token);
-void fillPunctuationTokenValue(Token *token);
-void fillOperatorTokenValue(Token *token);
-
-
+#include "../../includes/tokens/tokens_fill.h"
+#include "../../includes/tokens/tokens.h"
 
 void fillKeywordTokenValue(Token *token)
 {
@@ -110,6 +102,3 @@ void fillOperatorTokenValue(Token *token)
         break;
     }
 }
-
-
-#endif

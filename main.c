@@ -1,11 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "tokens/tokens.h"
-#include "lexer/lexer.h"
-#include "parser/ast.h"
-#include "parser/parser.h"
-// #include "parser.h"
+#include "includes/tokens/tokens.h"
+#include "includes/lexer/lexer.h"
+#include "includes/parser/ast.h"
+#include "includes/parser/parser.h"
+
 
 #define MAX_LINE_LENGTH 1024
 void usage(char *programName)
@@ -57,13 +57,14 @@ int main(int argc, char *argv[])
 
     // Open file for reading
     fp = fopen(inputfile, "r");
-    if(fp == NULL){
-        printf("\nERROR: %s file not found\n",inputfile);
+    if (fp == NULL)
+    {
+        printf("\nERROR: %s file not found\n", inputfile);
         exit(1);
     }
 
     Token *tokens = tokenize(fp, &tokenCount);
-     for (int i = 0; i < tokenCount; i++)
+    for (int i = 0; i < tokenCount; i++)
     {
         if (tokens[i].value == UNKNOWN)
         {
@@ -76,11 +77,8 @@ int main(int argc, char *argv[])
     printTokens(tokens, tokenCount);
     ASTNode *start = parseProgram(tokens, &index, tokenCount);
 
-   
-
     printf("\nLexical anaysis completed without any error\n");
     printAST(start, 0);
-
 
     return 0;
 }

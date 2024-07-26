@@ -1,27 +1,31 @@
-#ifndef EXPRESIION_STATEMENT_PARSER
-#define EXPRESIION_STATEMENT_PARSER
-#include "ast.h"
-#include "../symboltable/symboltable.h"
-
-ASTNode *parseExpression(Token *tokens, int *index, SymbolTableStack *stack);
-ASTNode *parseAssignmentExpression(Token *tokens, int *index, SymbolTableStack *stack);
-ASTNode *parseAdditiveExpression(Token *tokens, int *index, SymbolTableStack *stack);
-ASTNode *parseMultiplicativeExpression(Token *tokens, int *index, SymbolTableStack *stack);
-ASTNode *parsePrimaryExpression(Token *tokens, int *index, SymbolTableStack *stack);
-ASTNode *parseExpressionStatement(Token *tokens, int *index, SymbolTableStack *stack);
+#include "../../includes/parser/all_stmt.h"
+// #include "../../includes/parser/fun.h"
+#include "../../includes/parser/exp_stmt.h"
+#include "../../includes/parser/ast.h"
+#include <stdio.h>
+#include <stdlib.h>
 
 ASTNode *parseExpression(Token *tokens, int *index, SymbolTableStack *stack)
 {
+
+    if (isConditionalOperatorToken(tokens[*index + 1].lexeme))
+    {
+        return parseConditionalExpression(tokens, index, stack);
+    }
+    // if (tokens[*index + 1].value == OPEN_PAREN)
+    // {
+    //     return parseFunCall(tokens, index, stack);
+    // }
     return parseAssignmentExpression(tokens, index, stack);
 }
 
 ASTNode *parseAssignmentExpression(Token *tokens, int *index, SymbolTableStack *stack)
 {
 
-    //store index value to update variable defined flag to set to true
+    // store index value to update variable defined flag to set to true
     int *count = (int *)malloc(sizeof(int));
     *count = *index;
-    
+
     ASTNode *left = parsePrimaryExpression(tokens, index, stack);
 
     if (tokens[*index].value == ASSIGN)
@@ -96,7 +100,6 @@ ASTNode *parsePrimaryExpression(Token *tokens, int *index, SymbolTableStack *sta
         }
         else if (entry->isDefined == 0)
         {
-            printf("\n variable set to def");
             entry->isDefined = 1;
             return NULL;
         }
@@ -138,4 +141,18 @@ ASTNode *parseExpressionStatement(Token *tokens, int *index, SymbolTableStack *s
     return exprNode;
 }
 
-#endif
+ASTNode *parseConditionalExpression(Token *tokens, int *index, SymbolTableStack *stack)
+{
+    ASTNode *left = parsePrimaryExpression(tokens, index, stack);
+
+    if (!isOperatorToken(tokens[*index].lexeme))
+    {
+        printf("\nERROR: invalid conditional operator at line %d and col %d", tokens[*index].pos.line, tokens[*index].pos.col);
+        exit(1);
+    }
+    ASTNode *condition = createASTNode(tokens[(*index)++]);
+    ASTNode *right = parsePrimaryExpression(tokens, index, stack);
+    condition->right = right;
+    condition->left = left;
+    return condition;
+}

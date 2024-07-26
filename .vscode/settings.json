@@ -1,3 +1,8 @@
 {
-    "C_Cpp.errorSquiggles": "enabled"
+    "C_Cpp.errorSquiggles": "enabled",
+    "files.associations": {
+        "stdlib.h": "c",
+        "fun.h": "c",
+        "lexer.h": "c"
+    }
 }

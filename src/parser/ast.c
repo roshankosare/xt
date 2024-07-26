@@ -1,17 +1,4 @@
-#ifndef AST
-#define AST
-#include<stdio.h>
-#include<stdlib.h>
-#include "../tokens/tokens.h"
-
-typedef struct ASTNode
-{
-    Token token;
-    struct ASTNode *left;
-    struct ASTNode *right;
-    struct ASTNode *next;
-
-} ASTNode;
+#include "../../includes/parser/ast.h"
 
 ASTNode *createASTNode(Token token)
 {
@@ -21,5 +8,3 @@ ASTNode *createASTNode(Token token)
     node->left = node->right = node->next = NULL;
     return node;
 }
-
-#endif

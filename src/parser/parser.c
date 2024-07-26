@@ -1,16 +1,8 @@
-
-#ifndef PARSER_H
-#define PARSER_H
-
 #include <stdio.h>
 #include <stdlib.h>
-#include "../tokens/tokens.h"
-#include "../symboltable/symboltable.h"
-#include "ast.h"
-#include "fun_def.h"
-#include "stmt.h"
-
-#define PARSER_IMPLEMENTATION
+#include "../../includes/parser/fun.h"
+#include "../../includes/parser/stmt.h"
+#include "../../includes/parser/ast.h"
 
 ASTNode *parseProgram(Token *tokens, int *index, int token_count);
 void printAST(ASTNode *node, int depth);
@@ -59,11 +51,12 @@ ASTNode *parseProgram(Token *tokens, int *index, int token_count)
 
 void printAST(ASTNode *node, int depth)
 {
-   
-    if (node == NULL){
+
+    if (node == NULL)
+    {
         return;
     }
-        
+
     // Print indentation
     for (int i = 0; i < depth; ++i)
     {
@@ -90,5 +83,3 @@ void printAST(ASTNode *node, int depth)
         printAST(node->next, depth);
     }
 }
-
-#endif
