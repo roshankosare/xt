@@ -1,16 +1,13 @@
 #ifndef EXPRESIION_STATEMENT_PARSER
 #define EXPRESIION_STATEMENT_PARSER
-#include "ast.h"
-#include "../symboltable/symboltable.h"
-#include "../symboltable/functiontable.h"
-#include "../tokens/tokens.h"
+#include "../../include/context/context.h"
 
-ASTNode *parseExpression(Token *tokens, int *index, SymbolTableStack *stack, FunctionTable *table);
-ASTNode *parseAssignmentExpression(Token *tokens, int *index, SymbolTableStack *stack, FunctionTable *table);
-ASTNode *parseAdditiveExpression(Token *tokens, int *index, SymbolTableStack *stack, FunctionTable *table);
-ASTNode *parseMultiplicativeExpression(Token *tokens, int *index, SymbolTableStack *stack, FunctionTable *table);
-ASTNode *parsePrimaryExpression(Token *tokens, int *index, SymbolTableStack *stack, FunctionTable *table);
-ASTNode *parseExpressionStatement(Token *tokens, int *index, SymbolTableStack *stack, FunctionTable *table);
-ASTNode *parseConditionalExpression(Token *tokens, int *index, SymbolTableStack *stack, FunctionTable *table);
+ASTNode *parseExpression(Context *context);
+ASTNode *parseAssignmentExpression(Context *context);
+ASTNode *parseAdditiveExpression(Context *context);
+ASTNode *parseMultiplicativeExpression(Context *context);
+ASTNode *parsePrimaryExpression(Context *context);
+ASTNode *parseExpressionStatement(Context *context);
+ASTNode *parseConditionalExpression(Context *context);
 
 #endif

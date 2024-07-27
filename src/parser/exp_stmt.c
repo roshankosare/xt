@@ -7,55 +7,59 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-ASTNode *parseExpression(Token *tokens, int *index, SymbolTableStack *stack, FunctionTable *table)
+ASTNode *parseExpression(Context *context)
 {
 
-    if (isConditionalOperatorToken(tokens[*index + 1].lexeme))
+    if (isConditionalOperatorToken(context->tokens[context->index + 1].lexeme))
     {
-        return parseConditionalExpression(tokens, index, stack, table);
+        return parseConditionalExpression(context);
     }
-    if (tokens[*index + 1].value == OPEN_PAREN)
+    if (context->tokens[context->index + 1].value == OPEN_PAREN)
     {
-        return parseFunCall(tokens, index, stack, table);
+        return parseFunCall(context);
     }
-    return parseAssignmentExpression(tokens, index, stack, table);
+    return parseAssignmentExpression(context);
 }
 
-ASTNode *parseAssignmentExpression(Token *tokens, int *index, SymbolTableStack *stack, FunctionTable *table)
+ASTNode *parseAssignmentExpression(Context *context)
 {
 
     // store index value to update variable defined flag to set to true
-    int *count = (int *)malloc(sizeof(int));
-    *count = *index;
+    int count;
+    count = context->index;
+    int temp;
 
-    ASTNode *left = parsePrimaryExpression(tokens, index, stack, table);
+    ASTNode *left = parsePrimaryExpression(context);
 
-    if (tokens[*index].value == ASSIGN)
+    if (context->tokens[context->index].value == ASSIGN)
     {
-        Token assignToken = tokens[(*index)++];
+        Token assignToken = context->tokens[(context->index)++];
 
-        ASTNode *right = parseAdditiveExpression(tokens, index, stack, table);
+        ASTNode *right = parseAdditiveExpression(context);
         ASTNode *assignNode = createASTNode(assignToken);
         // this block of code will run to set var x = exp; statement x->isDefined flag to true
-        parsePrimaryExpression(tokens, count, stack, table);
+        temp = context->index;
+        context->index = count;
+        parsePrimaryExpression(context);
+        context->index = temp;
         assignNode->left = left;
         assignNode->right = right;
         return assignNode;
     }
 
     // this block of code will run to set var x; statement x->isDefined flag to true
-    parsePrimaryExpression(tokens, index, stack, table);
+    parsePrimaryExpression(context);
 
     return left;
 }
 
-ASTNode *parseAdditiveExpression(Token *tokens, int *index, SymbolTableStack *stack, FunctionTable *table)
+ASTNode *parseAdditiveExpression(Context *context)
 {
-    ASTNode *left = parseMultiplicativeExpression(tokens, index, stack, table);
-    while (tokens[*index].value == PLUS || tokens[*index].value == MINUS)
+    ASTNode *left = parseMultiplicativeExpression(context);
+    while (context->tokens[context->index].value == PLUS || context->tokens[context->index].value == MINUS)
     {
-        Token opToken = tokens[(*index)++];
-        ASTNode *right = parseMultiplicativeExpression(tokens, index, stack, table);
+        Token opToken = context->tokens[(context->index)++];
+        ASTNode *right = parseMultiplicativeExpression(context);
         ASTNode *opNode = createASTNode(opToken);
         opNode->left = left;
         opNode->right = right;
@@ -64,13 +68,13 @@ ASTNode *parseAdditiveExpression(Token *tokens, int *index, SymbolTableStack *st
     return left;
 }
 
-ASTNode *parseMultiplicativeExpression(Token *tokens, int *index, SymbolTableStack *stack, FunctionTable *table)
+ASTNode *parseMultiplicativeExpression(Context *context)
 {
-    ASTNode *left = parsePrimaryExpression(tokens, index, stack, table);
-    while (tokens[*index].value == MUL || tokens[*index].value == DIV)
+    ASTNode *left = parsePrimaryExpression(context);
+    while (context->tokens[context->index].value == MUL || context->tokens[context->index].value == DIV)
     {
-        Token opToken = tokens[(*index)++];
-        ASTNode *right = parsePrimaryExpression(tokens, index, stack, table);
+        Token opToken = context->tokens[(context->index)++];
+        ASTNode *right = parsePrimaryExpression(context);
         ASTNode *opNode = createASTNode(opToken);
         opNode->left = left;
         opNode->right = right;
@@ -79,31 +83,31 @@ ASTNode *parseMultiplicativeExpression(Token *tokens, int *index, SymbolTableSta
     return left;
 }
 
-ASTNode *parsePrimaryExpression(Token *tokens, int *index, SymbolTableStack *stack, FunctionTable *table)
+ASTNode *parsePrimaryExpression(Context *context)
 {
 
-    if (tokens[*index].value == VAR)
+    if (context->tokens[context->index].value == VAR)
     {
-        (*index)++;
-        SymbolTableEntry *entry = lookupSymbol(stack, tokens[*index].lexeme);
-        FunctionTableEntry *functionEntry = lookupFuntionSymbol(table, tokens[*index].lexeme);
+        (context->index)++;
+        SymbolTableEntry *entry = lookupSymbol(context->stack, context->tokens[context->index].lexeme);
+        FunctionTableEntry *functionEntry = lookupFuntionSymbol(context->table, context->tokens[context->index].lexeme);
         if (functionEntry != NULL)
         {
-            printf("\nERROR: multiple decleration of variable `%s`  at line %d and col %d\n", tokens[*index].lexeme, tokens[*index].pos.line, tokens[*index].pos.col);
+            printf("\nERROR: multiple decleration of variable `%s`  at line %d and col %d\n", context->tokens[context->index].lexeme, context->tokens[context->index].pos.line, context->tokens[context->index].pos.col);
             exit(1);
         }
 
         if (entry == NULL)
         { // create symbol entry in stack if there is no same symbol
-            insertSymbol(stack, tokens[*index].lexeme, stack->scope);
-            Token token = tokens[(*index)++];
+            insertSymbol(context->stack, context->tokens[context->index].lexeme, context->stack->scope);
+            Token token = context->tokens[(context->index)++];
             return createASTNode(token);
         }
-        else if (entry->scope != stack->scope)
+        else if (entry->scope != context->stack->scope)
         {
 
-            insertSymbol(stack, tokens[*index].lexeme, stack->scope);
-            Token token = tokens[(*index)++];
+            insertSymbol(context->stack, context->tokens[context->index].lexeme, context->stack->scope);
+            Token token = context->tokens[(context->index)++];
             return createASTNode(token);
         }
         else if (entry->isDefined == 0)
@@ -113,53 +117,53 @@ ASTNode *parsePrimaryExpression(Token *tokens, int *index, SymbolTableStack *sta
         }
         else
         {
-            printf("\nERROR: multiple decleration of variable `%s`  at line %d and col %d\n", tokens[*index].lexeme, tokens[*index].pos.line, tokens[*index].pos.col);
+            printf("\nERROR: multiple decleration of variable `%s`  at line %d and col %d\n", context->tokens[context->index].lexeme, context->tokens[context->index].pos.line, context->tokens[context->index].pos.col);
             exit(1);
         }
     }
-    SymbolTableEntry *entry = lookupSymbol(stack, tokens[*index].lexeme);
+    SymbolTableEntry *entry = lookupSymbol(context->stack, context->tokens[context->index].lexeme);
 
-    if (tokens[*index].value == IDENTIFIER && entry == NULL)
+    if (context->tokens[context->index].value == IDENTIFIER && entry == NULL)
     {
-        printf("\nERROR: undefined variable `%s` at line %d and col %d\n", tokens[*index].lexeme, tokens[*index].pos.line, tokens[*index].pos.col);
+        printf("\nERROR: undefined variable `%s` at line %d and col %d\n", context->tokens[context->index].lexeme, context->tokens[context->index].pos.line, context->tokens[context->index].pos.col);
         exit(1);
     }
-    else if (tokens[*index].value == IDENTIFIER && entry->isDefined == 0)
+    else if (context->tokens[context->index].value == IDENTIFIER && entry->isDefined == 0)
     {
-        printf("\nERROR: variable used before its defined `%s` at line %d and col %d\n", tokens[*index].lexeme, tokens[*index].pos.line, tokens[*index].pos.col);
+        printf("\nERROR: variable used before its defined `%s` at line %d and col %d\n", context->tokens[context->index].lexeme, context->tokens[context->index].pos.line, context->tokens[context->index].pos.col);
         exit(1);
     }
 
-    Token token = tokens[(*index)++];
+    Token token = context->tokens[(context->index)++];
     return createASTNode(token);
 }
-ASTNode *parseExpressionStatement(Token *tokens, int *index, SymbolTableStack *stack, FunctionTable *table)
+ASTNode *parseExpressionStatement(Context *context)
 {
 
-    ASTNode *exprNode = parseExpression(tokens, index, stack, table);
+    ASTNode *exprNode = parseExpression(context);
 
-    if (tokens[*index].value != SEMI_COLAN)
+    if (context->tokens[context->index].value != SEMI_COLAN)
     {
-        --(*index);
+        --(context->index);
         // go back one token to get line and col number of previous token
-        printf("\nError: Expected ';' at line %d, col %d\n", tokens[*index].pos.line, tokens[*index].pos.col + (int)strlen(tokens[*index].lexeme));
+        printf("\nError: Expected ';' at line %d, col %d\n", context->tokens[context->index].pos.line, context->tokens[context->index].pos.col + (int)strlen(context->tokens[context->index].lexeme));
         exit(1);
     }
-    (*index)++;
+    (context->index)++;
     return exprNode;
 }
 
-ASTNode *parseConditionalExpression(Token *tokens, int *index, SymbolTableStack *stack, FunctionTable *table)
+ASTNode *parseConditionalExpression(Context *context)
 {
-    ASTNode *left = parsePrimaryExpression(tokens, index, stack, table);
+    ASTNode *left = parsePrimaryExpression(context);
 
-    if (!isOperatorToken(tokens[*index].lexeme))
+    if (!isOperatorToken(context->tokens[context->index].lexeme))
     {
-        printf("\nERROR: invalid conditional operator at line %d and col %d", tokens[*index].pos.line, tokens[*index].pos.col);
+        printf("\nERROR: invalid conditional operator at line %d and col %d", context->tokens[context->index].pos.line, context->tokens[context->index].pos.col);
         exit(1);
     }
-    ASTNode *condition = createASTNode(tokens[(*index)++]);
-    ASTNode *right = parsePrimaryExpression(tokens, index, stack, table);
+    ASTNode *condition = createASTNode(context->tokens[(context->index)++]);
+    ASTNode *right = parsePrimaryExpression(context);
     condition->right = right;
     condition->left = left;
     return condition;

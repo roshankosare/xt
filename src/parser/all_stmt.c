@@ -4,160 +4,161 @@
 #include "../../include/parser/exp_stmt.h" /
 #include "../../include/symboltable/functiontable.h"
 #include "../../include/symboltable/symboltable.h"
+#include "../../include/context/context.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 
-ASTNode *parseSelectionStatement(Token *tokens, int *index, SymbolTableStack *stack, FunctionTable *table)
+ASTNode *parseSelectionStatement(Context *context)
 {
 
-    // tokens[*index].lexme = if
-    ASTNode *ifNode = createASTNode(tokens[*index]);
-    (*index)++;
+    // context->tokens[context->index].lexme = if*
+    ASTNode *ifNode = createASTNode(context->tokens[context->index]);
+    (context->index)++;
 
-    if (tokens[*index].value != OPEN_PAREN)
+    if (context->tokens[context->index].value != OPEN_PAREN)
     {
-        printf("\nERROR: expected ( at line %d and col %d", tokens[*index].pos.line, tokens[*index]);
+        printf("\nERROR: expected ( at line %d and col %d", context->tokens[context->index].pos.line, context->tokens[context->index]);
         exit(1);
     }
-    (*index)++; // skip ( character
+    (context->index)++; // skip ( character
 
     // parse expression stmt or conditional stmt
-    ASTNode *left = parseExpression(tokens, index, stack, table);
-    if (tokens[*index].value != CLOSE_PAREN)
+    ASTNode *left = parseExpression(context);
+    if (context->tokens[context->index].value != CLOSE_PAREN)
     {
-        printf("\nERROR: expected ) token at if block at line %d ", tokens[*index].pos.line);
+        printf("\nERROR: expected ) token at if block at line %d ", context->tokens[context->index].pos.line);
         exit(1);
     }
-    (*index)++; // skip ) chracter
-    if (tokens[*index].value != OPEN_CURLY_PAREN)
+    (context->index)++; // skip ) chracter
+    if (context->tokens[context->index].value != OPEN_CURLY_PAREN)
     {
-        ASTNode *right = parseExpressionStatement(tokens, index, stack, table);
+        ASTNode *right = parseExpressionStatement(context);
         ifNode->right = right;
         ifNode->left = left;
         return ifNode;
     }
-    ASTNode *right = parseBlockStatement(tokens, index, stack, table);
+    ASTNode *right = parseBlockStatement(context);
     ifNode->right = right;
     ifNode->left = left;
     return ifNode;
 }
 
-ASTNode *parseIterationStatement(Token *tokens, int *index, SymbolTableStack *stack, FunctionTable *table)
+ASTNode *parseIterationStatement(Context *context)
 {
-    if (tokens[*index].value == WHILE)
+    if (context->tokens[context->index].value == WHILE)
     {
-        // tokens[*index].lexme = if
-        ASTNode *whileNode = createASTNode(tokens[*index]);
-        (*index)++;
+        // context->tokens[context->index].lexme = if
+        ASTNode *whileNode = createASTNode(context->tokens[context->index]);
+        (context->index)++;
 
-        if (tokens[*index].value != OPEN_PAREN)
+        if (context->tokens[context->index].value != OPEN_PAREN)
         {
-            printf("\nERROR: expected ( at line %d and col %d", tokens[*index].pos.line, tokens[*index]);
+            printf("\nERROR: expected ( at line %d and col %d", context->tokens[context->index].pos.line, context->tokens[context->index]);
             exit(1);
         }
-        (*index)++; // skip ( character
+        (context->index)++; // skip ( character
 
         // parse expression stmt or conditional stmt
-        ASTNode *left = parseExpression(tokens, index, stack, table);
-        if (tokens[*index].value != CLOSE_PAREN)
+        ASTNode *left = parseExpression(context);
+        if (context->tokens[context->index].value != CLOSE_PAREN)
         {
-            printf("\nERROR: expected ) token at if block at line %d ", tokens[*index].pos.line);
+            printf("\nERROR: expected ) token at if block at line %d ", context->tokens[context->index].pos.line);
             exit(1);
         }
-        (*index)++; // skip ) chracter
-        if (tokens[*index].value != OPEN_CURLY_PAREN)
+        (context->index)++; // skip ) chracter
+        if (context->tokens[context->index].value != OPEN_CURLY_PAREN)
         {
-            ASTNode *right = parseExpressionStatement(tokens, index, stack, table);
+            ASTNode *right = parseExpressionStatement(context);
             whileNode->right = right;
             whileNode->left = left;
             return whileNode;
         }
-        ASTNode *right = parseBlockStatement(tokens, index, stack, table);
+        ASTNode *right = parseBlockStatement(context);
         whileNode->right = right;
         whileNode->left = left;
         return whileNode;
     }
 }
 
-ASTNode *parseJumpStatement(Token *tokens, int *index, SymbolTableStack *stack, FunctionTable *table)
+ASTNode *parseJumpStatement(Context *context)
 {
-    ASTNode *returnNode = createASTNode(tokens[*index]);
-    (*index)++;
-    // if (tokens[*index].value == OPEN_CURLY_PAREN)
+    ASTNode *returnNode = createASTNode(context->tokens[context->index]);
+    (context->index)++;
+    // if (context->tokens[context->index].value == OPEN_CURLY_PAREN)
     // {
     //     returnNode->right = parseBlockStatement(tokens, index, stack);
-    //     if (tokens[*index].value != SEMI_COLAN)
+    //     if (context->tokens[context->index].value != SEMI_COLAN)
     //     {
-    //         printf("\nERROR: expected ; at line %d and col %d", tokens[*index].pos.line, tokens[*index].pos.col + 1);
+    //         printf("\nERROR: expected ; at line %d and col %d", context->tokens[context->index].pos.line, context->tokens[context->index].pos.col + 1);
     //         exit(1);
     //     }
     //     return returnNode;
     // }
-    if (tokens[*index].value == SEMI_COLAN)
+    if (context->tokens[context->index].value == SEMI_COLAN)
     {
-        (*index)++;
+        (context->index)++;
         return returnNode;
     }
-    returnNode->right = parseExpressionStatement(tokens, index, stack, table);
-    if (tokens[*index].value != SEMI_COLAN)
+    returnNode->right = parseExpressionStatement(context);
+    if (context->tokens[context->index].value != SEMI_COLAN)
     {
-        printf("\nERROR: expected ; at line %d and col %d", tokens[*index].pos.line, tokens[*index].pos.col + 1);
+        printf("\nERROR: expected ; at line %d and col %d", context->tokens[context->index].pos.line, context->tokens[context->index].pos.col + 1);
         exit(1);
     }
     return returnNode;
 }
 
-ASTNode *parseBlockStatement(Token *tokens, int *index, SymbolTableStack *stack, FunctionTable *table)
+ASTNode *parseBlockStatement(Context *context)
 {
-    if (tokens[*index].value != OPEN_CURLY_PAREN)
+    if (context->tokens[context->index].value != OPEN_CURLY_PAREN)
     {
-        printf("\nError: Expected '{' at line %d, col %d\n", tokens[*index].pos.line, tokens[*index].pos.col);
+        printf("\nError: Expected '{' at line %d, col %d\n", context->tokens[context->index].pos.line, context->tokens[context->index].pos.col);
         exit(1);
     }
-    (*index)++;
+    (context->index)++;
     Token funtion_def = {.lexeme = "BLOCK", .value = UNKNOWN};
     ASTNode *compoundNode = createASTNode(funtion_def);
 
     ASTNode *current = compoundNode;
-    while (tokens[*index].value != CLOSE_CURLY_PAREN && tokens[*index].value != TEOF)
+    while (context->tokens[context->index].value != CLOSE_CURLY_PAREN && context->tokens[context->index].value != TEOF)
     {
 
-        switch (getTokenIntCodeValue(tokens[*index].lexeme))
+        switch (getTokenIntCodeValue(context->tokens[context->index].lexeme))
         {
 
         case INT_TOKEN_IF:
-            current->next = parseSelectionStatement(tokens, index, stack, table);
+            current->next = parseSelectionStatement(context);
             current = current->next;
             break;
         case INT_TOKEN_WHILE:
-            current->next = parseIterationStatement(tokens, index, stack, table);
+            current->next = parseIterationStatement(context);
             current = current->next;
             break;
         case INT_TOKEN_RETURN:
-            current->next = parseJumpStatement(tokens, index, stack, table);
+            current->next = parseJumpStatement(context);
             current = current->next;
             break;
         case INT_TOKEN_VAR:
-            current->next = parseExpressionStatement(tokens, index, stack, table);
+            current->next = parseExpressionStatement(context);
             current = current->next;
             break;
         case INT_TOKEN_IDENTIFIER:
-            current->next = parseExpressionStatement(tokens, index, stack, table);
+            current->next = parseExpressionStatement(context);
             current = current->next;
             break;
         default:
-            printf("\nERROR: unexpected token %s at line %d and col %d\n", tokens[*index].pos.line, tokens[*index].pos.col);
+            printf("\nERROR: unexpected token %s at line %d and col %d\n", context->tokens[context->index].pos.line, context->tokens[context->index].pos.col);
             exit(1);
         }
     }
 
-    if (tokens[*index].value != CLOSE_CURLY_PAREN)
+    if (context->tokens[context->index].value != CLOSE_CURLY_PAREN)
     {
-        printf("\nError: Expected '}' at line %d, col %d\n", tokens[*index].pos.line, tokens[*index].pos.col);
+        printf("\nError: Expected '}' at line %d, col %d\n", context->tokens[context->index].pos.line, context->tokens[context->index].pos.col);
         exit(1);
     }
-    (*index)++;
+    (context->index)++;
 
     return compoundNode;
 }

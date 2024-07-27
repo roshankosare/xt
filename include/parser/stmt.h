@@ -1,14 +1,9 @@
 #ifndef PARSE_STMT
 #define PARSE_STMT
 
+#include "../../include/context/context.h"
 #include "ast.h"
-#include "../symboltable/symboltable.h"
-#include "../symboltable/functiontable.h"
-#include "../tokens/tokens.h"
 
-
-ASTNode *parseStatement(Token *tokens, int *index, SymbolTableStack *stack,FunctionTable *table);
-
-
+ASTNode *parseStatement(Context *context);
 
 #endif

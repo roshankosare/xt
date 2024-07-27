@@ -7,46 +7,46 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-ASTNode *parseFunDefParameterList(Token *tokens, int *index, SymbolTableStack *stack)
+ASTNode *parseFunDefParameterList(Context *context)
 {
     Token funtion_pram = {.lexeme = "FUNTION PARANERTERS", .value = UNKNOWN};
     ASTNode *paramList = createASTNode(funtion_pram);
 
     ASTNode *current = paramList;
 
-    while (tokens[*index].value == IDENTIFIER)
+    while (context->tokens[context->index].value == IDENTIFIER)
     {
-        ASTNode *param = createASTNode(tokens[*index]);
+        ASTNode *param = createASTNode(context->tokens[context->index]);
         current->next = param;
         current = param;
-        SymbolTableEntry *entry = lookupSymbol(stack, tokens[*index].lexeme);
+        SymbolTableEntry *entry = lookupSymbol(context->stack, context->tokens[context->index].lexeme);
 
         if (entry == NULL)
 
         { // create symbol entry in stack if there is no same symbol
-            insertSymbol(stack, tokens[*index].lexeme, stack->scope);
-            entry = lookupSymbol(stack, tokens[*index].lexeme);
+            insertSymbol(context->stack, context->tokens[context->index].lexeme, context->stack->scope);
+            entry = lookupSymbol(context->stack, context->tokens[context->index].lexeme);
             entry->isDefined = 1;
         }
-        else if (entry->scope != stack->scope)
+        else if (entry->scope != context->stack->scope)
         {
             // entry is found but out of scope then create entry and set isDefined to true;
-            insertSymbol(stack, tokens[*index].lexeme, stack->scope);
-            entry = lookupSymbol(stack, tokens[*index].lexeme);
+            insertSymbol(context->stack, context->tokens[context->index].lexeme, context->stack->scope);
+            entry = lookupSymbol(context->stack, context->tokens[context->index].lexeme);
             entry->isDefined = 1;
         }
 
         else
         {
-            printf("\nERROR: multiple decleration of variable `%s`  at line %d and col %d\n", tokens[*index].lexeme, tokens[*index].pos.line, tokens[*index].pos.col);
+            printf("\nERROR: multiple decleration of variable `%s`  at line %d and col %d\n", context->tokens[context->index].lexeme, context->tokens[context->index].pos.line, context->tokens[context->index].pos.col);
             exit(1);
         }
 
-        (*index)++;
+        (context->index)++;
 
-        if (tokens[*index].value == COMMA)
+        if (context->tokens[context->index].value == COMMA)
         {
-            (*index)++; // Move to the next parameter
+            (context->index)++; // Move to the next parameter
         }
         else
         {
@@ -54,29 +54,29 @@ ASTNode *parseFunDefParameterList(Token *tokens, int *index, SymbolTableStack *s
         }
     }
 
-    if (tokens[*index].value == CONSTANT)
+    if (context->tokens[context->index].value == CONSTANT)
     {
-        printf("\nERROR: constant paratmeter in funtion defination at line %d", tokens[*index].pos.line);
+        printf("\nERROR: constant paratmeter in funtion defination at line %d", context->tokens[context->index].pos.line);
         exit(1);
     }
     return paramList;
 }
-ASTNode *parseFunCallParameterList(Token *tokens, int *index, SymbolTableStack *stack)
+ASTNode *parseFunCallParameterList(Context *context)
 {
     Token funtion_pram = {.lexeme = "FUNTION PARANERTERS", .value = UNKNOWN};
     ASTNode *paramList = createASTNode(funtion_pram);
     ASTNode *current = paramList;
 
-    while (tokens[*index].value == IDENTIFIER || tokens[*index].value == CONSTANT)
+    while (context->tokens[context->index].value == IDENTIFIER || context->tokens[context->index].value == CONSTANT)
     {
-        ASTNode *param = createASTNode(tokens[*index]);
+        ASTNode *param = createASTNode(context->tokens[context->index]);
         current->next = param;
         current = param;
-        (*index)++;
+        (context->index)++;
 
-        if (tokens[*index].value == COMMA)
+        if (context->tokens[context->index].value == COMMA)
         {
-            (*index)++; // Move to the next parameter
+            (context->index)++; // Move to the next parameter
         }
         else
         {
@@ -86,106 +86,106 @@ ASTNode *parseFunCallParameterList(Token *tokens, int *index, SymbolTableStack *
     return paramList;
 }
 
-ASTNode *parseFunctionDefinitionOrCall(Token *tokens, int *index, SymbolTableStack *stack, FunctionTable *table)
+ASTNode *parseFunctionDefinitionOrCall(Context *context)
 {
 
     // Check for identifier (function name)
-    ASTNode *funcNode = createASTNode(tokens[*index]);
-    FunctionTableEntry *funtionEntry = lookupFuntionSymbol(table, tokens[*index].lexeme);
-    SymbolTableEntry *symbolEntry = lookupSymbol(stack, tokens[*index].lexeme);
+    ASTNode *funcNode = createASTNode(context->tokens[context->index]);
+    FunctionTableEntry *funtionEntry = lookupFuntionSymbol(context->table, context->tokens[context->index].lexeme);
+    SymbolTableEntry *symbolEntry = lookupSymbol(context->stack, context->tokens[context->index].lexeme);
     if (funtionEntry || symbolEntry)
     {
-        printf("\nERROR: fution name `%s` is alredy in use \n", tokens[*index].lexeme);
+        printf("\nERROR: funtion name `%s` is alredy in use \n", context->tokens[context->index].lexeme);
         exit(1);
     }
-    insertFuntionSymbol(table, tokens[*index].lexeme);
-    insertSymbol(stack, tokens[*index].lexeme, 0);
-    // printf("\nTooken:%s",tokens[*index].lexeme);
-    (*index)++; // Move to the opening parenthesis
-    (*index)++; // Move to the parameter list or closing parenthesis
+    insertFuntionSymbol(context->table, context->tokens[context->index].lexeme);
+    insertSymbol(context->stack, context->tokens[context->index].lexeme, 0);
+    // printf("\nTooken:%s",context->tokens[context->index].lexeme);
+    (context->index)++; // Move to the opening parenthesis
+    (context->index)++; // Move to the parameter list or closing parenthesis
 
     // Parse parameter list
-    if (tokens[*index].value != CLOSE_PAREN)
+    if (context->tokens[context->index].value != CLOSE_PAREN)
     {
-        int count = *index;
+        int count = context->index;
 
-        while (tokens[count].value != CLOSE_PAREN && tokens[count].value != TEOF)
+        while (context->tokens[count].value != CLOSE_PAREN && context->tokens[count].value != TEOF)
         {
             count++;
         }
 
-        if (tokens[count].value == TEOF)
+        if (context->tokens[count].value == TEOF)
         {
-            printf("\nERROR: Expected ) at line %d ", tokens[*index].pos.line);
+            printf("\nERROR: Expected ) at line %d ", context->tokens[context->index].pos.line);
             exit(1);
         }
         count++;
 
-        if (tokens[count].value == SEMI_COLAN)
+        if (context->tokens[count].value == SEMI_COLAN)
         {
-            funcNode->left = parseFunCallParameterList(tokens, index, stack);
-            if (tokens[*index].value == SEMI_COLAN)
+            funcNode->left = parseFunCallParameterList(context);
+            if (context->tokens[context->index].value == SEMI_COLAN)
             {
-                (*index)++;
+                (context->index)++;
                 return funcNode;
             }
         }
 
         // change scope to funtion to create new funtion scope symbol table
-        pushSymbolTable(stack);
+        pushSymbolTable(context->stack);
 
-        if (tokens[count].value == OPEN_CURLY_PAREN)
-            funcNode->left = parseFunDefParameterList(tokens, index, stack);
+        if (context->tokens[count].value == OPEN_CURLY_PAREN)
+            funcNode->left = parseFunDefParameterList(context);
         // funcNode->left = parseFunCallParameterList(tokens, index);
     }
 
     // Check for closing parenthesis
-    if (tokens[*index].value != CLOSE_PAREN)
+    if (context->tokens[context->index].value != CLOSE_PAREN)
     {
-        printf("\nExpected ')' after parameter list at line %d and col %d", tokens[*index].pos.line, tokens[*index].pos.col);
+        printf("\nExpected ')' after parameter list at line %d and col %d", context->tokens[context->index].pos.line, context->tokens[context->index].pos.col);
     }
-    (*index)++; // Move to the function body (compound statement).
+    (context->index)++; // Move to the function body (compound statement).
 
     // Parse function body
-    funcNode->right = parseBlockStatement(tokens, index, stack, table);
+    funcNode->right = parseBlockStatement(context);
 
     // pop value from symbol table of cuurent funtional scope symbol table
-    popSymbolTable(stack);
+    popSymbolTable(context->stack);
 
     return funcNode;
 }
-ASTNode *parseFunCall(Token *tokens, int *index, SymbolTableStack *stack, FunctionTable *table)
+ASTNode *parseFunCall(Context *context)
 {
     // Check for identifier (function name)
-    FunctionTableEntry *funtionEntry = lookupFuntionSymbol(table, tokens[*index].lexeme);
+    FunctionTableEntry *funtionEntry = lookupFuntionSymbol(context->table, context->tokens[context->index].lexeme);
     if (funtionEntry == NULL)
     {
-        printf("\nERROR: funtion is used before its defination at line %d and col %d \n", tokens[*index].pos.line, tokens[*index].pos.col);
+        printf("\nERROR: funtion is used before its defination at line %d and col %d \n", context->tokens[context->index].pos.line, context->tokens[context->index].pos.col);
         exit(1);
     }
-    ASTNode *funcNode = createASTNode(tokens[*index]);
+    ASTNode *funcNode = createASTNode(context->tokens[context->index]);
 
-    // printf("\nTooken:%s",tokens[*index].lexeme);
-    (*index)++; // Move to the opening parenthesis
-    (*index)++; // Move to the parameter list or closing parenthesis
+    // printf("\nTooken:%s",context->tokens[context->index].lexeme);
+    (context->index)++; // Move to the opening parenthesis
+    (context->index)++; // Move to the parameter list or closing parenthesis
 
     // Parse parameter list
-    if (tokens[*index].value != CLOSE_PAREN)
+    if (context->tokens[context->index].value != CLOSE_PAREN)
     {
 
-        funcNode->left = parseFunCallParameterList(tokens, index, stack);
-        if (tokens[*index].value != CLOSE_PAREN)
+        funcNode->left = parseFunCallParameterList(context);
+        if (context->tokens[context->index].value != CLOSE_PAREN)
         {
-            printf("\nExpected ')' after parameter list at line %d and col %d", tokens[*index].pos.line, tokens[*index].pos.col);
+            printf("\nExpected ')' after parameter list at line %d and col %d", context->tokens[context->index].pos.line, context->tokens[context->index].pos.col);
         }
-        (*index)++; // skip to  semicolan
+        (context->index)++; // skip to  semicolan
 
         return funcNode;
     }
-    (*index)++; // skip to semicolan;
-    if (tokens[*index].value != SEMI_COLAN)
+    (context->index)++; // skip to semicolan;
+    if (context->tokens[context->index].value != SEMI_COLAN)
     {
-        printf("\nERROR: expected ; at line %d and col %d\n", tokens[*index].pos.line, tokens[*index].pos.col + 1);
+        printf("\nERROR: expected ; at line %d and col %d\n", context->tokens[context->index].pos.line, context->tokens[context->index].pos.col + 1);
         exit(1);
     }
     return funcNode;

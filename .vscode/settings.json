@@ -3,6 +3,8 @@
     "files.associations": {
         "stdlib.h": "c",
         "fun.h": "c",
-        "lexer.h": "c"
+        "lexer.h": "c",
+        "symboltable.h": "c",
+        "context.h": "c"
     }
 }
