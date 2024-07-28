@@ -4,6 +4,9 @@
 #include <string.h>
 #include <ctype.h>
 #include "../../include/lexer/lexer.h"
+#include "../../include/tokens/tokens_fill.h"
+#include "../../include/tokens/tokens.h"
+#include "../../include/tokens/tokens_val.h"
 
 Token *tokenize(FILE *fp, int *tokenCount)
 {
@@ -225,10 +228,11 @@ Token *tokenize(FILE *fp, int *tokenCount)
 void printTokens(Token *tokens, int tokenCount)
 {
 
-    for (int i = 0; i < tokenCount; i++)
+    for (int i = 0; i <= tokenCount; i++)
     {
         printf("\nLexme: %s ", tokens[i].lexeme);
         printf("\nValue: %s", getTokenStringValue(tokens[i].value));
+        printf("\npos: line %d  col %d ",tokens[i].pos.line,tokens[i].pos.col);
         printf("\n----------------------------------------------------------");
     }
 }

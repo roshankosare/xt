@@ -14,7 +14,7 @@ ASTNode *parseStatement(Context *context)
     case INT_TOKEN_WHILE:
         return parseIterationStatement(context);
     case INT_TOKEN_VAR:
-        return parseExpressionStatement(context);
+        return parseDeclerationStatement(context);
     case INT_TOKEN_IDENTIFIER:
         return parseExpressionStatement(context);
     default:

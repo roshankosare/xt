@@ -18,7 +18,8 @@ $(BUILD_DIR)/%.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
-	rm -rf $(BUILD_DIR)/*.o $(EXECUTABLE)
+	find $(BUILD_DIR) -name '*.o' -delete
+	rm -f $(EXECUTABLE)
 
 test: $(EXECUTABLE)
 	$(CC) $(CFLAGS) -o $(BUILD_DIR)/test_a $(TEST_DIR)/test_a.c -L$(BUILD_DIR) -lprogram

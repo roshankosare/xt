@@ -140,7 +140,7 @@ ASTNode *parseBlockStatement(Context *context)
             current = current->next;
             break;
         case INT_TOKEN_VAR:
-            current->next = parseExpressionStatement(context);
+            current->next = parseBlockDeclerationStatement(context);
             current = current->next;
             break;
         case INT_TOKEN_IDENTIFIER:
@@ -161,4 +161,120 @@ ASTNode *parseBlockStatement(Context *context)
     (context->index)++;
 
     return compoundNode;
+}
+
+ASTNode *parseDeclerationStatement(Context *context)
+{
+
+    ASTNode *varDecNode = createASTNode(context->tokens[(context->index)++]);
+    int idp = context->index;
+    int temp;
+    if (context->tokens[context->index].value != IDENTIFIER)
+    {
+        printf("\nERROR: expected identifer at line %d and col %d ", context->tokens[context->index - 1].pos.line, context->tokens[context->index - 1].pos.col + 1);
+        exit(1);
+    }
+    SymbolTableEntry *entry = lookupSymbol(context->stack, context->tokens[context->index].lexeme);
+    FunctionTableEntry *functionEntry = lookupFuntionSymbol(context->table, context->tokens[context->index].lexeme);
+    if (entry != NULL)
+    {
+        printf("\nERROR: multiple decleration of variable `%s`  at line %d and col %d\n", context->tokens[context->index].lexeme, context->tokens[context->index].pos.line, context->tokens[context->index].pos.col);
+        exit(1);
+    }
+    if (functionEntry != NULL)
+    {
+        printf("\nERROR: multiple decleration of variable `%s`  at line %d and col %d\n", context->tokens[context->index].lexeme, context->tokens[context->index].pos.line, context->tokens[context->index].pos.col);
+        exit(1);
+    }
+    insertSymbol(context->stack, context->tokens[context->index].lexeme, context->stack->scope);
+    entry = lookupSymbol(context->stack, context->tokens[context->index].lexeme);
+
+    (context->index)++; // skip to assign node;
+    if (context->tokens[context->index].value == SEMI_COLAN)
+    {
+        entry->isDefined = 1;
+        return varDecNode;
+    }
+    if (context->tokens[context->index].value != ASSIGN)
+    {
+        printf("\nERROR: expected  `=`  at line %d and col %d\n", context->tokens[context->index -1].pos.line, context->tokens[context->index -1].pos.col);
+        exit(1);
+    }
+    ASTNode *assignNode = createASTNode(context->tokens[context->index]);
+    varDecNode->right = assignNode;
+    (context->index)++;
+
+    assignNode->right = parseAdditiveExpression(context);
+
+    if (context->tokens[context->index].value != SEMI_COLAN)
+    {
+        printf("\nERROR: expected  `;`  at line %d and col %d\n", context->tokens[context->index - 1].pos.line, context->tokens[context->index - 1].pos.col);
+        exit(1);
+    }
+    (context->index)++;
+    temp = context->index;
+    context->index = idp;
+    entry->isDefined = 1;
+    assignNode->left = parsePrimaryExpression(context);
+    context->index = temp;
+
+    return varDecNode;
+}
+
+ASTNode *parseBlockDeclerationStatement(Context *context)
+{
+    Token token = {.lexeme = "var", .value = BLOCK_VAR};
+    ASTNode *varDecNode = createASTNode(token);
+    (context->index)++;
+    int idp = context->index;
+    int temp;
+    if (context->tokens[context->index].value != IDENTIFIER)
+    {
+        printf("\nERROR: expected identifer at line %d and col %d ", context->tokens[context->index - 1].pos.line, context->tokens[context->index - 1].pos.col + 1);
+    }
+    SymbolTableEntry *entry = lookupSymbol(context->stack, context->tokens[context->index].lexeme);
+    FunctionTableEntry *functionEntry = lookupFuntionSymbol(context->table, context->tokens[context->index].lexeme);
+    if (entry != NULL)
+    {
+        printf("\nERROR: multiple decleration of variable `%s`  at line %d and col %d\n", context->tokens[context->index].lexeme, context->tokens[context->index].pos.line, context->tokens[context->index].pos.col);
+        exit(1);
+    }
+    if (functionEntry != NULL)
+    {
+        printf("\nERROR: multiple decleration of variable `%s`  at line %d and col %d\n", context->tokens[context->index].lexeme, context->tokens[context->index].pos.line, context->tokens[context->index].pos.col);
+        exit(1);
+    }
+    insertSymbol(context->stack, context->tokens[context->index].lexeme, context->stack->scope);
+    entry = lookupSymbol(context->stack, context->tokens[context->index].lexeme);
+
+    (context->index)++; // skip to assign node;
+    if (context->tokens[context->index].value == SEMI_COLAN)
+    {
+        entry->isDefined = 1;
+        return varDecNode;
+    }
+    if (context->tokens[context->index].value != ASSIGN)
+    {
+        printf("\nERROR: expected  `=`  at line %d and col %d\n", context->tokens[context->index -1].pos.line, context->tokens[context->index-1].pos.col);
+        exit(1);
+    }
+    ASTNode *assignNode = createASTNode(context->tokens[context->index]);
+    varDecNode->right = assignNode;
+    (context->index)++;
+
+    assignNode->right = parseAdditiveExpression(context);
+
+    if (context->tokens[context->index].value != SEMI_COLAN)
+    {
+        printf("\nERROR: expected  `;`  at line %d and col %d\n", context->tokens[context->index-1].pos.line, context->tokens[context->index-1].pos.col);
+        exit(1);
+    }
+    (context->index)++;
+    temp = context->index;
+    context->index = idp;
+    entry->isDefined = 1;
+    assignNode->left = parsePrimaryExpression(context);
+    context->index = temp;
+
+    return varDecNode;
 }

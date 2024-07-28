@@ -1,6 +1,8 @@
 
 #include "../../include/tokens/tokens.h"
+#include "../../include/tokens/tokens_val.h"
 #include <string.h>
+
 
 char *getTokenStringValue(int token)
 {
@@ -29,6 +31,8 @@ char *getTokenStringValue(int token)
         return "EQUALTO";
     case VAR:
         return "VAR";
+    case BLOCK_VAR:
+        return "BLOCK_VAR";
     case IF:
         return "IF";
     case ELSE:
@@ -65,15 +69,17 @@ char *getTokenStringValue(int token)
         return "CONSTANT";
     case UNKNOWN:
         return "UNKNOWN";
+    
 
     default:
         return "UNKNOWN";
     }
 }
 
- int getTokenIntCodeValue(char *token)
+int getTokenIntCodeValue(char *token)
 {
     // clang-format off
+
     if(strcmp(token,"var") == 0)        return INT_TOKEN_VAR; 
     if (strcmp(token, "if") == 0)       return INT_TOKEN_IF;
     if (strcmp(token, "else") == 0)     return INT_TOKEN_ELSE;
@@ -102,9 +108,5 @@ char *getTokenStringValue(int token)
     if(isIdentifierToken(token))        return INT_TOKEN_IDENTIFIER;   
     if(isConstantToken(token))          return INT_TOKEN_CONSTANT;
     return INT_TOKEN_UNKNOWN;
-
-    
-
-    return -1;
     // clang-format on
 }

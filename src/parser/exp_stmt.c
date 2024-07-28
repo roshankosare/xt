@@ -25,12 +25,8 @@ ASTNode *parseAssignmentExpression(Context *context)
 {
 
     // store index value to update variable defined flag to set to true
-    int count;
-    count = context->index;
-    int temp;
-
+    
     ASTNode *left = parsePrimaryExpression(context);
-
     if (context->tokens[context->index].value == ASSIGN)
     {
         Token assignToken = context->tokens[(context->index)++];
@@ -38,17 +34,12 @@ ASTNode *parseAssignmentExpression(Context *context)
         ASTNode *right = parseAdditiveExpression(context);
         ASTNode *assignNode = createASTNode(assignToken);
         // this block of code will run to set var x = exp; statement x->isDefined flag to true
-        temp = context->index;
-        context->index = count;
-        parsePrimaryExpression(context);
-        context->index = temp;
         assignNode->left = left;
         assignNode->right = right;
         return assignNode;
     }
 
     // this block of code will run to set var x; statement x->isDefined flag to true
-    parsePrimaryExpression(context);
 
     return left;
 }
@@ -85,53 +76,24 @@ ASTNode *parseMultiplicativeExpression(Context *context)
 
 ASTNode *parsePrimaryExpression(Context *context)
 {
-
-    if (context->tokens[context->index].value == VAR)
+    if (context->tokens[context->index].value == IDENTIFIER)
     {
-        (context->index)++;
         SymbolTableEntry *entry = lookupSymbol(context->stack, context->tokens[context->index].lexeme);
-        FunctionTableEntry *functionEntry = lookupFuntionSymbol(context->table, context->tokens[context->index].lexeme);
-        if (functionEntry != NULL)
+        if (entry == NULL)
         {
-            printf("\nERROR: multiple decleration of variable `%s`  at line %d and col %d\n", context->tokens[context->index].lexeme, context->tokens[context->index].pos.line, context->tokens[context->index].pos.col);
+            printf("\nERROR: undefined variable `%s` at line %d and col %d\n", context->tokens[context->index].lexeme, context->tokens[context->index].pos.line, context->tokens[context->index].pos.col);
             exit(1);
         }
-
-        if (entry == NULL)
-        { // create symbol entry in stack if there is no same symbol
-            insertSymbol(context->stack, context->tokens[context->index].lexeme, context->stack->scope);
-            Token token = context->tokens[(context->index)++];
-            return createASTNode(token);
-        }
-        else if (entry->scope != context->stack->scope)
+        else if (entry->scope == context->stack->scope && entry->isDefined == 0)
         {
-
-            insertSymbol(context->stack, context->tokens[context->index].lexeme, context->stack->scope);
-            Token token = context->tokens[(context->index)++];
-            return createASTNode(token);
-        }
-        else if (entry->isDefined == 0)
-        {
-            entry->isDefined = 1;
-            return NULL;
+            printf("\nERROR: undefined variable `%s` at line %d and col %d\n", context->tokens[context->index].lexeme, context->tokens[context->index].pos.line, context->tokens[context->index].pos.col);
+            exit(1);
         }
         else
         {
-            printf("\nERROR: multiple decleration of variable `%s`  at line %d and col %d\n", context->tokens[context->index].lexeme, context->tokens[context->index].pos.line, context->tokens[context->index].pos.col);
-            exit(1);
+            Token token = context->tokens[(context->index)++];
+            return createASTNode(token);
         }
-    }
-    SymbolTableEntry *entry = lookupSymbol(context->stack, context->tokens[context->index].lexeme);
-
-    if (context->tokens[context->index].value == IDENTIFIER && entry == NULL)
-    {
-        printf("\nERROR: undefined variable `%s` at line %d and col %d\n", context->tokens[context->index].lexeme, context->tokens[context->index].pos.line, context->tokens[context->index].pos.col);
-        exit(1);
-    }
-    else if (context->tokens[context->index].value == IDENTIFIER && entry->isDefined == 0)
-    {
-        printf("\nERROR: variable used before its defined `%s` at line %d and col %d\n", context->tokens[context->index].lexeme, context->tokens[context->index].pos.line, context->tokens[context->index].pos.col);
-        exit(1);
     }
 
     Token token = context->tokens[(context->index)++];

@@ -1,15 +1,13 @@
 var x = 12 ;
-var y = 12 ;
+var y = x +12 ;
 
-print(x,y){
-    var z = x +y;
-}
- 
  while(x > 10){
  if(x < 10){
            x = 10;
            return;
-           print(x,y);
+           if(y = 5+ 10){
+            var t = y +10;
+           }
        }
  }
 
