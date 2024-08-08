@@ -1,13 +1,5 @@
-var x = 12 ;
-var y = x +12 ;
+ var x = (12);
+ var y = ((x +12)*((12 +x)/40));
+ 
 
- while(x > 10){
- if(x < 10){
-           x = 10;
-           return;
-           if(y = 5+ 10){
-            var t = y +10;
-           }
-       }
- }
 

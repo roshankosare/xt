@@ -31,6 +31,8 @@
 #define INT_TOKEN_UNKNOWN               26  
 #define INT_TOKEN_VAR                   27
 #define INT_TOKEN_BLOCK_VAR             28
+#define INT_TOKEN_INC                   29
+#define INT_TOKEN_DEC                   30
 #define INVALID_TOKEN                   -1
 
 
@@ -47,6 +49,8 @@ typedef enum
     MINUS,
     ASSIGN,
     EQUALTO,
+    INC,
+    DEC,
     VAR,
     BLOCK_VAR,
     IF,

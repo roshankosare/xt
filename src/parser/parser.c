@@ -1,19 +1,17 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "../../include/parser/fun.h"
-#include "../../include/parser/stmt.h"
+
 #include "../../include/parser/ast.h"
 #include "../../include/symboltable/functiontable.h"
 #include "../../include/symboltable/symboltable.h"
 #include "../../include/context/context.h"
-
-ASTNode *parseProgram(Token *tokens, int *index, int token_count);
-void printAST(ASTNode *node, int depth);
+#include "../../include/parser/program.h"
+#include "../../include/parser/helper.h"
 
 ASTNode *parseProgram(Token *tokens, int *index, int token_count)
 {
-    Token program = {.lexeme = "Program", .value = UNKNOWN};
-    ASTNode *programNode = createASTNode(program);
+    Token token = {.lexeme = "Program", .value = UNKNOWN};
+    ASTNode *programNode = createASTNode(token);
     ASTNode *current = programNode;
     int count = 0;
 
@@ -21,24 +19,11 @@ ASTNode *parseProgram(Token *tokens, int *index, int token_count)
 
     initSymbolTableStack(context->stack);
     pushSymbolTable(context->stack);
-
-    while (context->tokens[context->index].value != TEOF)
+    int i = 0;
+    while (context->current.value != TEOF)  
     {
 
-        if (context->tokens[context->index].value == IDENTIFIER && context->tokens[context->index + 1].value == OPEN_PAREN)
-        {
-            ASTNode *stmt = parseFunctionDefinitionOrCall(context);
-            if (programNode == current)
-            {
-                current->right = stmt;
-                current = stmt;
-            }
-
-            current->next = stmt;
-            current = stmt;
-            continue;
-        }
-        ASTNode *stmt = parseStatement(context);
+        ASTNode *stmt = program(context);
         if (programNode == current)
         {
             current->right = stmt;

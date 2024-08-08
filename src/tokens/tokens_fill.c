@@ -97,6 +97,12 @@ void fillOperatorTokenValue(Token *token)
     case INT_TOKEN_GRATER_THAN_EQTO:
         token->value = GRATER_THAN_EQTO;
         break;
+    case INT_TOKEN_INC:
+        token->value = INC;
+        break;
+    case INT_TOKEN_DEC:
+        token->value = DEC;
+        break;
 
     default:
         break;

@@ -1,4 +1,3 @@
-
 #ifndef PARSER_H
 #define PARSER_H
 
@@ -6,12 +5,8 @@
 #include "../context/context.h"
 #include "../tokens/tokens.h"
 
-
-ASTNode *parseProgram(Token *tokens, int *index, int token_count);
-void printAST(ASTNode *node, int depth);
-
-
-
-
+ASTNode *program(Context *context);
+ASTNode *stmt(Context *context);
+ASTNode *fun(Context *context);
 
 #endif
