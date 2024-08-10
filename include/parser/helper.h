@@ -6,5 +6,6 @@
 int expect(Context *context, TokenValue t);
 void consume(Context *context);
 int match(Context *context,TokenValue t);
+int isConditionalOperator(TokenValue t);
 
 #endif

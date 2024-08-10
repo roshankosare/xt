@@ -106,12 +106,17 @@ int isConditionalOperatorToken(char *token)
 int isKeywordToken(char *token)
 {
     // clang-format off
+    if(strcmp("function",token) == 0)    return 1;
     if(strcmp("var",token) == 0)         return 1;
     if(strcmp("if",token) == 0)          return 1;
     if(strcmp("else",token) == 0)        return 1;
     if(strcmp("while",token) == 0)       return 1;
     if(strcmp("return",token) == 0)      return 1;
     if(strcmp("for",token) == 0)         return 1;
+    if(strcmp("and",token)== 0)          return 1;
+    if(strcmp("or",token)== 0)           return 1;
+    if(strcmp("not",token)==0 )          return 1;
+    
 
     return 0;
     // clang-format on

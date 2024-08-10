@@ -9,27 +9,12 @@
 ASTNode *program(Context *context)
 {
 
-    if (context->current.value == IDENTIFIER)
+    if (context->current.value == FUNCTION)
     {
-
-        if (context->lookahed.value == OPEN_PAREN)
-        {
-            Token token = {.lexeme = "Funtion", .value = UNKNOWN};
-            ASTNode *funNode = createASTNode(token);
-            funNode->right = fun(context);
-            return funNode;
-        }
-        else if (context->lookahed.value == ASSIGN)
-        {
-            Token token = {.lexeme = "Exp_Stmt", .value = UNKNOWN};
-            ASTNode *expstmtNode = createASTNode(token);
-            expstmtNode->right = stmt(context);
-            return expstmtNode;
-        }
-        else
-        {
-            return NULL;
-        }
+        Token token = {.lexeme = "Function", .value = UNKNOWN};
+        ASTNode *expstmtNode = createASTNode(token);
+        expstmtNode->right = fun(context);
+        return expstmtNode;
     }
 
     Token token = {.lexeme = "Statement", .value = UNKNOWN};
@@ -73,4 +58,5 @@ ASTNode *fun(Context *context)
 {
     ASTNode *node;
     node = parse_fun(context);
+    return node;
 }

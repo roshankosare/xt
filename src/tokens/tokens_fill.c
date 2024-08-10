@@ -5,6 +5,9 @@ void fillKeywordTokenValue(Token *token)
 {
     switch (getTokenIntCodeValue(token->lexeme))
     {
+    case INT_TOKEN_FUNCTION:
+        token->value = FUNCTION;
+        break;
     case INT_TOKEN_VAR:
         token->value = VAR;
         break;
@@ -19,6 +22,15 @@ void fillKeywordTokenValue(Token *token)
         break;
     case INT_TOKEN_WHILE:
         token->value = WHILE;
+        break;
+    case INT_TOKEN_LOGICAL_AND:
+        token->value = LOGICAL_AND;
+        break;
+    case INT_TOKEN_LOGICAL_OR:
+        token->value = LOGICAL_OR;
+        break;
+    case INT_TOKEN_LOGICAL_NOT:
+        token->value = LOGICAL_NOT;
         break;
 
     default:

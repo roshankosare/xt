@@ -33,6 +33,10 @@
 #define INT_TOKEN_BLOCK_VAR             28
 #define INT_TOKEN_INC                   29
 #define INT_TOKEN_DEC                   30
+#define INT_TOKEN_FUNCTION              31
+#define INT_TOKEN_LOGICAL_AND       32
+#define INT_TOKEN_LOGICAL_OR        33
+#define INT_TOKEN_LOGICAL_NOT       34
 #define INVALID_TOKEN                   -1
 
 
@@ -70,7 +74,14 @@ typedef enum
     KEYWORD,
     IDENTIFIER,
     CONSTANT,
+    FUNCTION,
     UNKNOWN,
+    CONDITIONAL_TOKEN,
+    LOGICAL_AND,
+    LOGICAL_OR,
+    LOGICAL_NOT,
+    BODYSTART,
+    BODYEND,
     TEOF
     
 } TokenValue;

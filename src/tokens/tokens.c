@@ -3,7 +3,6 @@
 #include "../../include/tokens/tokens_val.h"
 #include <string.h>
 
-
 char *getTokenStringValue(int token)
 {
 
@@ -33,6 +32,8 @@ char *getTokenStringValue(int token)
         return "VAR";
     case BLOCK_VAR:
         return "BLOCK_VAR";
+    case FUNCTION:
+        return "FUNCTION";
     case IF:
         return "IF";
     case ELSE:
@@ -69,7 +70,12 @@ char *getTokenStringValue(int token)
         return "CONSTANT";
     case UNKNOWN:
         return "UNKNOWN";
-    
+    case LOGICAL_AND:
+        return "LOGICAL_AND";
+    case LOGICAL_OR:
+        return "LOGICAL_OR";
+    case LOGICAL_NOT:
+        return "LOGICAL_NOT";
 
     default:
         return "UNKNOWN";
@@ -80,11 +86,16 @@ int getTokenIntCodeValue(char *token)
 {
     // clang-format off
 
+    if(strcmp(token,"function") == 0)   return INT_TOKEN_FUNCTION;
     if(strcmp(token,"var") == 0)        return INT_TOKEN_VAR; 
     if (strcmp(token, "if") == 0)       return INT_TOKEN_IF;
     if (strcmp(token, "else") == 0)     return INT_TOKEN_ELSE;
     if (strcmp(token, "return") == 0)   return INT_TOKEN_RETURN;
     if (strcmp(token, "while") == 0)    return INT_TOKEN_WHILE;
+    if(strcmp("and",token)== 0)         return INT_TOKEN_LOGICAL_AND;
+    if(strcmp("or",token)== 0)          return INT_TOKEN_LOGICAL_OR;
+    if(strcmp("not",token)==0 )         return INT_TOKEN_LOGICAL_NOT;
+    
     if (strcmp(token, "+") == 0)        return INT_TOKEN_PLUS;
     if (strcmp(token, "-") == 0)        return INT_TOKEN_MINUS;
     if (strcmp(token, "*") == 0)        return INT_TOKEN_MUL;
