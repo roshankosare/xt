@@ -5,7 +5,8 @@
 
 int expect(Context *context, TokenValue t);
 void consume(Context *context);
-int match(Context *context,TokenValue t);
+int match(Context *context, TokenValue t);
 int isConditionalOperator(TokenValue t);
+int isAdditiveOprand(TokenValue t);
 
 #endif

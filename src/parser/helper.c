@@ -29,6 +29,14 @@ void consume(Context *context)
 
 int match(Context *context, TokenValue t)
 {
+    if (t == ADDITIVE_OP)
+    {
+        if (isAdditiveOprand(context->current.value))
+        {
+            return 1;
+        }
+        return 0;
+    }
 
     if (t == CONDITIONAL_TOKEN)
     {
@@ -62,6 +70,38 @@ int isConditionalOperator(TokenValue t)
         return 1;
         break;
     case EQUALTO:
+        return 1;
+        break;
+
+    default:
+        return 0;
+        break;
+    }
+}
+
+int isAdditiveOprand(TokenValue t)
+{
+    switch (t)
+    {
+    case PLUS:
+        return 1;
+        break;
+    case MINUS:
+        return 1;
+        break;
+    case MUL:
+        return 1;
+        break;
+    case DIV:
+        return 1;
+        break;
+    case LOGICAL_AND:
+        return 1;
+        break;
+    case LOGICAL_OR:
+        return 1;
+        break;
+    case LOGICAL_NOT:
         return 1;
         break;
 

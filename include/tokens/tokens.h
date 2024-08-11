@@ -82,6 +82,7 @@ typedef enum
     LOGICAL_NOT,
     BODYSTART,
     BODYEND,
+    ADDITIVE_OP,
     TEOF
     
 } TokenValue;

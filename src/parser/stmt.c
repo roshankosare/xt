@@ -26,6 +26,13 @@ ASTNode *exp(Context *context)
     ASTNode *node;
 
     /// EXP := EXP_STMT | "var" EXP_STMT";"
+    if (match(context, VAR))
+    {
+        node = dec_stmt(context);
+        expect(context, SEMI_COLAN);
+        consume(context);
+        return node;
+    }
 
     node = exp_stmt(context);
     expect(context, SEMI_COLAN);
@@ -35,24 +42,37 @@ ASTNode *exp(Context *context)
 
 ASTNode *dec_stmt(Context *context)
 {
-    ASTNode *varnode = createASTNode(context->current);
-    consume(context);
-    varnode->right = exp_stmt(context);
 
+    ASTNode *varnode = createASTNode(context->current);
+    consume(context); // consume "var"
+    expect(context, IDENTIFIER);
+    ASTNode *idNode = createASTNode(context->current); // consume "id"
+    consume(context);
+    varnode->right = idNode;
+    if (match(context, SEMI_COLAN))
+    {
+        return varnode;
+    }
+    expect(context, ASSIGN);
+    ASTNode *assignNode = createASTNode(context->current);
+    consume(context); // consume "="
+    assignNode->left = idNode;
+    assignNode->right = parse_additive(context);
+    varnode->right = assignNode;
     return varnode;
 }
 
 ASTNode *exp_stmt(Context *context)
 {
     ASTNode *node;
-    if (match(context, VAR))
+    if (match(context, OPEN_PAREN))
     {
-        node = dec_stmt(context);
+        node = parse_additive(context);
         return node;
     }
-
     if (match(context, IDENTIFIER))
     {
+ 
         // EXP_STMT := "IDENTIFIER_TOKEN" UNI_EXP  case
         // create left side of ASTNode as Identifier
         ASTNode *node = createASTNode(context->current);
@@ -68,13 +88,7 @@ ASTNode *exp_stmt(Context *context)
             return node;
         }
         // EXP_STMT := "IDENTIFIER_TOKEN" ASSIGN_EXP case
-        if (match(context, ASSIGN))
-        {
-            ASTNode *assign = parse_assign(context);
-            assign->left = node;
-            node = assign;
-            return node;
-        }
+
         if (match(context, OPEN_PAREN))
         {
             node->right = parse_fun_call(context);
@@ -105,7 +119,7 @@ ASTNode *parse_additive(Context *context)
         node = parse_additive(context);
         expect(context, CLOSE_PAREN);
         consume(context);
-        if (match(context, PLUS) || match(context, MINUS) || match(context, DIV) || match(context, MUL))
+        if (match(context, ADDITIVE_OP) || match(context,CONDITIONAL_TOKEN))
         {
 
             ASTNode *op = createASTNode(context->current);
@@ -119,28 +133,32 @@ ASTNode *parse_additive(Context *context)
         return node;
     }
 
-    // ASSIGN_EXP := "="  ADDITIVE_EXP | CONDITIONAL_EXP
-    if (isConditionalOperator(context->lookahed.value))
-    {
-        node = parse_conditional_exp(context);
-        if (match(context, PLUS) || match(context, MINUS) || match(context, DIV) || match(context, MUL))
-        {
-
-            ASTNode *op = createASTNode(context->current);
-            consume(context);
-            ASTNode *right = parse_additive(context);
-            op->left = node;
-            op->right = right;
-            node = op;
-        }
-        return node;
-    }
+    
 
     // ADDITIVE_EXP := MULTI_EXP  + | - MULTI_EXP
     node = parse_multi(context);
+    if (match(context, ASSIGN))
+    {
+
+        ASTNode *assign = parse_assign(context);
+        assign->left = node;
+        node = assign;
+        return node;
+    }
+
+    if (match(context, ADDITIVE_OP) || match(context, CONDITIONAL_TOKEN))
+    {
+        ASTNode *op = createASTNode(context->current);
+        consume(context);
+        ASTNode *right = parse_additive(context);
+        op->left = node;
+        op->right = right;
+        node = op;
+    }
 
     while (context->current.value == PLUS || context->current.value == MINUS)
     {
+
         Token opToken = context->current;
         consume(context);
         ASTNode *right = parse_multi(context);
@@ -259,7 +277,7 @@ ASTNode *parse_conditional_exp(Context *context)
             return right;
         }
         return node;
-    }
+    };
     ASTNode *first = parse_primary(context);
     expect(context, CONDITIONAL_TOKEN);
     ASTNode *op = createASTNode(context->current);

@@ -20,9 +20,9 @@ ASTNode *parseProgram(Token *tokens, int *index, int token_count)
     initSymbolTableStack(context->stack);
     pushSymbolTable(context->stack);
     int i = 0;
-    while (context->current.value != TEOF)  
+    while (context->current.value != TEOF && i < 1000)
     {
-
+        i++;
         ASTNode *stmt = program(context);
         if (programNode == current)
         {

@@ -27,27 +27,27 @@ ASTNode *program(Context *context)
 ASTNode *stmt(Context *context)
 {
     ASTNode *node;
-    if (context->current.value == IF)
+    if (match(context, IF))
     {
         node = selc_stmt(context);
         return node;
     }
-    if (context->current.value == WHILE)
+    if (match(context, WHILE))
     {
         node = iter_stmt(context);
         return node;
     }
-    if (context->current.value == RETURN)
+    if (match(context, RETURN))
     {
         node = jump_stmt(context);
         return node;
     }
-    if (context->current.value == VAR)
+    if (match(context, VAR))
     {
         node = exp(context);
         return node;
     }
-    if (context->current.value == IDENTIFIER)
+    if (match(context, IDENTIFIER) || match(context, OPEN_PAREN))
     {
         node = exp(context);
         return node;
