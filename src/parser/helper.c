@@ -26,12 +26,18 @@ void consume(Context *context)
     context->lookahed = context->tokens[context->index + 1];
     return;
 }
+void unconsume(Context *context){
+    (context->index)--;
+    context->current = context->tokens[context->index];
+    context->lookahed = context->tokens[context->index + 1];
+    return;
+}
 
 int match(Context *context, TokenValue t)
 {
-    if (t == ADDITIVE_OP)
+    if (t == EXP_TOKEN)
     {
-        if (isAdditiveOprand(context->current.value))
+        if (isExpToken(context->current.value))
         {
             return 1;
         }
@@ -79,34 +85,26 @@ int isConditionalOperator(TokenValue t)
     }
 }
 
-int isAdditiveOprand(TokenValue t)
+int isExpToken(TokenValue t)
 {
     switch (t)
     {
     case PLUS:
         return 1;
-        break;
     case MINUS:
         return 1;
-        break;
     case MUL:
         return 1;
-        break;
     case DIV:
         return 1;
-        break;
     case LOGICAL_AND:
         return 1;
-        break;
     case LOGICAL_OR:
         return 1;
-        break;
-    case LOGICAL_NOT:
+    case EQUALTO:
         return 1;
-        break;
 
     default:
         return 0;
-        break;
     }
 }

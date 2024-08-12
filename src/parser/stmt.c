@@ -2,18 +2,24 @@
 #include "../../include/parser/helper.h"
 #include "../../include/parser/ast.h"
 
-// EXP := EXP_STMT | "var" EXP_STMT";"
-// EXP_STMT := "IDENTIFIER" UNI_EXP | ASSIGN_EXP | FUNTION_CALL |
-// EXP_STMT := "(" EXP_STMT ")"
-// UNI_EXP := "++" | "--"
-// ASSIGN_EXP := "="  ADDITIVE_EXP | CONDITIONAL_EXP
-// ADDITIVE_EXP := MULTI_EXP  + | - MULTI_EXP
-// ADDITIVE_EXP := "(" ADDITIVE_EXP ")" +|-|*|/ ADDITIVE_EXP
-// MULTI_EXP := PRIMARY_EXP  | PRIMARY_EXP * | / MULTI_EXP
-// MULTI_EXP := "(" ADDITIVE_EXP ")"
-// PRIMARY_EXP := "CONSTANT" | "IDENTIFIER"
-// FUNTION_CALL :=  "(" PARAM_LIST ")"
+// STMT := { EXP_STMT | DEC_STMT | SELC_STMT | ITER_STMT   ";" }
+// DEC_STMT := { "var" "IDENTFIER" ";"} | { "var" "IDENTFIER" "=" EXP_STMT }
+// EXP_STMT := { "(" EXP_STMT ")" }
+// EXP_STMT := { UNI_STMT | ASSIGN_STMT | FUNTION_CALL_STMT | ADDITIVE_EXP | CONDITIONAL_EXP }
+// EXP_STMT := { EXP_STMT  "EXP_TOKEN" EXP_STMT }
+// EXP_TOKEN := { "+" | "-" | "*" | "/" | ">" | "<" | "==" | "and" | "or" }
+// UNI_STMT := {"++" | "--" "IDENTIFIER"}  | {"++" | "--" "IDENTIFIER" } | {"not" EXP_STMT }
+// FUNCTION_CALL_STMT := { "IDENTIFER" "(" FUNTION_CALL _PARMA_LIST ")" }
+// FUNTION_CALL _PARMA_LIST := { { "IDENTIFIER" "," FUNTION_CALL _PARMA_LIST | "IDENTIFER" ε }}
+// ASSIGN_STMT := { "IDENTIFIER" "=" EXP_STMT }
+// CONDITIONAL_EXP := PRIMARY_EXP "<" | ">" | "==" | "<=" | ">=" PRIMARY_EXP
+// ADDITIVE_EXP := { MULTI_EXP "+" | "-" MULTI_EXP  } | {MULTI_EXP}
+// MULTI_EXP := { PRIMARY_EXP "*" | "/" MULTI_EXP } | { PRIMARY_EXP }
+// PRIMARY_EXP := { "IDENTIFER" | "CONSTANT" }
+
+ASTNode *dec_stmt(Context *context);
 ASTNode *parse_assign(Context *context);
+ASTNode *parse_uni_stmt(Context *context);
 ASTNode *parse_additive(Context *context);
 ASTNode *parse_multi(Context *context);
 ASTNode *parse_primary(Context *context);
@@ -21,11 +27,12 @@ ASTNode *parse_fun_call(Context *context);
 ASTNode *parse_fun_call_args(Context *context);
 ASTNode *parse_conditional_exp(Context *context);
 
+// STMT := { EXP_STMT | DEC_STMT  ";" }
 ASTNode *exp(Context *context)
 {
+    int x;
     ASTNode *node;
-
-    /// EXP := EXP_STMT | "var" EXP_STMT";"
+    /// EXP :=  "var" EXP_STMT";"
     if (match(context, VAR))
     {
         node = dec_stmt(context);
@@ -40,9 +47,11 @@ ASTNode *exp(Context *context)
     return node;
 }
 
+// DEC_STMT := { "var" "IDENTFIER" ";"} | { "var" "IDENTFIER" "=" EXP_STMT }
 ASTNode *dec_stmt(Context *context)
 {
 
+    // DEC_STMT := { "var" "IDENTFIER" ";"}
     ASTNode *varnode = createASTNode(context->current);
     consume(context); // consume "var"
     expect(context, IDENTIFIER);
@@ -53,11 +62,12 @@ ASTNode *dec_stmt(Context *context)
     {
         return varnode;
     }
+    // DEC_STMT := { "var" "IDENTFIER" "=" EXP_STMT }
     expect(context, ASSIGN);
     ASTNode *assignNode = createASTNode(context->current);
     consume(context); // consume "="
     assignNode->left = idNode;
-    assignNode->right = parse_additive(context);
+    assignNode->right = exp_stmt(context);
     varnode->right = assignNode;
     return varnode;
 }
@@ -65,153 +75,130 @@ ASTNode *dec_stmt(Context *context)
 ASTNode *exp_stmt(Context *context)
 {
     ASTNode *node;
+    // EXP_STMT := { "(" EXP_STMT ")" }
     if (match(context, OPEN_PAREN))
     {
-        node = parse_additive(context);
-        return node;
-    }
-    if (match(context, IDENTIFIER))
-    {
- 
-        // EXP_STMT := "IDENTIFIER_TOKEN" UNI_EXP  case
-        // create left side of ASTNode as Identifier
-        ASTNode *node = createASTNode(context->current);
         consume(context);
-
-        // UNI_EXP := "++" | "--"
-        // following lines of code will implement above rule
-        if (match(context, INC) || match(context, DEC))
-        {
-            ASTNode *op = createASTNode(context->current);
-            consume(context);
-            node->right = op;
-            return node;
-        }
-        // EXP_STMT := "IDENTIFIER_TOKEN" ASSIGN_EXP case
-
-        if (match(context, OPEN_PAREN))
-        {
-            node->right = parse_fun_call(context);
-            return node;
-        }
-    }
-    consume(context);
-    return NULL;
-}
-ASTNode *parse_assign(Context *context)
-{
-
-    ASTNode *node = createASTNode(context->current);
-    consume(context);
-    node->right = parse_additive(context);
-    return node;
-}
-
-ASTNode *parse_additive(Context *context)
-{
-
-    // ADDITIVE_EXP := "(" ADDITIVE_EXP ")" +|-|*|/ ADDITIVE_EXP
-    ASTNode *node;
-    if (match(context, OPEN_PAREN))
-    {
-        // consume "(" token
-        consume(context);
-        node = parse_additive(context);
+        node = exp_stmt(context);
         expect(context, CLOSE_PAREN);
         consume(context);
-        if (match(context, ADDITIVE_OP) || match(context,CONDITIONAL_TOKEN))
+        // EXP_STMT := { EXP_STMT  "EXP_TOKEN" EXP_STMT }
+        // EXP_TOKEN := { "+" | "-" | "*" | "/" | ">" | "<" | "==" | "and" | "or" }
+        if (match(context, EXP_TOKEN))
         {
-
             ASTNode *op = createASTNode(context->current);
-            consume(context);
-            ASTNode *right = parse_additive(context);
+            consume(context); // consume  exp_token
             op->left = node;
-            op->right = right;
+            op->right = exp_stmt(context);
             node = op;
+            return node;
         }
-
         return node;
     }
 
-    
-
-    // ADDITIVE_EXP := MULTI_EXP  + | - MULTI_EXP
-    node = parse_multi(context);
-    if (match(context, ASSIGN))
+    node = parse_assign(context);
+    if (node != NULL)
     {
-
-        ASTNode *assign = parse_assign(context);
-        assign->left = node;
-        node = assign;
+        if (match(context, EXP_TOKEN))
+        {
+            ASTNode *op = createASTNode(context->current);
+            consume(context); // consume  exp_token
+            op->left = node;
+            op->right = exp_stmt(context);
+            node = op;
+            return node;
+        }
         return node;
     }
 
-    if (match(context, ADDITIVE_OP) || match(context, CONDITIONAL_TOKEN))
+    node = parse_uni_stmt(context);
+    if (node != NULL)
+    {
+        if (match(context, EXP_TOKEN))
+        {
+            ASTNode *op = createASTNode(context->current);
+            consume(context); // consume  exp_token
+            op->left = node;
+            op->right = exp_stmt(context);
+            node = op;
+            return node;
+        }
+        return node;
+    }
+
+    node = parse_conditional_exp(context);
+    if (node != NULL)
+    {
+        if (match(context, EXP_TOKEN))
+        {
+            ASTNode *op = createASTNode(context->current);
+            consume(context); // consume  exp_token
+            op->left = node;
+            op->right = exp_stmt(context);
+            node = op;
+            return node;
+        }
+        return node;
+    }
+
+    node = parse_additive(context);
+    if (node != NULL)
+    {
+        if (match(context, EXP_TOKEN))
+        {
+            ASTNode *op = createASTNode(context->current);
+            consume(context); // consume  exp_token
+            op->left = node;
+            op->right = exp_stmt(context);
+            node = op;
+            return node;
+        }
+        return node;
+    }
+}
+
+// UNI_STMT := {"++" | "--" "IDENTIFIER"}  | {"IDENTIFIER" "++" | "--"  } | {"not" EXP_STMT }
+ASTNode *parse_uni_stmt(Context *context)
+{
+
+    // UNI_STMT := {"++" | "--" "IDENTIFIER"}
+    if (match(context, INC) || match(context, DEC))
     {
         ASTNode *op = createASTNode(context->current);
-        consume(context);
-        ASTNode *right = parse_additive(context);
-        op->left = node;
-        op->right = right;
-        node = op;
+        consume(context); // consume op
+        expect(context, IDENTIFIER);
+        // TODO:= here identifer should not funtion name
+        op->right = createASTNode(context->current);
+        return op;
     }
-
-    while (context->current.value == PLUS || context->current.value == MINUS)
+    int x;
+    // UNI_STMT :=  {"IDENTIFIER" "++" | "--"  }
+    if (match(context, IDENTIFIER))
     {
-
-        Token opToken = context->current;
+        ASTNode *node = createASTNode(context->current);
         consume(context);
-        ASTNode *right = parse_multi(context);
-        ASTNode *opNode = createASTNode(opToken);
-        opNode->left = node;
-        opNode->right = right;
-        node = opNode;
+        if (match(context, INC) || match(context, DEC))
+        {
+            node->right = createASTNode(context->current);
+            return node;
+        }
+        free(node);
+        unconsume(context);
+        return NULL;
     }
-    return node;
-}
-ASTNode *parse_multi(Context *context)
-{
-    // MULTI_EXP := "(" ADDITIVE_EXP ")"
-    ASTNode *node;
-    if (match(context, OPEN_PAREN))
+    // UNI_STMT := {"not" EXP_STMT }
+    if (match(context, LOGICAL_NOT))
     {
-        node = parse_additive(context);
+        ASTNode *node = createASTNode(context->current);
+        consume(context);
+        node->right = exp_stmt(context);
         return node;
     }
 
-    // MULTI_EXP := PRIMARY_EXP  | PRIMARY_EXP * | / MULTI_EXP
-    ASTNode *left = parse_primary(context);
-    if (match(context, MUL) || match(context, DIV))
-    {
-        Token opToken = context->current;
-        consume(context);
-        ASTNode *right = parse_multi(context);
-        ASTNode *opNode = createASTNode(opToken);
-        opNode->left = left;
-        opNode->right = right;
-        left = opNode;
-    }
-
-    return left;
-}
-ASTNode *parse_primary(Context *context)
-{
-
-    if (match(context, IDENTIFIER) || match(context, CONSTANT))
-    {
-        ASTNode *node;
-
-        // PRIMARY_EXP := "CONSTANT" | "IDENTIFIER"
-
-        node = createASTNode(context->current);
-        consume(context);
-        return node;
-    }
-    expect(context, IDENTIFIER);
     return NULL;
 }
 
-// FUNTION_CALL :=  "(" PARAM_LIST ")"
+// FUNCTION_CALL_STMT := { "IDENTIFER" "(" FUNTION_CALL _PARMA_LIST ")" }
 ASTNode *parse_fun_call(Context *context)
 {
     expect(context, OPEN_PAREN);
@@ -223,8 +210,7 @@ ASTNode *parse_fun_call(Context *context)
     return args;
 }
 
-// PARAM_LIST :=  "IDENTIFIER"|"CONSTANT" ","| ε  PARAMLIST
-// PARAM_LIST := ε
+// FUNTION_CALL _PARMA_LIST := { { "IDENTIFIER" | "CONSTANT" "," FUNTION_CALL _PARMA_LIST | "IDENTIFER"|"CONSTANT" ε }}
 
 ASTNode *parse_fun_call_args(Context *context)
 {
@@ -255,44 +241,97 @@ ASTNode *parse_fun_call_args(Context *context)
     return NULL;
 }
 
-// CONDITIONAL_STMT := "(" CONDITIONAL_EXP ")" "and" | "or" | "not" CONDITIONAL_EXP
-// CONDITIONAL_STMT :=  PRIMARY_EXP  | PPRIMARY_EXP OPERATOR_TOKEN "IDEN" PRIMARY_EXP
+// ASSIGN_STMT := { "IDENTIFIER" "=" EXP_STMT }
+ASTNode *parse_assign(Context *context)
+{
+    if (match(context, IDENTIFIER))
+    {
+        ASTNode *identifierNode = createASTNode(context->current);
+        consume(context);
+        if (match(context, ASSIGN))
+        {
+            ASTNode *assignNode = createASTNode(context->current);
+            consume(context);
+            assignNode->right = exp_stmt(context);
+            assignNode->left = identifierNode;
+            return assignNode;
+        }
+        unconsume(context);
+        free(identifierNode);
+        return NULL;
+    }
+    return NULL;
+}
+
+// CONDITIONAL_EXP := PRIMARY_EXP "<" | ">" | "==" | "<=" | ">=" PRIMARY_EXP
 ASTNode *parse_conditional_exp(Context *context)
 {
-    ASTNode *node;
-    // CONDITIONAL_STMT := "(" CONDITIONAL_EXP ")"
-    if (match(context, OPEN_PAREN))
+    ASTNode *primaryLeft = parse_primary(context);
+    if (match(context, CONDITIONAL_TOKEN))
     {
-        // consume "("
+        ASTNode *op = createASTNode(context->current);
         consume(context);
-        node = parse_conditional_exp(context);
-        expect(context, CLOSE_PAREN);
-        consume(context);
-        if (match(context, LOGICAL_AND) || match(context, LOGICAL_OR) || match(context, LOGICAL_NOT))
-        {
-            ASTNode *right = createASTNode(context->current);
-            consume(context);
-            right->left = node;
-            right->right = parse_conditional_exp(context);
-            return right;
-        }
-        return node;
-    };
-    ASTNode *first = parse_primary(context);
-    expect(context, CONDITIONAL_TOKEN);
-    ASTNode *op = createASTNode(context->current);
-    consume(context);
-    ASTNode *second = parse_primary(context);
-    if (match(context, LOGICAL_AND) || match(context, LOGICAL_OR) || match(context, LOGICAL_NOT))
-    {
-        ASTNode *right = createASTNode(context->current);
-        consume(context);
-        right->left = op;
-        right->right = parse_conditional_exp(context);
-        return right;
+        op->left = primaryLeft;
+        op->right = parse_primary(context);
+        return op;
     }
-    node = op;
-    return op;
+    unconsume(context);
+    free(primaryLeft);
+    return NULL;
+}
+
+// ADDITIVE_EXP := { MULTI_EXP "+" | "-" MULTI_EXP  } | {MULTI_EXP}
+
+ASTNode *parse_additive(Context *context)
+{
+    ASTNode *node;
+    ASTNode *primaryLeft = parse_multi(context);
+    node = primaryLeft;
+    while (match(context, PLUS) || match(context, MINUS))
+    {
+        ASTNode *op = createASTNode(context->current);
+        consume(context);
+        op->left = primaryLeft;
+        op->right = parse_multi(context);
+        primaryLeft = op;
+        node = op;
+    }
+
+    return node;
+}
+
+// MULTI_EXP := { PRIMARY_EXP "*" | "/" MULTI_EXP } | { PRIMARY_EXP }
+
+ASTNode *parse_multi(Context *context)
+{
+    ASTNode *primaryLeft = parse_primary(context);
+    ASTNode *node = primaryLeft;
+    while (match(context, MUL) || match(context, DIV))
+    {
+        Token opToken = context->current;
+        consume(context);
+        ASTNode *right = parse_multi(context);
+        ASTNode *opNode = createASTNode(opToken);
+        opNode->left = primaryLeft;
+        opNode->right = right;
+        primaryLeft = opNode;
+        node = opNode;
+    }
+    return node;
+}
+
+// PRIMARY_EXP := { "IDENTIFER" | "CONSTANT" }
+ASTNode *parse_primary(Context *context)
+{
+    if (match(context, IDENTIFIER) || match(context, CONSTANT))
+    {
+        ASTNode *node;
+        node = createASTNode(context->current);
+        consume(context);
+        return node;
+    }
+    expect(context, IDENTIFIER);
+    return NULL;
 }
 
 // SELC_STMT :=  IF_STMT
@@ -305,7 +344,7 @@ ASTNode *selc_stmt(Context *context)
         consume(context);
         expect(context, OPEN_PAREN);
         consume(context);
-        ifNode->left = parse_additive(context);
+        ifNode->left = exp_stmt(context);
         expect(context, CLOSE_PAREN);
         consume(context);
         if (match(context, OPEN_CURLY_PAREN))
@@ -327,7 +366,7 @@ ASTNode *iter_stmt(Context *context)
         consume(context);
         expect(context, OPEN_PAREN);
         consume(context);
-        whileNode->left = parse_additive(context);
+        whileNode->left = exp_stmt(context);
         expect(context, CLOSE_PAREN);
         consume(context);
         if (match(context, OPEN_CURLY_PAREN))
@@ -347,7 +386,7 @@ ASTNode *jump_stmt(Context *context)
     {
         ASTNode *returnNode = createASTNode(context->current);
         consume(context);
-        returnNode->right = exp(context);
+        returnNode->right = exp_stmt(context);
         return returnNode;
     }
     return NULL;
