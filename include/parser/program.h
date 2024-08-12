@@ -6,7 +6,6 @@
 #include "../tokens/tokens.h"
 
 ASTNode *program(Context *context);
-ASTNode *stmt(Context *context);
 ASTNode *fun(Context *context);
 
 #endif

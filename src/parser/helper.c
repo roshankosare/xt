@@ -1,17 +1,15 @@
 #include "../../include/parser/helper.h"
 #include "../../include/tokens/tokens.h"
 
+void unexpected(Context *context)
+{
+
+    printf("\nERROR: unexpected token %s at line %d and col %d ", context->current.value, context->current.pos.line, context->current.pos.col);
+    exit(1);
+}
+
 int expect(Context *context, TokenValue t)
 {
-    if (t == CONDITIONAL_TOKEN)
-    {
-        if (isConditionalOperator(context->current.value))
-        {
-            return 1;
-        }
-        printf("\nERROR: expected conditional operator %s at line %d and col %d ", context->current.pos.line, context->current.pos.col);
-        exit(1);
-    }
     if (context->current.value == t)
     {
         return 1;
@@ -26,7 +24,8 @@ void consume(Context *context)
     context->lookahed = context->tokens[context->index + 1];
     return;
 }
-void unconsume(Context *context){
+void unconsume(Context *context)
+{
     (context->index)--;
     context->current = context->tokens[context->index];
     context->lookahed = context->tokens[context->index + 1];
@@ -102,6 +101,14 @@ int isExpToken(TokenValue t)
     case LOGICAL_OR:
         return 1;
     case EQUALTO:
+        return 1;
+    case LESS_THAN:
+        return 1;
+    case GRATER_THAN:
+        return 1;
+    case LESS_THAN_EQTO:
+        return 1;
+    case GRATER_THAN_EQTO:
         return 1;
 
     default:
