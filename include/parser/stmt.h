@@ -3,7 +3,6 @@
 #include "../parser/ast.h"
 #include "../context/context.h"
 
-
 ASTNode *stmt(Context *context);
 ASTNode *dec_stmt(Context *context);
 ASTNode *selc_stmt(Context *context);

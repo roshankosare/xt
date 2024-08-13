@@ -80,7 +80,7 @@ ASTNode *selc_stmt(Context *context)
             ifNode->right = parse_block(context);
             return ifNode;
         }
-        ifNode->right = exp(context);
+        ifNode->right = stmt(context);
         return ifNode;
     }
     return NULL;
@@ -102,7 +102,7 @@ ASTNode *iter_stmt(Context *context)
             whileNode->right = parse_block(context);
             return whileNode;
         }
-        whileNode->right = exp(context);
+        whileNode->right = stmt(context);
         return whileNode;
     }
     return NULL;
