@@ -86,7 +86,7 @@ SymbolTableEntry *lookupSymbol(SymbolTableStack *stack, Token t)
     while (current != NULL)
     {
         SymbolTableEntry *entry = lookupSymbolInSymbolTable(current, t);
-        if (entry)
+        if (entry != NULL)
         {
             return entry;
         }

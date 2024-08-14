@@ -165,43 +165,38 @@ int checkFuntionEntry(Context *context, Token t)
     exit(1);
 }
 
-void insertSymbolEntry(Context *context, Token t)
+SymbolTableEntry *insertSymbolEntry(Context *context, Token t)
 {
-    if (t.value != IDENTIFIER)
-    {
-        printf("\nERROR : funtion or symbol entry must be identifer\n");
-        exit(1);
-    }
     SymbolTableEntry *symbolEntry = lookupSymbol(context->symbolTableStack, t);
     FunctionTableEntry *functionEntry = lookupFuntionSymbol(context->functionTable, t);
-    if (symbolEntry == NULL && functionEntry == NULL)
+
+    if (functionEntry != NULL)
     {
-        insertSymbol(context->symbolTableStack, t);
-        return;
-    }
-    if (functionEntry)
-    {
-        printf("\nERROR : identifer is already used at line at line %d and col %d",
-               functionEntry->token.pos.line, functionEntry->token.pos.col);
+        printf("\nERROR : identifer `%s`is already used at line at line %d and col %d",
+               t.lexeme, functionEntry->token.pos.line, functionEntry->token.pos.col);
         exit(1);
     }
-    if (symbolEntry->scope == context->symbolTableStack->scope)
+    if (symbolEntry)
     {
-        printf("\nERROR : identifer is already used at line at line %d and col %d", symbolEntry->token.pos.line, symbolEntry->token.pos.col);
-        exit(1);
+        if (symbolEntry->scope == context->symbolTableStack->scope)
+        {
+            printf("\nERROR : identifer `%s`is already used at line at line %d and col %d", t.lexeme, symbolEntry->token.pos.line, symbolEntry->token.pos.col);
+            exit(1);
+        }
     }
 
-    return;
+    insertSymbol(context->symbolTableStack, t);
+    SymbolTableEntry *entry = lookupSymbol(context->symbolTableStack, t);
+    if (entry)
+    {
+        return entry;
+    }
+    return NULL;
 }
 
 SymbolTableEntry *checkSymbolEntry(Context *context, Token t)
 {
 
-    if (t.value != IDENTIFIER)
-    {
-        printf("\nERROR : funtion or symbol entry must be identifer\n");
-        exit(1);
-    }
     FunctionTableEntry *functionEntry = lookupFuntionSymbol(context->functionTable, t);
     if (functionEntry)
     {
@@ -212,9 +207,14 @@ SymbolTableEntry *checkSymbolEntry(Context *context, Token t)
     SymbolTableEntry *symbolEntry = lookupSymbol(context->symbolTableStack, t);
     if (symbolEntry)
     {
+        if (!symbolEntry->isDefined)
+        {
+            printf("\nERROR : undefined variable  `%s` at line at line %d and col %d", t.lexeme, t.pos.line, t.pos.col);
+            exit(1);
+        }
         return symbolEntry;
     }
-    printf("\nERROR : undefined variable  `%s` at line at line %d and col %d",t.lexeme, t.pos.line, t.pos.col);
+    printf("\nERROR : undefined variable  `%s` at line at line %d and col %d", t.lexeme, t.pos.line, t.pos.col);
     exit(1);
 }
 
