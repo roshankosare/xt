@@ -5,8 +5,8 @@ var z = x + y ;
 function print(x,y){
   var x =  10;
   while(x < 10){
-    (x + 10 +j);
+    (x + 10);
   }
 }
 
-
+print((x+10),(x *10));

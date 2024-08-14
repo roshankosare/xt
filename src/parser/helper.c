@@ -161,7 +161,7 @@ int checkFuntionEntry(Context *context, Token t)
     {
         return 1;
     }
-    printf("\nERROR : undefined function at line at line %d and col %d", t.pos.line, t.pos.col);
+    printf("\nERROR : undefined function `%s` at line at line %d and col %d", t.lexeme, t.pos.line, t.pos.col);
     exit(1);
 }
 

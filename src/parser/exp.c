@@ -183,17 +183,19 @@ ASTNode *parse_fun_call(Context *context)
 
     if (match(context, IDENTIFIER))
     {
-        ASTNode *funId = createASTNode(context->current);
+        Token funtion_name = context->current;
+        ASTNode *funId = createASTNode(funtion_name);
         consume(context);
         if (match(context, OPEN_PAREN))
         {
-            consume(context); //consume "("
+            checkFuntionEntry(context,funtion_name);
+            consume(context); // consume "("
             Token token = {.lexeme = "Args", .value = UNKNOWN};
             ASTNode *args = createASTNode(token);
             funId->left = args;
             args->right = parse_fun_call_args(context);
             expect(context, CLOSE_PAREN);
-            consume(context);  // consume ")"
+            consume(context); // consume ")"
             return funId;
         }
         free(funId);
