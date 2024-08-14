@@ -7,34 +7,36 @@
 FunctionTable *initFuntionTable()
 {
     FunctionTable *funtionTable = (SymbolTable *)malloc(sizeof(SymbolTable));
-    for (int i = 0; i < TABLE_SIZE; i++)
+    for (int i = 0; i < FUNTION_TABLE_SIZE; i++)
     {
         funtionTable->table[i] = NULL;
     }
 
     return funtionTable;
 }
-FunctionTableEntry *createFuntionEntry(char *name)
+FunctionTableEntry *createFuntionEntry(Token t)
 {
     FunctionTableEntry *newEntry = (FunctionTableEntry *)malloc(sizeof(FunctionTableEntry));
-    strcpy(newEntry->name, name);
+    newEntry->token = t;
+    newEntry->parameterTable = initSymbolTable();
     newEntry->next = NULL;
     return newEntry;
 }
-void insertFuntionSymbol(FunctionTable *funtionTable, char *name)
+void insertFuntionSymbol(FunctionTable *funtionTable, Token t)
 {
-    unsigned int index = hash(name);
-    SymbolTableEntry *newEntry = createFuntionEntry(name);
+    unsigned int index = hash(t.lexeme);
+    SymbolTableEntry *newEntry = createFuntionEntry(t);
     funtionTable->table[index] = newEntry;
 }
-SymbolTableEntry *lookupFuntionSymbol(FunctionTable *funtionTable, char *name)
+
+FunctionTableEntry *lookupFuntionSymbol(FunctionTable *funtionTable, Token t)
 {
-    unsigned int index = hash(name);
+    unsigned int index = hash(t.lexeme);
     FunctionTableEntry *entry = funtionTable->table[index];
 
     while (entry != NULL)
     {
-        if (strcmp(entry->name, name) == 0)
+        if (strcmp(entry->token.lexeme, t.lexeme) == 0)
         {
             return entry;
         }
@@ -42,3 +44,4 @@ SymbolTableEntry *lookupFuntionSymbol(FunctionTable *funtionTable, char *name)
     }
     return NULL;
 }
+

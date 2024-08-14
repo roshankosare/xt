@@ -4,7 +4,7 @@
 
 typedef struct FunctionTableEntry
 {
-    char name[100];
+    Token token;
     char returnType;
     SymbolTable *parameterTable;
     struct FunctionTableEntry *next;
@@ -20,8 +20,8 @@ typedef struct FunctionTable
 } FunctionTable;
 
 FunctionTable *initFuntionTable();
-FunctionTableEntry *createFuntionEntry(char *name);
-void insertFuntionSymbol(FunctionTable *funtionTable, char *name);
-SymbolTableEntry *lookupFuntionSymbol(FunctionTable *funtionTable, char *name);
+FunctionTableEntry *createFuntionEntry(Token t);
+void insertFuntionSymbol(FunctionTable *funtionTable, Token t);
+FunctionTableEntry *lookupFuntionSymbol(FunctionTable *funtionTable, Token t);
 
 #endif

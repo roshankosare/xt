@@ -45,11 +45,15 @@ ASTNode *dec_stmt(Context *context)
     ASTNode *varnode = createASTNode(context->current);
     consume(context); // consume "var"
     expect(context, IDENTIFIER);
-    ASTNode *idNode = createASTNode(context->current); // consume "id"
+    Token identifier_token = context->current;
+    insertSymbolEntry(context, identifier_token);      // insert symbol in symbol table
+    ASTNode *idNode = createASTNode(identifier_token); // consume "id"
     consume(context);
     varnode->right = idNode;
     if (match(context, SEMI_COLAN))
     {
+        SymbolTableEntry *entry = checkSymbolEntry(context, identifier_token);
+        entry->isDefined = 1;
         consume(context); // consume ";"
         return varnode;
     }
@@ -61,6 +65,8 @@ ASTNode *dec_stmt(Context *context)
     assignNode->right = exp(context);
     expect(context, SEMI_COLAN);
     consume(context);
+    SymbolTableEntry *entry = checkSymbolEntry(context, identifier_token);
+    entry->isDefined = 1;
     varnode->right = assignNode;
     return varnode;
 }
@@ -123,7 +129,7 @@ ASTNode *jump_stmt(Context *context)
 // BLOCK := "{" EXP  "}"
 ASTNode *parse_block(Context *context)
 {
-
+    pushSymbolTable(context->symbolTableStack);
     expect(context, OPEN_CURLY_PAREN);
     consume(context);
     Token body_start = {.lexeme = "Body_start", .value = BODYSTART};
@@ -139,5 +145,6 @@ ASTNode *parse_block(Context *context)
     ASTNode *body_end = createASTNode(body_end_token);
     body->next = body_end;
     consume(context);
+    popSymbolTable(context->symbolTableStack);
     return start;
 }

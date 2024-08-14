@@ -1,5 +1,8 @@
 #include "../../include/parser/helper.h"
 #include "../../include/tokens/tokens.h"
+#include "../../include/symboltable/symboltable.h"
+#include "../../include/symboltable/functiontable.h"
+#include "ast.h"
 
 void unexpected(Context *context)
 {
@@ -114,4 +117,123 @@ int isExpToken(TokenValue t)
     default:
         return 0;
     }
+}
+
+void insertFuntionEntry(Context *context, Token t)
+{
+    if (t.value != IDENTIFIER)
+    {
+        printf("\nERROR : funtion or symbol entry must be identifer\n");
+        exit(1);
+    }
+    SymbolTableEntry *symbolEntry = lookupSymbol(context->symbolTableStack, t);
+    FunctionTableEntry *functionEntry = lookupFuntionSymbol(context->functionTable, t);
+    if (symbolEntry == NULL && functionEntry == NULL)
+    {
+        insertFuntionSymbol(context->functionTable, t);
+        return;
+    }
+    if (symbolEntry)
+    {
+        printf("\nERROR : identifer is already used at line at line %d and col %d", symbolEntry->token.pos.line, symbolEntry->token.pos.col);
+        exit(1);
+    }
+
+    if (functionEntry)
+    {
+        printf("\nERROR : identifer is already used at line at line %d and col %d",
+               functionEntry->token.pos.line, functionEntry->token.pos.col);
+        exit(1);
+    }
+    return;
+}
+
+int checkFuntionEntry(Context *context, Token t)
+{
+
+    if (t.value != IDENTIFIER)
+    {
+        printf("\nERROR : funtion or symbol entry must be identifer\n");
+        exit(1);
+    }
+    FunctionTableEntry *functionEntry = lookupFuntionSymbol(context->functionTable, t);
+    if (functionEntry)
+    {
+        return 1;
+    }
+    printf("\nERROR : undefined function at line at line %d and col %d", t.pos.line, t.pos.col);
+    exit(1);
+}
+
+void insertSymbolEntry(Context *context, Token t)
+{
+    if (t.value != IDENTIFIER)
+    {
+        printf("\nERROR : funtion or symbol entry must be identifer\n");
+        exit(1);
+    }
+    SymbolTableEntry *symbolEntry = lookupSymbol(context->symbolTableStack, t);
+    FunctionTableEntry *functionEntry = lookupFuntionSymbol(context->functionTable, t);
+    if (symbolEntry == NULL && functionEntry == NULL)
+    {
+        insertSymbol(context->symbolTableStack, t);
+        return;
+    }
+    if (functionEntry)
+    {
+        printf("\nERROR : identifer is already used at line at line %d and col %d",
+               functionEntry->token.pos.line, functionEntry->token.pos.col);
+        exit(1);
+    }
+    if (symbolEntry->scope == context->symbolTableStack->scope)
+    {
+        printf("\nERROR : identifer is already used at line at line %d and col %d", symbolEntry->token.pos.line, symbolEntry->token.pos.col);
+        exit(1);
+    }
+
+    return;
+}
+
+SymbolTableEntry *checkSymbolEntry(Context *context, Token t)
+{
+
+    if (t.value != IDENTIFIER)
+    {
+        printf("\nERROR : funtion or symbol entry must be identifer\n");
+        exit(1);
+    }
+    FunctionTableEntry *functionEntry = lookupFuntionSymbol(context->functionTable, t);
+    if (functionEntry)
+    {
+        printf("\nERROR : invalid function call  at line at line %d and col %d", t.pos.line, t.pos.col);
+        exit(1);
+    }
+
+    SymbolTableEntry *symbolEntry = lookupSymbol(context->symbolTableStack, t);
+    if (symbolEntry)
+    {
+        return symbolEntry;
+    }
+    printf("\nERROR : undefined variable  `%s` at line at line %d and col %d",t.lexeme, t.pos.line, t.pos.col);
+    exit(1);
+}
+
+void insertParamSymbol(Context *context, Token function_name, Token identifier)
+{
+
+    FunctionTableEntry *functionEntry = lookupFuntionSymbol(context->functionTable, function_name);
+    if (functionEntry)
+    {
+        SymbolTableEntry *symbolEntry = lookupSymbolInSymbolTable(functionEntry->parameterTable, identifier);
+        if (symbolEntry)
+        {
+            printf("\nERROR : identifer is already used at line at line %d and col %d", symbolEntry->token.pos.line, symbolEntry->token.pos.col);
+            exit(1);
+        }
+        insertSymbolInSymbolTable(functionEntry->parameterTable, identifier);
+        return;
+    }
+
+    printf("\nERROR : undefined function at line at line %d and col %d", function_name.pos.line, function_name.pos.col);
+    exit(1);
 }

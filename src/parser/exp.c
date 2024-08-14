@@ -9,7 +9,7 @@
 // EXP_TOKEN := { "+" | "-" | "*" | "/" | ">" | "<" | "==" | "and" | "or" }
 // UNI_STMT := {"++" | "--" "IDENTIFIER"}  | {"++" | "--" "IDENTIFIER" } | {"not" exp }
 // FUNCTION_CALL_STMT := { "IDENTIFER" "(" FUNTION_CALL _PARMA_LIST ")" }
-// FUNTION_CALL _PARMA_LIST := { { "IDENTIFIER" "," FUNTION_CALL _PARMA_LIST | "IDENTIFER" ε }}
+// FUNTION_CALL _PARMA_LIST := { { EXP "," FUNTION_CALL _PARMA_LIST | EXP ε }}
 // ASSIGN_STMT := { "IDENTIFIER" "=" exp }
 // CONDITIONAL_EXP := PRIMARY_EXP "<" | ">" | "==" | "<=" | ">=" PRIMARY_EXP
 // ADDITIVE_EXP := { MULTI_EXP "+" | "-" MULTI_EXP  } | {MULTI_EXP}
@@ -60,6 +60,21 @@ ASTNode *exp(Context *context)
     }
 
     node = parse_assign(context);
+    if (node != NULL)
+    {
+        if (match(context, EXP_TOKEN))
+        {
+            ASTNode *op = createASTNode(context->current);
+            consume(context); // consume  exp_token
+            op->left = node;
+            op->right = exp(context);
+            node = op;
+            return node;
+        }
+        return node;
+    }
+
+    node = parse_fun_call(context);
     if (node != NULL)
     {
         if (match(context, EXP_TOKEN))
@@ -165,51 +180,45 @@ ASTNode *parse_uni_stmt(Context *context)
 // FUNCTION_CALL_STMT := { "IDENTIFER" "(" FUNTION_CALL _PARMA_LIST ")" }
 ASTNode *parse_fun_call(Context *context)
 {
-    expect(context, IDENTIFIER);
-    ASTNode *funId = createASTNode(context->current);
-    consume(context);
-    if (match(context, OPEN_PAREN))
+
+    if (match(context, IDENTIFIER))
     {
-        Token token = {.lexeme = "Args", .value = UNKNOWN};
-        ASTNode *args = createASTNode(token);
-        funId->left = args;
-        args->right = parse_fun_call_args(context);
-        return funId;
+        ASTNode *funId = createASTNode(context->current);
+        consume(context);
+        if (match(context, OPEN_PAREN))
+        {
+            consume(context); //consume "("
+            Token token = {.lexeme = "Args", .value = UNKNOWN};
+            ASTNode *args = createASTNode(token);
+            funId->left = args;
+            args->right = parse_fun_call_args(context);
+            expect(context, CLOSE_PAREN);
+            consume(context);  // consume ")"
+            return funId;
+        }
+        free(funId);
+        unconsume(context);
     }
-    free(funId);
-    unconsume(context);
+
     return NULL;
 }
 
-// FUNTION_CALL _PARMA_LIST := { { "IDENTIFIER" | "CONSTANT" "," FUNTION_CALL _PARMA_LIST | "IDENTIFER"|"CONSTANT" ε }}
+// FUNTION_CALL _PARMA_LIST := { { EXP "," FUNTION_CALL _PARMA_LIST | EXP ε }}
 
 ASTNode *parse_fun_call_args(Context *context)
 {
-
     if (match(context, CLOSE_PAREN))
     {
         return NULL;
     }
-
-    if (match(context, IDENTIFIER) || match(context, CONSTANT))
+    ASTNode *node = exp(context);
+    if (match(context, COMMA))
     {
-
-        ASTNode *node = createASTNode(context->current);
         consume(context);
-        if (match(context, CLOSE_PAREN))
-        {
-            return node;
-        }
-        else
-        {
-            expect(context, COMMA);
-            consume(context);
-            node->next = parse_fun_call_args(context);
-            return node;
-        }
+        node->next = parse_fun_call_args(context);
+        return node;
     }
-    expect(context, IDENTIFIER);
-    return NULL;
+    return node;
 }
 
 // ASSIGN_STMT := { "IDENTIFIER" "=" exp }
@@ -296,6 +305,11 @@ ASTNode *parse_primary(Context *context)
 {
     if (match(context, IDENTIFIER) || match(context, CONSTANT))
     {
+        Token symbol = context->current;
+        if (match(context, IDENTIFIER))
+        {
+            checkSymbolEntry(context, symbol);
+        }
         ASTNode *node;
         node = createASTNode(context->current);
         consume(context);

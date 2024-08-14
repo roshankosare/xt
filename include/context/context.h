@@ -6,8 +6,8 @@
 
 typedef struct Context
 {
-    SymbolTableStack *stack;
-    FunctionTable *table;
+    SymbolTableStack *symbolTableStack;
+    FunctionTable *functionTable;
     Token *tokens;
     Token current;
     Token lookahed;

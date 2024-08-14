@@ -1,5 +1,7 @@
+
 #ifndef SYMBOL_TABLE
 #define SYMBOL_TABLE
+#include "../tokens/tokens.h"
 
 typedef enum Type
 {
@@ -13,7 +15,7 @@ typedef enum Type
 // Symbol table entry structure
 typedef struct SymbolTableEntry
 {
-    char name[100]; // Identifier name              // Type of the identifier (e.g., int, float)
+    Token token; // Identifier name              // Type of the identifier (e.g., int, float)
     int scope;
     int isDefined; // Scope level
     struct SymbolTableEntry *next;
@@ -40,10 +42,12 @@ void initSymbolTableStack(SymbolTableStack *stack);
 SymbolTable *initSymbolTable();
 void pushSymbolTable(SymbolTableStack *stack);
 void popSymbolTable(SymbolTableStack *stack);
-SymbolTableEntry *createEntry(char *name, int scope);
+SymbolTableEntry *createEntry(Token t,int scope);
 unsigned int hash(char *name);
-void insertSymbol(SymbolTableStack *stack, char *name, int scope);
-SymbolTableEntry *lookupSymbol(SymbolTableStack *stack, char *name);
+void insertSymbol(SymbolTableStack *stack,Token t);
+SymbolTableEntry *lookupSymbol(SymbolTableStack *stack, Token t);
+SymbolTableEntry *lookupSymbolInSymbolTable(SymbolTable *table, Token t);
+void insertSymbolInSymbolTable(SymbolTable *symbolTable, Token t);
 
 // Function to initialize the symbol table stack
 

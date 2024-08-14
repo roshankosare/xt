@@ -44,10 +44,10 @@ void popSymbolTable(SymbolTableStack *stack)
 }
 
 // Function to create a new symbol table entry
-SymbolTableEntry *createEntry(char *name, int scope)
+SymbolTableEntry *createEntry(Token t, int scope)
 {
     SymbolTableEntry *newEntry = (SymbolTableEntry *)malloc(sizeof(SymbolTableEntry));
-    strcpy(newEntry->name, name);
+    newEntry->token = t;
     newEntry->scope = scope;
     newEntry->next = NULL;
     newEntry->isDefined = 0;
@@ -66,39 +66,56 @@ unsigned int hash(char *name)
 }
 
 // Function to insert an entry into the current symbol table
-void insertSymbol(SymbolTableStack *stack, char *name, int scope)
+void insertSymbol(SymbolTableStack *stack, Token t)
 {
     if (stack->top == NULL)
     {
         return;
     }
 
-    unsigned int index = hash(name);
-    SymbolTableEntry *newEntry = createEntry(name, scope);
+    unsigned int index = hash(t.lexeme);
+    SymbolTableEntry *newEntry = createEntry(t, stack->scope);
     newEntry->next = stack->top->table[index];
     stack->top->table[index] = newEntry;
 }
 
 // Function to lookup an entry in the symbol table stack
-SymbolTableEntry *lookupSymbol(SymbolTableStack *stack, char *name)
+SymbolTableEntry *lookupSymbol(SymbolTableStack *stack, Token t)
 {
-
     SymbolTable *current = stack->top;
     while (current != NULL)
     {
-
-        unsigned int index = hash(name);
-        SymbolTableEntry *entry = current->table[index];
-
-        while (entry != NULL)
+        SymbolTableEntry *entry = lookupSymbolInSymbolTable(current, t);
+        if (entry)
         {
-            if (strcmp(entry->name, name) == 0)
-            {
-                return entry;
-            }
-            entry = entry->next; // Move to the next node in symbol table token index hased node
+            return entry;
         }
         current = current->next; // Move to the next symbol table in the stack
     }
     return NULL; // Not found
+}
+
+SymbolTableEntry *lookupSymbolInSymbolTable(SymbolTable *table, Token t)
+{
+    unsigned int index = hash(t.lexeme);
+    SymbolTableEntry *entry = table->table[index];
+
+    while (entry != NULL)
+    {
+        if (strcmp(entry->token.lexeme, t.lexeme) == 0)
+        {
+            return entry;
+        }
+        entry = entry->next; // Move to the next node in symbol table token index hased node
+    }
+    return NULL; // Not found
+}
+
+void insertSymbolInSymbolTable(SymbolTable *symbolTable, Token t)
+{
+
+    unsigned int index = hash(t.lexeme);
+    SymbolTableEntry *newEntry = createEntry(t, 0);
+    newEntry->next = symbolTable->table[index];
+    symbolTable->table[index] = newEntry;
 }

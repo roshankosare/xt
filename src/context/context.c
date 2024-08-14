@@ -6,13 +6,13 @@
 Context *initContext(Token *tokens)
 {
     Context *context = (Context *)malloc(sizeof(Context));
-    context->stack = (SymbolTableStack *)malloc(sizeof(SymbolTableStack));
+    context->symbolTableStack = (SymbolTableStack *)malloc(sizeof(SymbolTableStack));
     context->tokens = tokens;
     context->index = 0;
     context->current = tokens[0];
     context->lookahed = tokens[1];
 
-    initSymbolTableStack(context->stack);
-    context->table = initFuntionTable();
+    initSymbolTableStack(context->symbolTableStack);
+    context->functionTable = initFuntionTable();
     return context;
 };
