@@ -5,7 +5,8 @@
 #include "include/lexer/lexer.h"
 #include "include/parser/ast.h"
 #include "include/parser/parser.h"
-
+#include "include/asm/asm.h"
+#include "include/context/context.h"
 
 #define MAX_LINE_LENGTH 1024
 void usage(char *programName)
@@ -75,10 +76,24 @@ int main(int argc, char *argv[])
 
     int index = 0;
     printTokens(tokens, tokenCount);
-    ASTNode *start = parseProgram(tokens, &index, tokenCount);
+
+    Context *context = initContext(tokens);
+
+    initSymbolTableStack(context->symbolTableStack);
+    pushSymbolTable(context->symbolTableStack);
+    ASTNode *start = parseProgram(context, tokens, &index, tokenCount);
 
     printf("\nLexical anaysis completed without any error\n");
     printAST(start, 0);
+
+    FILE *op;
+    op = fopen(outputfile, "w+");
+    if (fp == NULL)
+    {
+        printf("\nERROR: %s file cannot be creted\n", inputfile);
+        exit(1);
+    }
+    createASMFile(start, context, op);
 
     return 0;
 }

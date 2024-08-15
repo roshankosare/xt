@@ -8,17 +8,13 @@
 #include "../../include/parser/program.h"
 #include "../../include/parser/helper.h"
 
-ASTNode *parseProgram(Token *tokens, int *index, int token_count)
+ASTNode *parseProgram(Context *context, Token *tokens, int *index, int token_count)
 {
     Token token = {.lexeme = "Program", .value = UNKNOWN};
     ASTNode *programNode = createASTNode(token);
     ASTNode *current = programNode;
     int count = 0;
 
-    Context *context = initContext(tokens);
-
-    initSymbolTableStack(context->symbolTableStack);
-    pushSymbolTable(context->symbolTableStack);
     int i = 0;
     while (context->current.value != TEOF && i < 1000)
     {
