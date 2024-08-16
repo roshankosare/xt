@@ -98,6 +98,7 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
     {
         translate(ast->right, context, fp); // convert expression to asm which will store value of evaluated expresion to stack
         fprintf(fp, "    pop eax\n");
+
         SymbolTableEntry *entry = checkSymbolEntry(context, ast->left->token);
         if (entry->scope == 1)
         {
@@ -108,7 +109,7 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
         else
         {
             int offset = getSymbolOffset(context, entry);
-            fprintf(fp, "    mov [ebp + %d - %d  ], eax\n", offset, entry->symbolOffset);
+            fprintf(fp, "    mov [ebp + %d - %d  ], eax   ;;%s\n", offset, entry->symbolOffset,entry->token.lexeme);
             fprintf(fp, "    push eax\n");
         }
     }
@@ -122,12 +123,12 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
     {
         if (ast->right->token.value == ASSIGN) // decleration with assignment
         {
+
             SymbolTableEntry *entry = checkSymbolEntry(context, ast->right->left->token);
             if (entry->scope != 1)
             { // means variable is local we have to allocate it meemory in stack first then assign value
               // TODO allocate different size of memeory based on type of symbol; for int and float = 4byte char = 2byte
                 fprintf(fp, "    sub esp, 4\n");
-                break;
                 // for integers and float// for integer and float
             }
             translate(ast->right, context, fp);
@@ -142,7 +143,7 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
         }
         // allocate  memory in stack for local variables
         // TODO allocate different size of memeory based on type of symbol; for int and float = 4byte char = 2byte
-        fprintf(fp, "    sub esp, 4\n");       // for integers// for integer and float
+        fprintf(fp, "    sub esp, 4\n"); // for integers// for integer and float
     }
 
     break;
@@ -175,21 +176,21 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
         SymbolTableEntry *entry = checkSymbolEntry(context, ast->token);
         if (entry->scope == 1)
         { // this is global var
-            fprintf(fp, "    mov eax, [%s]", ast->left->token.lexeme);
+            fprintf(fp, "    mov eax, [%s]\n", ast->token.lexeme);
             break; // store the value of identifer to eax
         }
         else
         {
             int offset = getSymbolOffset(context, entry);
-            fprintf(fp, "    mov eax, [ebp + %d - %d  ]", offset, entry->symbolOffset);
+            fprintf(fp, "    mov eax, [ebp + %d - %d  ]     ;; %s\n", offset, entry->symbolOffset,entry->token.lexeme);
         }
         fprintf(fp, "    push eax\n");
     }
-        return;
+    break;
     case CONSTANT:
         fprintf(fp, "    mov eax, %s\n", ast->token.lexeme);
         fprintf(fp, "    push eax\n");
-        return;
+        break;
     case FUNCTION:
         assert(0 && "TODO: FUNCTION is not implemented");
     case CONDITIONAL_TOKEN:
@@ -204,13 +205,12 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
     case BODYSTART:
     {
 
-        fprintf(fp, "    rbp                     ; Save base pointer\n");
+        fprintf(fp, "    push rbp                ; Save base pointer\n");
         fprintf(fp, "    mov rbp, rsp            ; Establish new base pointer\n");
         SymbolTable *symboltable = getSymboTableFromQueue(context);
         pushSymbolTable(context->symbolTableStack, symboltable);
-        translate(ast->right, context, fp);
-        break;
     }
+    break;
     case BODYEND:
     {
         fprintf(fp, "    mov rsp, rbp            ; Restore the stack pointer\n");
@@ -225,5 +225,5 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
         exit(1);
     }
 
-    translate(ast->next, context, fp);
+    return translate(ast->next, context, fp);
 }

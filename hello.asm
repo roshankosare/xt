@@ -27,18 +27,46 @@ section .text          ; Section for code
     pop eax
     mov [x], eax
     push eax
-    rbp                     ; Save base pointer
+    push rbp                ; Save base pointer
     mov rbp, rsp            ; Establish new base pointer
     sub esp, 4
-    sub esp, 4
-    mov eax, 5
+    mov eax, 20
     push eax
     pop eax
-    mov [x], eax
+    mov [ebp + 0 - 4  ], eax   ;;j
     push eax
-    rbp                     ; Save base pointer
+    sub esp, 4
+    mov eax, [ebp + 0 - 4  ]     ;; j
+    push eax
+    mov eax, [x]
+    ;; plus
+    pop eax
+    pop ebx
+    add eax ,ebx
+    push eax
+    pop eax
+    mov [ebp + 0 - 8  ], eax   ;;k
+    push eax
+    mov eax, 50
+    push eax
+    pop eax
+    mov [ebp + 0 - 8  ], eax   ;;k
+    push eax
+    push rbp                ; Save base pointer
     mov rbp, rsp            ; Establish new base pointer
     sub esp, 4
+    mov eax, [ebp + 8 - 8  ]     ;; k
+    push eax
+    mov eax, [ebp + 8 - 4  ]     ;; j
+    push eax
+    ;; plus
+    pop eax
+    pop ebx
+    add eax ,ebx
+    push eax
+    pop eax
+    mov [ebp + 0 - 4  ], eax   ;;i
+    push eax
     mov rsp, rbp            ; Restore the stack pointer
     pop rbp                 ; Restore the base pointer
     mov rsp, rbp            ; Restore the stack pointer

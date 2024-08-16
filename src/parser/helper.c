@@ -198,14 +198,14 @@ SymbolTableEntry *checkSymbolEntry(Context *context, Token t)
 {
 
     FunctionTableEntry *functionEntry = lookupFuntionSymbol(context->functionTable, t);
-    if (functionEntry)
+    if (functionEntry != NULL)
     {
         printf("\nERROR : invalid function call  at line at line %d and col %d", t.pos.line, t.pos.col);
         exit(1);
     }
 
     SymbolTableEntry *symbolEntry = lookupSymbol(context->symbolTableStack, t);
-    if (symbolEntry)
+    if (symbolEntry != NULL)
     {
         if (!symbolEntry->isDefined)
         {
@@ -214,6 +214,7 @@ SymbolTableEntry *checkSymbolEntry(Context *context, Token t)
         }
         return symbolEntry;
     }
+  
     printf("\nERROR : undefined variable  `%s` at line at line %d and col %d", t.lexeme, t.pos.line, t.pos.col);
     exit(1);
 }
@@ -270,14 +271,14 @@ SymbolTable *getSymboTableFromQueue(Context *context)
 int getSymbolOffset(Context *context, SymbolTableEntry *entry)
 {
 
-    SymbolTableStack *stack = context->symbolTableStack;
+    SymbolTable *table = context->symbolTableStack->top;
 
     int scope = context->symbolTableStack->scope;
     int offset = 0;
-    while (entry->scope != scope && stack->top->next != NULL)
+    while (entry->scope != scope && table->next != NULL)
     {
-        stack->top = stack->top->next;
-        offset = offset + stack->top->offset;
+        table = table->next;
+        offset = offset + table->offset;
         scope--;
     }
     return offset;

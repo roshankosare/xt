@@ -41,6 +41,7 @@ SymbolTable *popSymbolTable(SymbolTableStack *stack)
         SymbolTable *top = stack->top;
         stack->top = stack->top->next;
         stack->scope--;
+        top->next = NULL;
         return top;
     }
 }
@@ -78,7 +79,7 @@ void insertSymbol(SymbolTableStack *stack, Token t)
 
     unsigned int index = hash(t.lexeme);
 
-    //TODO handle to calculate offset based on data type of symbol int = 4byte char = 2yte float= 4byte
+    // TODO handle to calculate offset based on data type of symbol int = 4byte char = 2yte float= 4byte
     int offset = stack->top->offset;
     offset = offset + 4;
     SymbolTableEntry *newEntry = createEntry(t, stack->scope, offset);
