@@ -8,9 +8,11 @@ typedef struct Context
 {
     SymbolTableStack *symbolTableStack;
     FunctionTable *functionTable;
+    SymbolTable * symbolTableQueue;
     Token *tokens;
     Token current;
     Token lookahed;
+    int offset;
     int index;
 
 } Context;

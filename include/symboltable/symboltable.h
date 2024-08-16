@@ -19,7 +19,8 @@ typedef struct SymbolTableEntry
     int scope;
     int isDefined; // Scope level
     struct SymbolTableEntry *next;
-    Type type // Pointer to the next entry (for handling collisions in the hash table)
+    Type type; // Pointer to the next entry (for handling collisions in the hash table)
+    int symbolOffset;
 } SymbolTableEntry;
 
 // Symbol table structure
@@ -28,7 +29,9 @@ typedef struct SymbolTableEntry
 typedef struct SymbolTable
 {
     SymbolTableEntry *table[TABLE_SIZE]; // Array of pointers to symbol table entries
-    struct SymbolTable *next;            // Pointer to the next symbol table (for stack implementation)
+    struct SymbolTable *next;  
+    struct SymbolTable *nextLink; 
+    int offset;         // Pointer to the next symbol table (for stack implementation)
 } SymbolTable;
 
 // Stack of symbol tables structure
@@ -40,11 +43,11 @@ typedef struct SymbolTableStack
 
 void initSymbolTableStack(SymbolTableStack *stack);
 SymbolTable *initSymbolTable();
-void pushSymbolTable(SymbolTableStack *stack);
-void popSymbolTable(SymbolTableStack *stack);
-SymbolTableEntry *createEntry(Token t,int scope);
+void pushSymbolTable(SymbolTableStack *stack, SymbolTable *SymbolTable);
+SymbolTable *popSymbolTable(SymbolTableStack *stack);
+SymbolTableEntry *createEntry(Token t, int scope,int offset);
 unsigned int hash(char *name);
-void insertSymbol(SymbolTableStack *stack,Token t);
+void insertSymbol(SymbolTableStack *stack, Token t);
 SymbolTableEntry *lookupSymbol(SymbolTableStack *stack, Token t);
 SymbolTableEntry *lookupSymbolInSymbolTable(SymbolTable *table, Token t);
 void insertSymbolInSymbolTable(SymbolTable *symbolTable, Token t);

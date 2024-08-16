@@ -80,7 +80,8 @@ int main(int argc, char *argv[])
     Context *context = initContext(tokens);
 
     initSymbolTableStack(context->symbolTableStack);
-    pushSymbolTable(context->symbolTableStack);
+    SymbolTable *symbolTable = initSymbolTable();
+    pushSymbolTable(context->symbolTableStack,symbolTable);
     ASTNode *start = parseProgram(context, tokens, &index, tokenCount);
 
     printf("\nLexical anaysis completed without any error\n");
@@ -93,7 +94,8 @@ int main(int argc, char *argv[])
         printf("\nERROR: %s file cannot be creted\n", inputfile);
         exit(1);
     }
+    printf("\n Parsing is completed successfully..\n");
     createASMFile(start, context, op);
-
+    
     return 0;
 }

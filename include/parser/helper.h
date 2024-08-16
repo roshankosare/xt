@@ -14,5 +14,8 @@ int checkFuntionEntry(Context *context, Token t);
 SymbolTableEntry *insertSymbolEntry(Context *context, Token t);
 SymbolTableEntry *checkSymbolEntry(Context *context, Token t);
 void insertParamSymbol(Context *context, Token function_name, Token identifier);
+void insertSymbolTableToQueue(Context *context, SymbolTable *symbolTable);
+SymbolTable *getSymboTableFromQueue(Context *context);
+int getSymbolOffset(Context *context, SymbolTableEntry *entry);
 
 #endif

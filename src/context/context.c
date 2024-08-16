@@ -11,8 +11,10 @@ Context *initContext(Token *tokens)
     context->index = 0;
     context->current = tokens[0];
     context->lookahed = tokens[1];
+    context->offset = 0;
 
     initSymbolTableStack(context->symbolTableStack);
     context->functionTable = initFuntionTable();
+    context->symbolTableQueue = NULL;
     return context;
 };

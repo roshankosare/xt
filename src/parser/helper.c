@@ -237,3 +237,48 @@ void insertParamSymbol(Context *context, Token function_name, Token identifier)
     printf("\nERROR : undefined function at line at line %d and col %d", function_name.pos.line, function_name.pos.col);
     exit(1);
 }
+
+void insertSymbolTableToQueue(Context *context, SymbolTable *symbolTable)
+{
+
+    SymbolTable *current = context->symbolTableQueue;
+    if (current == NULL)
+    {
+        context->symbolTableQueue = symbolTable;
+        return;
+    }
+    while (current->nextLink != NULL)
+    {
+        current = current->nextLink;
+    }
+    current->nextLink = symbolTable;
+    return;
+}
+
+SymbolTable *getSymboTableFromQueue(Context *context)
+{
+    if (context->symbolTableQueue == NULL)
+    {
+        printf("\nERROR : symbol table queue is empty\n");
+        exit(1);
+    }
+    SymbolTable *symbolTable = context->symbolTableQueue;
+    context->symbolTableQueue = symbolTable->nextLink;
+    return symbolTable;
+}
+
+int getSymbolOffset(Context *context, SymbolTableEntry *entry)
+{
+
+    SymbolTableStack *stack = context->symbolTableStack;
+
+    int scope = context->symbolTableStack->scope;
+    int offset = 0;
+    while (entry->scope != scope && stack->top->next != NULL)
+    {
+        stack->top = stack->top->next;
+        offset = offset + stack->top->offset;
+        scope--;
+    }
+    return offset;
+}

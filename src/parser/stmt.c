@@ -2,6 +2,8 @@
 #include "../../include/parser/helper.h"
 #include "../../include/parser/ast.h"
 #include "../../include/parser/exp.h"
+#include "../../include/symboltable/symboltable.h"
+#include "../../include/symboltable/functiontable.h"
 // SELC_STMT :=  IF_STMT
 //  IF_STMT := "if" "(" exp | CONDITIONAL_STMT ")" BLOCK_STMT | EXP
 
@@ -129,7 +131,9 @@ ASTNode *parse_block(Context *context)
 
     expect(context, OPEN_CURLY_PAREN);
     consume(context);
-    pushSymbolTable(context->symbolTableStack);
+    SymbolTable *symbolTable = initSymbolTable();
+    pushSymbolTable(context->symbolTableStack, symbolTable);
+    insertSymbolTableToQueue(context, symbolTable);
     Token body_start = {.lexeme = "Body_start", .value = BODYSTART};
     ASTNode *body = createASTNode(body_start);
     ASTNode *start = body;
@@ -144,5 +148,6 @@ ASTNode *parse_block(Context *context)
     body->next = body_end;
     consume(context);
     popSymbolTable(context->symbolTableStack);
+
     return start;
 }

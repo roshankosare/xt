@@ -9,10 +9,8 @@ void translateGlobalVar(ASTNode *ast, FILE *fp);
 void createASMFile(ASTNode *ast, Context *context, FILE *fp)
 {
     fprintf(fp, "section .data          ; Section for initialized data\n");
-    fprintf(fp, "\n");
     translateGlobalVar(ast, fp);
     fprintf(fp, "section .bss           ; Section for uninitialized data\n");
-    fprintf(fp, "\n");
     fprintf(fp, "section .text          ; Section for code\n");
     fprintf(fp, "    global _start      ; Make the _start symbol available to the linker");
     fprintf(fp, "\n");
@@ -104,11 +102,14 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
         if (entry->scope == 1)
         {
             // this is global var
-            fprintf(fp, "    mov [%s], eax\n", ast->left->token.lexeme); // store the to address of identifier
+            fprintf(fp, "    mov [%s], eax\n", ast->left->token.lexeme);
+            fprintf(fp, "    push eax\n"); // store the to address of identifier
         }
         else
         {
-            assert(0 && "TODO : handle local var assign implementation");
+            int offset = getSymbolOffset(context, entry);
+            fprintf(fp, "    mov [ebp + %d - %d  ], eax\n", offset, entry->symbolOffset);
+            fprintf(fp, "    push eax\n");
         }
     }
     break;
@@ -122,35 +123,35 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
         if (ast->right->token.value == ASSIGN) // decleration with assignment
         {
             SymbolTableEntry *entry = checkSymbolEntry(context, ast->right->left->token);
-            if (entry == NULL)
-            {
-                assert(0 &&"symbol not found in symbol table");
-            }
-            if (entry->scope == 1)
-            {
-                // this mean memory is allocated previously in .data section
-                translate(ast->right, context, fp);
+            if (entry->scope != 1)
+            { // means variable is local we have to allocate it meemory in stack first then assign value
+              // TODO allocate different size of memeory based on type of symbol; for int and float = 4byte char = 2byte
+                fprintf(fp, "    sub esp, 4\n");
                 break;
+                // for integers and float// for integer and float
             }
-            {
-                // allocate  memory in stack for local variables
-                break;
-            }
+            translate(ast->right, context, fp);
+            break;
         }
         // decleration only
         SymbolTableEntry *entry = checkSymbolEntry(context, ast->right->token);
-        if (entry->scope == 0)
+        if (entry->scope == 1)
         {
+            // global variable
             break;
         }
         // allocate  memory in stack for local variables
+        // TODO allocate different size of memeory based on type of symbol; for int and float = 4byte char = 2byte
+        fprintf(fp, "    sub esp, 4\n");       // for integers// for integer and float
     }
 
     break;
     case BLOCK_VAR:
         assert(0 && "TODO: BLOCK_VAR is not implemented");
     case IF:
-        assert(0 && "TODO: IF is not implemented");
+        translate(ast->left, context, fp); // prase condition first
+        translate(ast->right, context, fp);
+        break;
     case ELSE:
         assert(0 && "TODO: ELSE is not implemented");
     case FOR:
@@ -171,15 +172,16 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
         assert(0 && "TODO: EQUALTO is not implemented");
     case IDENTIFIER:
     {
-        SymbolTableEntry *entry = checkSymbolEntry(context, ast->left->token);
-        if (entry->scope == 0)
-        {
-            // this is global var
-            fprintf(fp, "    mov eax, [%s]", ast->left->token.lexeme); // store the value of identifer to eax
+        SymbolTableEntry *entry = checkSymbolEntry(context, ast->token);
+        if (entry->scope == 1)
+        { // this is global var
+            fprintf(fp, "    mov eax, [%s]", ast->left->token.lexeme);
+            break; // store the value of identifer to eax
         }
         else
         {
-            assert(0 && "TODO : handle local var assign implementation");
+            int offset = getSymbolOffset(context, entry);
+            fprintf(fp, "    mov eax, [ebp + %d - %d  ]", offset, entry->symbolOffset);
         }
         fprintf(fp, "    push eax\n");
     }
@@ -198,6 +200,29 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
         assert(0 && "TODO: LOGICAL_OR is not implemented");
     case LOGICAL_NOT:
         assert(0 && "TODO: LOGICAL_NOT is not implemented");
+
+    case BODYSTART:
+    {
+
+        fprintf(fp, "    rbp                     ; Save base pointer\n");
+        fprintf(fp, "    mov rbp, rsp            ; Establish new base pointer\n");
+        SymbolTable *symboltable = getSymboTableFromQueue(context);
+        pushSymbolTable(context->symbolTableStack, symboltable);
+        translate(ast->right, context, fp);
+        break;
+    }
+    case BODYEND:
+    {
+        fprintf(fp, "    mov rsp, rbp            ; Restore the stack pointer\n");
+        fprintf(fp, "    pop rbp                 ; Restore the base pointer\n");
+        SymbolTable *symbolTable = popSymbolTable(context->symbolTableStack);
+        free(symbolTable);
+        break;
+    }
+
+    default:
+        printf("\nERROR: %s token handle not implemented", ast->token.lexeme);
+        exit(1);
     }
 
     translate(ast->next, context, fp);

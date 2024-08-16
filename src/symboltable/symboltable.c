@@ -20,37 +20,40 @@ SymbolTable *initSymbolTable()
         symbolTable->table[i] = NULL;
     }
     symbolTable->next = NULL;
+    symbolTable->nextLink = NULL;
+    symbolTable->offset = 0;
     return symbolTable;
 }
 
 // Function to push a new symbol table onto the stack
-void pushSymbolTable(SymbolTableStack *stack)
+void pushSymbolTable(SymbolTableStack *stack, SymbolTable *symbolTable)
 {
-    SymbolTable *symbolTable = initSymbolTable();
     stack->scope++;
     symbolTable->next = stack->top;
     stack->top = symbolTable;
 }
 
 // Function to pop the top symbol table from the stack
-void popSymbolTable(SymbolTableStack *stack)
+SymbolTable *popSymbolTable(SymbolTableStack *stack)
 {
     if (stack->top != NULL)
     {
         SymbolTable *top = stack->top;
         stack->top = stack->top->next;
-        free(top);
+        stack->scope--;
+        return top;
     }
 }
 
 // Function to create a new symbol table entry
-SymbolTableEntry *createEntry(Token t, int scope)
+SymbolTableEntry *createEntry(Token t, int scope, int offset)
 {
     SymbolTableEntry *newEntry = (SymbolTableEntry *)malloc(sizeof(SymbolTableEntry));
     newEntry->token = t;
     newEntry->scope = scope;
     newEntry->next = NULL;
     newEntry->isDefined = 0;
+    newEntry->symbolOffset = offset;
     return newEntry;
 }
 
@@ -74,7 +77,12 @@ void insertSymbol(SymbolTableStack *stack, Token t)
     }
 
     unsigned int index = hash(t.lexeme);
-    SymbolTableEntry *newEntry = createEntry(t, stack->scope);
+
+    //TODO handle to calculate offset based on data type of symbol int = 4byte char = 2yte float= 4byte
+    int offset = stack->top->offset;
+    offset = offset + 4;
+    SymbolTableEntry *newEntry = createEntry(t, stack->scope, offset);
+    stack->top->offset = offset;
     newEntry->next = stack->top->table[index];
     stack->top->table[index] = newEntry;
 }
@@ -115,7 +123,7 @@ void insertSymbolInSymbolTable(SymbolTable *symbolTable, Token t)
 {
 
     unsigned int index = hash(t.lexeme);
-    SymbolTableEntry *newEntry = createEntry(t, 0);
+    SymbolTableEntry *newEntry = createEntry(t, 0, 0);
     newEntry->next = symbolTable->table[index];
     symbolTable->table[index] = newEntry;
 }
