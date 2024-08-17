@@ -214,7 +214,7 @@ SymbolTableEntry *checkSymbolEntry(Context *context, Token t)
         }
         return symbolEntry;
     }
-  
+
     printf("\nERROR : undefined variable  `%s` at line at line %d and col %d", t.lexeme, t.pos.line, t.pos.col);
     exit(1);
 }
@@ -282,4 +282,20 @@ int getSymbolOffset(Context *context, SymbolTableEntry *entry)
         scope--;
     }
     return offset;
+}
+
+char *label_generate()
+{
+    char *label = malloc(20 * sizeof(char)); // Allocate memory for 20 characters (adjust size as needed)
+
+    if (label == NULL)
+    {
+        perror("Failed to allocate memory");
+        exit(EXIT_FAILURE);
+    }
+
+    srand(time(NULL)); // Seed the random number generator with the current time
+    snprintf(label, 20, ".label_%d", rand());
+
+    return label;
 }

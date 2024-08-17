@@ -115,6 +115,9 @@ void fillOperatorTokenValue(Token *token)
     case INT_TOKEN_DEC:
         token->value = DEC;
         break;
+    case INT_TOKEN_NOT_EQLTO:
+        token->value = NOT_EQLTO;
+        break;
 
     default:
         break;

@@ -76,6 +76,8 @@ char *getTokenStringValue(int token)
         return "LOGICAL_OR";
     case LOGICAL_NOT:
         return "LOGICAL_NOT";
+    case NOT_EQLTO:
+        return "NOT_EQLTO";
 
     default:
         return "UNKNOWN";
@@ -114,6 +116,7 @@ int getTokenIntCodeValue(char *token)
     if (strcmp(token, ">") == 0)        return INT_TOKEN_GRATER_THAN;
     if (strcmp(token, "<=") == 0)       return INT_TOKEN_LESS_THAN_EQTO;
     if (strcmp(token, ">=") == 0)       return INT_TOKEN_GRATER_THAN_EQTO;
+    if (strcmp(token,"!=") == 0)        return INT_TOKEN_NOT_EQLTO;
     if (strcmp(token, ",") == 0)        return INT_TOKEN_COMMA;
     if(isKeywordToken(token))           return INT_TOKEN_KEYWORD;
     if(isIdentifierToken(token))        return INT_TOKEN_IDENTIFIER;   

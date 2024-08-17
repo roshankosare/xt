@@ -109,7 +109,7 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
         else
         {
             int offset = getSymbolOffset(context, entry);
-            fprintf(fp, "    mov [ebp + %d - %d  ], eax   ;;%s\n", offset, entry->symbolOffset,entry->token.lexeme);
+            fprintf(fp, "    mov [ebp + %d - %d  ], eax   ;;%s\n", offset, entry->symbolOffset, entry->token.lexeme);
             fprintf(fp, "    push eax\n");
         }
     }
@@ -150,8 +150,18 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
     case BLOCK_VAR:
         assert(0 && "TODO: BLOCK_VAR is not implemented");
     case IF:
-        translate(ast->left, context, fp); // prase condition first
-        translate(ast->right, context, fp);
+        translate(ast->left, context, fp);
+        // prase  condition first
+        char *label = label_generate(); // generate label for  this if block
+
+        fprintf(fp, "    pop eax\n");      // get value of expression from stack
+        fprintf(fp, "    test eax eax\n"); // check if value is non zero
+        fprintf(fp, "    jz %s      ;; jump if expression  is zero\n", label);
+        fprintf(fp, "    ;; if block start\n");
+        translate(ast->right, context, fp); // parse
+        fprintf(fp, "    ;; if block ends\n");
+        fprintf(fp, "%s", label);
+
         break;
     case ELSE:
         assert(0 && "TODO: ELSE is not implemented");
@@ -162,15 +172,77 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
     case WHILE:
         assert(0 && "TODO: WHILE is not implemented");
     case LESS_THAN:
-        assert(0 && "TODO: LESS_THAN is not implemented");
+    {
+        translate(ast->left, context, fp);  // parse left expression
+        translate(ast->right, context, fp); // parse right expression
+        fprintf(fp, "    pop eax\n");       // right oprand
+        fprintf(fp, "    pop ebx\n");       // left oprand
+        fprintf(fp, "    cmp ebx,eax\n");
+        fprintf(fp, "    setl al\n");
+        fprintf(fp, "    movzx eax, al\n");
+        fprintf(fp, "    push eax\n");
+    }
+    break;
     case GRATER_THAN:
-        assert(0 && "TODO: GRATER_THAN is not implemented");
+    {
+        translate(ast->left, context, fp);  // parse left expression
+        translate(ast->right, context, fp); // parse right expression
+        fprintf(fp, "    pop eax\n");       // right oprand
+        fprintf(fp, "    pop ebx\n");       // left oprand
+        fprintf(fp, "    cmp ebx,eax\n");
+        fprintf(fp, "    setg al\n");
+        fprintf(fp, "    movzx eax, al\n");
+        fprintf(fp, "    push eax\n");
+    }
+    break;
     case LESS_THAN_EQTO:
-        assert(0 && "TODO: LESS_THAN_EQTO is not implemented");
+    {
+        translate(ast->left, context, fp);  // parse left expression
+        translate(ast->right, context, fp); // parse right expression
+        fprintf(fp, "    pop eax\n");       // right oprand
+        fprintf(fp, "    pop ebx\n");       // left oprand
+        fprintf(fp, "    cmp ebx,eax\n");
+        fprintf(fp, "    setle al\n");
+        fprintf(fp, "    movzx eax, al\n");
+        fprintf(fp, "    push eax\n");
+    }
+    break;
     case GRATER_THAN_EQTO:
-        assert(0 && "TODO: GRATER_THAN_EQTO is not implemented");
+    {
+        translate(ast->left, context, fp);  // parse left expression
+        translate(ast->right, context, fp); // parse right expression
+        fprintf(fp, "    pop eax\n");       // right oprand
+        fprintf(fp, "    pop ebx\n");       // left oprand
+        fprintf(fp, "    cmp ebx,eax\n");
+        fprintf(fp, "    setge al\n");
+        fprintf(fp, "    movzx eax, al\n");
+        fprintf(fp, "    push eax\n");
+    }
+    break;
     case EQUALTO:
-        assert(0 && "TODO: EQUALTO is not implemented");
+    {
+        translate(ast->left, context, fp);  // parse left expression
+        translate(ast->right, context, fp); // parse right expression
+        fprintf(fp, "    pop eax\n");       // right oprand
+        fprintf(fp, "    pop ebx\n");       // left oprand
+        fprintf(fp, "    cmp ebx,eax\n");
+        fprintf(fp, "    sete al\n");
+        fprintf(fp, "    movzx eax, al\n");
+        fprintf(fp, "    push eax\n");
+    }
+    break;
+    case NOT_EQLTO:
+    {
+        translate(ast->left, context, fp);  // parse left expression
+        translate(ast->right, context, fp); // parse right expression
+        fprintf(fp, "    pop eax\n");       // right oprand
+        fprintf(fp, "    pop ebx\n");       // left oprand
+        fprintf(fp, "    cmp ebx,eax\n");
+        fprintf(fp, "    setne al\n");
+        fprintf(fp, "    movzx eax, al\n");
+        fprintf(fp, "    push eax\n");
+    }
+    break;
     case IDENTIFIER:
     {
         SymbolTableEntry *entry = checkSymbolEntry(context, ast->token);
@@ -182,7 +254,7 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
         else
         {
             int offset = getSymbolOffset(context, entry);
-            fprintf(fp, "    mov eax, [ebp + %d - %d  ]     ;; %s\n", offset, entry->symbolOffset,entry->token.lexeme);
+            fprintf(fp, "    mov eax, [ebp + %d - %d  ]     ;; %s\n", offset, entry->symbolOffset, entry->token.lexeme);
         }
         fprintf(fp, "    push eax\n");
     }

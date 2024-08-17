@@ -27,6 +27,10 @@ int isOperator(char ch)
     case '>':
         return 1;
         break;
+    
+    case '!':
+    return 1;
+    break;
 
     default:
         return 0;
@@ -85,6 +89,7 @@ int isOperatorToken(char *token)
    if(strcmp(token,"<=") == 0) return 1;
    if(strcmp(token,">=") == 0) return 1;
    if(strcmp(token,"==") == 0) return 1;
+   if(strcmp(token,"!=")== 0)   return 1;
    if(strcmp(token,"=") == 0) return 1;
     return 0;
 
@@ -99,6 +104,7 @@ int isConditionalOperatorToken(char *token)
     if(strcmp(token,"<=") == 0) return 1;
     if(strcmp(token,">=") == 0) return 1;
     if(strcmp(token,"==") == 0) return 1;
+    if(strcmp(token,"!=") == 0) return 1;
     return 0;
     // clang-format on
 }

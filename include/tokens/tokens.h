@@ -34,9 +34,10 @@
 #define INT_TOKEN_INC                   29
 #define INT_TOKEN_DEC                   30
 #define INT_TOKEN_FUNCTION              31
-#define INT_TOKEN_LOGICAL_AND       32
-#define INT_TOKEN_LOGICAL_OR        33
-#define INT_TOKEN_LOGICAL_NOT       34
+#define INT_TOKEN_LOGICAL_AND           32
+#define INT_TOKEN_LOGICAL_OR            33
+#define INT_TOKEN_LOGICAL_NOT           34
+#define INT_TOKEN_NOT_EQLTO             35
 #define INVALID_TOKEN                   -1
 
 
@@ -71,6 +72,7 @@ typedef enum
     GRATER_THAN,
     LESS_THAN_EQTO,
     GRATER_THAN_EQTO,
+    NOT_EQLTO,
     KEYWORD,
     IDENTIFIER,
     CONSTANT,
