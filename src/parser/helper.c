@@ -209,7 +209,7 @@ SymbolTableEntry *checkSymbolEntry(Context *context, Token t)
     {
         if (!symbolEntry->isDefined)
         {
-            printf("\nERROR : undefined variable  `%s` at line at line %d and col %d", t.lexeme, t.pos.line, t.pos.col);
+            printf("\nERROR : variable is used before its decleration  `%s` at line at line %d and col %d", t.lexeme, t.pos.line, t.pos.col);
             exit(1);
         }
         return symbolEntry;
@@ -293,8 +293,6 @@ char *label_generate()
         perror("Failed to allocate memory");
         exit(EXIT_FAILURE);
     }
-
-    srand(time(NULL)); // Seed the random number generator with the current time
     snprintf(label, 20, ".label_%d", rand());
 
     return label;

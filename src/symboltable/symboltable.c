@@ -44,6 +44,17 @@ SymbolTable *popSymbolTable(SymbolTableStack *stack)
         top->next = NULL;
         return top;
     }
+    return NULL;
+}
+
+SymbolTable *getTopSymbolTable(SymbolTableStack *stack)
+{
+    if (stack->top == NULL)
+    {
+        return NULL;
+    }
+    SymbolTable *top = stack->top;
+    return top;
 }
 
 // Function to create a new symbol table entry

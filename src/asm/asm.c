@@ -5,6 +5,7 @@
 #include <assert.h>
 
 void translateGlobalVar(ASTNode *ast, FILE *fp);
+void generateLabels(Context *context, FILE *fp);
 
 void createASMFile(ASTNode *ast, Context *context, FILE *fp)
 {
@@ -20,6 +21,7 @@ void createASMFile(ASTNode *ast, Context *context, FILE *fp)
     fprintf(fp, "    mov eax, 1         ; syscall number for sys_exit\n");
     fprintf(fp, "    xor ebx, ebx       ; exit code 0\n");
     fprintf(fp, "    int 0x80           ; make syscall\n");
+    generateLabels(context, fp);
 }
 
 void translateGlobalVar(ASTNode *ast, FILE *fp)
@@ -156,11 +158,8 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
 
         fprintf(fp, "    pop eax\n");      // get value of expression from stack
         fprintf(fp, "    test eax eax\n"); // check if value is non zero
-        fprintf(fp, "    jz %s      ;; jump if expression  is zero\n", label);
-        fprintf(fp, "    ;; if block start\n");
-        translate(ast->right, context, fp); // parse
-        fprintf(fp, "    ;; if block ends\n");
-        fprintf(fp, "%s", label);
+        fprintf(fp, "    jnz %s      ;; jump if expression  is zero\n", label);
+        pushASTQnodeInQueue(context->astQueue, ast->right, label);
 
         break;
     case ELSE:
@@ -288,7 +287,7 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
         fprintf(fp, "    mov rsp, rbp            ; Restore the stack pointer\n");
         fprintf(fp, "    pop rbp                 ; Restore the base pointer\n");
         SymbolTable *symbolTable = popSymbolTable(context->symbolTableStack);
-        free(symbolTable);
+        pushSymbolTable(context->symbolTableTempStack, symbolTable);
         break;
     }
 
@@ -298,4 +297,54 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
     }
 
     return translate(ast->next, context, fp);
+}
+
+void generateLabels(Context *context, FILE *fp)
+{
+    printf("\n this runs \n");
+    ASTQNode *current = popFromASTQueueFront(context->astQueue);
+    int num_elements = 0;
+    while (current != NULL)
+    {
+        num_elements = context->astQueue->num_elements;
+        fprintf(fp, "%s\n", current->label);
+        translate(current->ast, context, fp);
+
+        // step 1 : popfromASTQueueRear  and push into astStack till num_elements == context->astQueue->num_elemnts
+        // step 2 :  pop  from astStack
+        // step 3: current = pop(astStack);
+        // step 3: translate
+        // if new elements is added pushElemts in queue repeat step 1;
+        if (num_elements < context->astQueue->num_elements)
+        {
+            
+            SymbolTable *st = getTopSymbolTable(context->symbolTableTempStack);
+            if (st == NULL)
+            {
+                printf("\nERROR :symbol table temp stack is empty");
+            }
+            pushSymbolTable(context->symbolTableStack, st);
+            while (num_elements < context->astQueue->num_elements)
+            {
+                // step 1 : popfromASTQueueRear  and push into astStack till num_elements == context->astQueue->num_elemnts
+                current = popFromASTQueueRear(context->astQueue);
+                pushASTStack(context->astStack, current);
+            }
+        }
+        current = popASTStack(context->astStack);
+        if (current != NULL)
+        {
+            continue;
+        }
+
+        while (getTopSymbolTable(context->symbolTableTempStack) != NULL)
+        {
+            popSymbolTable(context->symbolTableStack);
+            popSymbolTable(context->symbolTableTempStack);
+        }
+
+        // step 2 :  pop  from astStack
+
+        current = popFromASTQueueFront(context->astQueue);
+    }
 }

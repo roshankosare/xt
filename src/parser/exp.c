@@ -229,6 +229,7 @@ ASTNode *parse_assign(Context *context)
     if (match(context, IDENTIFIER))
     {
         ASTNode *identifierNode = createASTNode(context->current);
+        checkSymbolEntry(context,identifierNode->token); // check for symbol entry
         consume(context);
         if (match(context, ASSIGN))
         {

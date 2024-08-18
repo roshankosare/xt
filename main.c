@@ -78,8 +78,6 @@ int main(int argc, char *argv[])
     printTokens(tokens, tokenCount);
 
     Context *context = initContext(tokens);
-
-    initSymbolTableStack(context->symbolTableStack);
     SymbolTable *symbolTable = initSymbolTable();
     pushSymbolTable(context->symbolTableStack,symbolTable);
     ASTNode *start = parseProgram(context, tokens, &index, tokenCount);

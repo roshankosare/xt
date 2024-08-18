@@ -45,6 +45,7 @@ void initSymbolTableStack(SymbolTableStack *stack);
 SymbolTable *initSymbolTable();
 void pushSymbolTable(SymbolTableStack *stack, SymbolTable *SymbolTable);
 SymbolTable *popSymbolTable(SymbolTableStack *stack);
+SymbolTable *getTopSymbolTable(SymbolTableStack *stack);
 SymbolTableEntry *createEntry(Token t, int scope,int offset);
 unsigned int hash(char *name);
 void insertSymbol(SymbolTableStack *stack, Token t);
