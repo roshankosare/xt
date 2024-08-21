@@ -135,7 +135,9 @@ void insertSymbolInSymbolTable(SymbolTable *symbolTable, Token t)
 {
 
     unsigned int index = hash(t.lexeme);
-    SymbolTableEntry *newEntry = createEntry(t, 0, 0);
+    int offset  = symbolTable->offset + 4;
+    symbolTable->offset = offset;
+    SymbolTableEntry *newEntry = createEntry(t, 0, offset);
     newEntry->isDefined = 1;
     newEntry->next = symbolTable->table[index];
     symbolTable->table[index] = newEntry;

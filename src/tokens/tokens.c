@@ -79,11 +79,16 @@ char *getTokenStringValue(int token)
     case NOT_EQLTO:
         return "NOT_EQLTO";
     case ARGS_START:
-        return "ARGS";
+        return "ARGS_START";
     case ARGS_END:
         return "ARGS_END";
+    case PARAM_START:
+        return "PARAM_START";
+    case PARAM_END:
+        return "PARAM_END";
 
-            default : return "UNKNOWN";
+    default:
+        return "UNKNOWN";
     }
 }
 

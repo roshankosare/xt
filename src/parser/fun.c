@@ -52,11 +52,11 @@ ASTNode *parse_fun(Context *context)
     functionKeywordNode->left = functionNamenode;
     expect(context, OPEN_PAREN);
     consume(context);
-    Token args_start_token = {.lexeme = "Args_start", .value = ARGS_START};
+    Token args_start_token = {.lexeme = "Param_start", .value = PARAM_START};
     ASTNode *args_start = createASTNode(args_start_token);
     args_start->right = parse_fun_def_param(context, functionNameToken);
 
-    Token args_end_token = {.lexeme = "Args_start", .value = ARGS_END};
+    Token args_end_token = {.lexeme = "Param_end", .value = PARAM_END};
     ASTNode *args_end = createASTNode(args_end_token);
     args_start->next = args_end;
     expect(context, CLOSE_PAREN);

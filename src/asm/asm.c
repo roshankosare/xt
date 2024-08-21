@@ -244,11 +244,12 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
     break;
     case IDENTIFIER:
     {
+
         SymbolTableEntry *entry = checkSymbolEntry(context, ast->token);
         if (entry->scope == 1)
         { // this is global var
             fprintf(fp, "    mov eax , [%s]\n", ast->token.lexeme);
-            break; // store the value of identifer to eax
+            // store the value of identifer to eax
         }
         else
         {
@@ -269,21 +270,48 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
         pushASTQnodeInQueue(context->astQueue, ast->right, entry->token.lexeme);
         break;
 
-    case ARGS_START:
+    case FUNCTION_CALL:
+    {
+        fprintf(fp, "    push rbp                ; Save base pointer\n");
+        fprintf(fp, "    mov rbp, rsp            ; Establish new base pointer\n");
+        ASTNode *args = ast->right->right;
+
+        int offset = 4;
+        while (args != NULL)
+        {
+            translate(args, context, fp);
+            fprintf(fp, "    pop eax\n");
+            fprintf(fp, "    mov [ebp - %d] , eax       ;; args no:- %d\n", offset,offset/4);
+            args = args->next;
+            offset = offset + 4;
+        }
+        fprintf(fp, "    call  %s\n", ast->left->token.lexeme);
+    }
+    break;
+    case PARAM_START:
     {
         SymbolTableEntry *entry = getSymboTableFromQueue(context);
         pushSymbolTable(context->symbolTableStack, entry);
+        pushSymbolTable(context->symbolTableTempStack, entry);
     }
 
     break;
 
-    case ARGS_END:
+    case PARAM_END:
     {
         // SymbolTableEntry *entry = popSymbolTable(context->symbolTableStack);
         // pushSymbolTable(context->symbolTableTempStack, entry);
     }
 
     break;
+
+    case ARGS_START:
+
+        break;
+
+    case ARGS_END:
+
+        return;
 
     case LOGICAL_AND:
         translate(ast->left, context, fp);
@@ -353,6 +381,7 @@ void generateLabels(Context *context, FILE *fp)
     int num_elements = 0;
     while (current != NULL)
     {
+
         num_elements = context->astQueue->num_elements;
         fprintf(fp, "%s\n", current->label);
         translate(current->ast, context, fp);
@@ -386,7 +415,11 @@ void generateLabels(Context *context, FILE *fp)
 
         while (getTopSymbolTable(context->symbolTableTempStack) != NULL)
         {
-            popSymbolTable(context->symbolTableStack);
+            if (getTopSymbolTable(context->symbolTableStack)->next != NULL)
+            {
+                popSymbolTable(context->symbolTableStack);
+            }
+
             popSymbolTable(context->symbolTableTempStack);
         }
 

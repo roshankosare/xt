@@ -88,6 +88,9 @@ typedef enum
     EXP_TOKEN,
     ARGS_START,
     ARGS_END,
+    PARAM_START,
+    PARAM_END,
+    FUNCTION_CALL,
     TEOF
     
 } TokenValue;

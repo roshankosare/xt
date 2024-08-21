@@ -1,9 +1,9 @@
 var x = 10;
 
 function fun(a,b){
-    var z = a +b;
-    if(z > 19){
-        a = 59 * b;
-    }
+    
+    a + b;
     
 }
+
+fun(10,20);

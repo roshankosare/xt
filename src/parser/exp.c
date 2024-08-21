@@ -74,21 +74,6 @@ ASTNode *exp(Context *context)
         return node;
     }
 
-    node = parse_fun_call(context);
-    if (node != NULL)
-    {
-        if (match(context, EXP_TOKEN))
-        {
-            ASTNode *op = createASTNode(context->current);
-            consume(context); // consume  exp_token
-            op->left = node;
-            op->right = exp(context);
-            node = op;
-            return node;
-        }
-        return node;
-    }
-
     node = parse_uni_stmt(context);
     if (node != NULL)
     {
@@ -104,20 +89,20 @@ ASTNode *exp(Context *context)
         return node;
     }
 
-    node = parse_conditional_exp(context);
-    if (node != NULL)
-    {
-        if (match(context, EXP_TOKEN))
-        {
-            ASTNode *op = createASTNode(context->current);
-            consume(context); // consume  exp_token
-            op->left = node;
-            op->right = exp(context);
-            node = op;
-            return node;
-        }
-        return node;
-    }
+    // node = parse_conditional_exp(context);
+    // if (node != NULL)
+    // {
+    //     if (match(context, EXP_TOKEN))
+    //     {
+    //         ASTNode *op = createASTNode(context->current);
+    //         consume(context); // consume  exp_token
+    //         op->left = node;
+    //         op->right = exp(context);
+    //         node = op;
+    //         return node;
+    //     }
+    //     return node;
+    // }
 
     node = parse_additive(context);
     if (node != NULL)
@@ -189,15 +174,23 @@ ASTNode *parse_fun_call(Context *context)
         consume(context);
         if (match(context, OPEN_PAREN))
         {
+            Token funtion_call_token = {.lexeme = "Funtion_call", .value = FUNCTION_CALL};
+            ASTNode *funtion_call_node = createASTNode(funtion_call_token);
             checkFuntionEntry(context, funtion_name);
+            funtion_call_node->left = funId;
             consume(context); // consume "("
-            Token token = {.lexeme = "Args", .value = UNKNOWN};
-            ASTNode *args = createASTNode(token);
-            funId->left = args;
-            args->right = parse_fun_call_args(context);
+            Token args_start_token = {.lexeme = "Args_start", .value = ARGS_START};
+            ASTNode *args_start = createASTNode(args_start_token);
+            funtion_call_node->right = args_start;
+            args_start->right = parse_fun_call_args(context);
+
+            Token args_end_token = {.lexeme = "Args_end", .value = ARGS_END};
+            ASTNode *args_end = createASTNode(args_end_token);
             expect(context, CLOSE_PAREN);
-            consume(context); // consume ")"
-            return funId;
+            consume(context); //consume ")"
+            args_start->next = args_end;
+
+            return funtion_call_node;
         }
         free(funId);
         unconsume(context);
@@ -218,9 +211,12 @@ ASTNode *parse_fun_call_args(Context *context)
     if (match(context, COMMA))
     {
         consume(context);
-        node->next = parse_fun_call_args(context);
+        node->next = exp(context);
+        node->next->next = parse_fun_call_args(context);
+
         return node;
     }
+    expect(context, CLOSE_PAREN);
     return node;
 }
 
@@ -229,9 +225,15 @@ ASTNode *parse_assign(Context *context)
 {
     if (match(context, IDENTIFIER))
     {
+
         ASTNode *identifierNode = createASTNode(context->current);
-        checkSymbolEntry(context, identifierNode->token); // check for symbol entry
         consume(context);
+        if (!match(context, ASSIGN))
+        {
+            unconsume(context);
+            return NULL;
+        }
+        checkSymbolEntry(context, identifierNode->token); // check for symbol entry
         if (match(context, ASSIGN))
         {
             ASTNode *assignNode = createASTNode(context->current);
@@ -248,21 +250,23 @@ ASTNode *parse_assign(Context *context)
 }
 
 // CONDITIONAL_EXP := PRIMARY_EXP "<" | ">" | "==" | "<=" | ">=" PRIMARY_EXP
-ASTNode *parse_conditional_exp(Context *context)
-{
-    ASTNode *primaryLeft = parse_primary(context);
-    if (match(context, CONDITIONAL_TOKEN))
-    {
-        ASTNode *op = createASTNode(context->current);
-        consume(context);
-        op->left = primaryLeft;
-        op->right = parse_primary(context);
-        return op;
-    }
-    unconsume(context);
-    free(primaryLeft);
-    return NULL;
-}
+// ASTNode *parse_conditional_exp(Context *context)
+// {
+//     ASTNode *primaryLeft = parse_additive(context);
+
+//     if (match(context, CONDITIONAL_TOKEN))
+//     {
+
+//         ASTNode *op = createASTNode(context->current);
+//         consume(context);
+//         op->left = primaryLeft;
+//         op->right = parse_primary(context);
+//         return op;
+//     }
+//     unconsume(context);
+//     free(primaryLeft);
+//     return NULL;
+// }
 
 // ADDITIVE_EXP := { MULTI_EXP "+" | "-" MULTI_EXP  } | {MULTI_EXP}
 
@@ -307,8 +311,14 @@ ASTNode *parse_multi(Context *context)
 // PRIMARY_EXP := { "IDENTIFER" | "CONSTANT" }
 ASTNode *parse_primary(Context *context)
 {
+
     if (match(context, IDENTIFIER) || match(context, CONSTANT))
     {
+        ASTNode *funCall = parse_fun_call(context);
+        if (funCall)
+        {
+            return funCall;
+        }
         Token symbol = context->current;
         if (match(context, IDENTIFIER))
         {
@@ -319,8 +329,7 @@ ASTNode *parse_primary(Context *context)
         consume(context);
         return node;
     }
+    printf("\nthis runs");
     expect(context, IDENTIFIER);
     return NULL;
 }
-
-
