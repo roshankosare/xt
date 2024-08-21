@@ -115,11 +115,13 @@ ASTNode *iter_stmt(Context *context)
 
 ASTNode *jump_stmt(Context *context)
 {
-    if (expect(context, RETURN))
+    if (match(context, RETURN))
     {
         ASTNode *returnNode = createASTNode(context->current);
         consume(context);
         returnNode->right = exp(context);
+        expect(context,SEMI_COLAN);
+        consume(context);
         return returnNode;
     }
     return NULL;

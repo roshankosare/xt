@@ -11,10 +11,10 @@ ASTNode *program(Context *context)
 
     if (context->current.value == FUNCTION)
     {
-        Token token = {.lexeme = "Function", .value = UNKNOWN};
-        ASTNode *expstmtNode = createASTNode(token);
-        expstmtNode->right = fun(context);
-        return expstmtNode;
+        
+        ASTNode *funtionNode;
+        funtionNode = fun(context);
+        return funtionNode;
     }
 
     Token token = {.lexeme = "Statement", .value = UNKNOWN};

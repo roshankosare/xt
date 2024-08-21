@@ -148,7 +148,7 @@ void insertFuntionEntry(Context *context, Token t)
     return;
 }
 
-int checkFuntionEntry(Context *context, Token t)
+FunctionTableEntry *checkFuntionEntry(Context *context, Token t)
 {
 
     if (t.value != IDENTIFIER)
@@ -159,7 +159,7 @@ int checkFuntionEntry(Context *context, Token t)
     FunctionTableEntry *functionEntry = lookupFuntionSymbol(context->functionTable, t);
     if (functionEntry)
     {
-        return 1;
+        return functionEntry;
     }
     printf("\nERROR : undefined function `%s` at line at line %d and col %d", t.lexeme, t.pos.line, t.pos.col);
     exit(1);

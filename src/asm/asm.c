@@ -66,7 +66,7 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
         fprintf(fp, "    ;; plus\n");
         fprintf(fp, "    pop eax\n");
         fprintf(fp, "    pop ebx\n");
-        fprintf(fp, "    add eax ,ebx\n");
+        fprintf(fp, "    add eax , ebx\n");
         fprintf(fp, "    push eax\n");
         break;
     case MUL:
@@ -75,7 +75,7 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
         fprintf(fp, "    ;; mul\n");
         fprintf(fp, "    pop eax\n");
         fprintf(fp, "    pop ebx\n");
-        fprintf(fp, "    imul eax ,ebx\n");
+        fprintf(fp, "    imul eax , ebx\n");
         fprintf(fp, "    push eax\n");
         break;
     case DIV:
@@ -84,7 +84,7 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
         fprintf(fp, "    ;; mul\n");
         fprintf(fp, "    pop eax\n");
         fprintf(fp, "    pop ebx\n");
-        fprintf(fp, "    idiv eax ,ebx\n");
+        fprintf(fp, "    idiv eax , ebx\n");
         fprintf(fp, "    push eax\n");
         break;
     case MINUS:
@@ -93,7 +93,7 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
         fprintf(fp, "    ;; plus\n");
         fprintf(fp, "    pop eax\n");
         fprintf(fp, "    pop ebx\n");
-        fprintf(fp, "    sub eax ,ebx\n");
+        fprintf(fp, "    sub eax , ebx\n");
         fprintf(fp, "    push eax\n");
         break;
     case ASSIGN:
@@ -105,13 +105,13 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
         if (entry->scope == 1)
         {
             // this is global var
-            fprintf(fp, "    mov [%s], eax\n", ast->left->token.lexeme);
+            fprintf(fp, "    mov [%s] , eax\n", ast->left->token.lexeme);
             fprintf(fp, "    push eax\n"); // store the to address of identifier
         }
         else
         {
             int offset = getSymbolOffset(context, entry);
-            fprintf(fp, "    mov [ebp + %d - %d  ], eax   ;;%s\n", offset, entry->symbolOffset, entry->token.lexeme);
+            fprintf(fp, "    mov [ebp + %d - %d  ] , eax   ;;%s\n", offset, entry->symbolOffset, entry->token.lexeme);
             fprintf(fp, "    push eax\n");
         }
     }
@@ -130,7 +130,7 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
             if (entry->scope != 1)
             { // means variable is local we have to allocate it meemory in stack first then assign value
               // TODO allocate different size of memeory based on type of symbol; for int and float = 4byte char = 2byte
-                fprintf(fp, "    sub esp, 4\n");
+                fprintf(fp, "    sub esp , 4\n");
                 // for integers and float// for integer and float
             }
             translate(ast->right, context, fp);
@@ -156,8 +156,8 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
         // prase  condition first
         char *label = label_generate(); // generate label for  this if block
 
-        fprintf(fp, "    pop eax\n");      // get value of expression from stack
-        fprintf(fp, "    test eax eax\n"); // check if value is non zero
+        fprintf(fp, "    pop eax\n");        // get value of expression from stack
+        fprintf(fp, "    test eax , eax\n"); // check if value is non zero
         fprintf(fp, "    jnz %s      ;; jump if expression  is zero\n", label);
         pushASTQnodeInQueue(context->astQueue, ast->right, label);
 
@@ -176,9 +176,9 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
         translate(ast->right, context, fp); // parse right expression
         fprintf(fp, "    pop eax\n");       // right oprand
         fprintf(fp, "    pop ebx\n");       // left oprand
-        fprintf(fp, "    cmp ebx,eax\n");
+        fprintf(fp, "    cmp ebx , eax\n");
         fprintf(fp, "    setl al\n");
-        fprintf(fp, "    movzx eax, al\n");
+        fprintf(fp, "    movzx eax , al\n");
         fprintf(fp, "    push eax\n");
     }
     break;
@@ -188,9 +188,9 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
         translate(ast->right, context, fp); // parse right expression
         fprintf(fp, "    pop eax\n");       // right oprand
         fprintf(fp, "    pop ebx\n");       // left oprand
-        fprintf(fp, "    cmp ebx,eax\n");
+        fprintf(fp, "    cmp ebx , eax\n");
         fprintf(fp, "    setg al\n");
-        fprintf(fp, "    movzx eax, al\n");
+        fprintf(fp, "    movzx eax , al\n");
         fprintf(fp, "    push eax\n");
     }
     break;
@@ -200,9 +200,9 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
         translate(ast->right, context, fp); // parse right expression
         fprintf(fp, "    pop eax\n");       // right oprand
         fprintf(fp, "    pop ebx\n");       // left oprand
-        fprintf(fp, "    cmp ebx,eax\n");
+        fprintf(fp, "    cmp ebx , eax\n");
         fprintf(fp, "    setle al\n");
-        fprintf(fp, "    movzx eax, al\n");
+        fprintf(fp, "    movzx eax , al\n");
         fprintf(fp, "    push eax\n");
     }
     break;
@@ -212,9 +212,9 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
         translate(ast->right, context, fp); // parse right expression
         fprintf(fp, "    pop eax\n");       // right oprand
         fprintf(fp, "    pop ebx\n");       // left oprand
-        fprintf(fp, "    cmp ebx,eax\n");
+        fprintf(fp, "    cmp ebx , eax\n");
         fprintf(fp, "    setge al\n");
-        fprintf(fp, "    movzx eax, al\n");
+        fprintf(fp, "    movzx eax , al\n");
         fprintf(fp, "    push eax\n");
     }
     break;
@@ -224,9 +224,9 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
         translate(ast->right, context, fp); // parse right expression
         fprintf(fp, "    pop eax\n");       // right oprand
         fprintf(fp, "    pop ebx\n");       // left oprand
-        fprintf(fp, "    cmp ebx,eax\n");
+        fprintf(fp, "    cmp ebx , eax\n");
         fprintf(fp, "    sete al\n");
-        fprintf(fp, "    movzx eax, al\n");
+        fprintf(fp, "    movzx eax , al\n");
         fprintf(fp, "    push eax\n");
     }
     break;
@@ -236,9 +236,9 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
         translate(ast->right, context, fp); // parse right expression
         fprintf(fp, "    pop eax\n");       // right oprand
         fprintf(fp, "    pop ebx\n");       // left oprand
-        fprintf(fp, "    cmp ebx,eax\n");
+        fprintf(fp, "    cmp ebx , eax\n");
         fprintf(fp, "    setne al\n");
-        fprintf(fp, "    movzx eax, al\n");
+        fprintf(fp, "    movzx eax , al\n");
         fprintf(fp, "    push eax\n");
     }
     break;
@@ -247,13 +247,13 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
         SymbolTableEntry *entry = checkSymbolEntry(context, ast->token);
         if (entry->scope == 1)
         { // this is global var
-            fprintf(fp, "    mov eax, [%s]\n", ast->token.lexeme);
+            fprintf(fp, "    mov eax , [%s]\n", ast->token.lexeme);
             break; // store the value of identifer to eax
         }
         else
         {
             int offset = getSymbolOffset(context, entry);
-            fprintf(fp, "    mov eax, [ebp + %d - %d  ]     ;; %s\n", offset, entry->symbolOffset, entry->token.lexeme);
+            fprintf(fp, "    mov eax , [ebp + %d - %d  ]     ;; %s\n", offset, entry->symbolOffset, entry->token.lexeme);
         }
         fprintf(fp, "    push eax\n");
     }
@@ -263,15 +263,63 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
         fprintf(fp, "    push eax\n");
         break;
     case FUNCTION:
-        assert(0 && "TODO: FUNCTION is not implemented");
-    case CONDITIONAL_TOKEN:
-        assert(0 && "TODO: CONDITIONAL_TOKEN is not implemented");
+        // FUNTION ->LEFT.TOKEN == IDENTIFIER
+        FunctionTableEntry *entry = checkFuntionEntry(context, ast->left->token);
+        // FUNTION ->RIGHT = ARGS + BODY
+        pushASTQnodeInQueue(context->astQueue, ast->right, entry->token.lexeme);
+        break;
+
+    case ARGS_START:
+    {
+        SymbolTableEntry *entry = getSymboTableFromQueue(context);
+        pushSymbolTable(context->symbolTableStack, entry);
+    }
+
+    break;
+
+    case ARGS_END:
+    {
+        // SymbolTableEntry *entry = popSymbolTable(context->symbolTableStack);
+        // pushSymbolTable(context->symbolTableTempStack, entry);
+    }
+
+    break;
+
     case LOGICAL_AND:
-        assert(0 && "TODO: LOGICAL_AND is not implemented");
+        translate(ast->left, context, fp);
+        translate(ast->right, context, fp);
+        fprintf(fp, "    pop eax\n");
+        fprintf(fp, "    pop ebx\n");
+        fprintf(fp, "    test eax , eax\n"); //  Logical AND with itself to check if zero
+        fprintf(fp, "    setne al\n");       //  Set cl to 1 if eax is not zero
+        fprintf(fp, "    test ebx , ebx\n");
+        fprintf(fp, "    setne bl\n");
+        fprintf(fp, "    and al , bl\n");
+        fprintf(fp, "    movzx eax , al\n");
+        fprintf(fp, "    push eax\n");
+        break;
+
     case LOGICAL_OR:
-        assert(0 && "TODO: LOGICAL_OR is not implemented");
+        translate(ast->left, context, fp);
+        translate(ast->right, context, fp);
+        fprintf(fp, "    pop eax\n");
+        fprintf(fp, "    pop ebx\n");
+        fprintf(fp, "    test eax , eax\n"); //  Logical AND with itself to check if zero
+        fprintf(fp, "    setne al\n");       //  Set al to 1 if eax is not zero
+        fprintf(fp, "    test ebx , ebx\n");
+        fprintf(fp, "    setne bl\n");
+        fprintf(fp, "    or al , bl\n");
+        fprintf(fp, "    movzx eax , al\n");
+        fprintf(fp, "    push eax\n");
+        break;
     case LOGICAL_NOT:
-        assert(0 && "TODO: LOGICAL_NOT is not implemented");
+        translate(ast->left, context, fp);
+        fprintf(fp, "    pop eax\n");
+        fprintf(fp, "    test eax , eax\n");
+        fprintf(fp, "    sete al\n");
+        fprintf(fp, "    movzx eax , al");
+        fprintf(fp, "    push eax\n");
+        break;
 
     case BODYSTART:
     {
@@ -301,7 +349,6 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
 
 void generateLabels(Context *context, FILE *fp)
 {
-    printf("\n this runs \n");
     ASTQNode *current = popFromASTQueueFront(context->astQueue);
     int num_elements = 0;
     while (current != NULL)
@@ -317,7 +364,7 @@ void generateLabels(Context *context, FILE *fp)
         // if new elements is added pushElemts in queue repeat step 1;
         if (num_elements < context->astQueue->num_elements)
         {
-            
+
             SymbolTable *st = getTopSymbolTable(context->symbolTableTempStack);
             if (st == NULL)
             {

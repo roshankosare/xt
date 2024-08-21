@@ -25,7 +25,7 @@ ASTNode *parse_fun_def_param(Context *context, Token funtion_name)
             expect(context, COMMA);
             consume(context);
             expect(context, IDENTIFIER);
-            node->next = parse_fun_def_param(context,funtion_name);
+            node->next = parse_fun_def_param(context, funtion_name);
             return node;
         }
     }
@@ -40,24 +40,36 @@ ASTNode *parse_fun_def_param(Context *context, Token funtion_name)
 ASTNode *parse_fun(Context *context)
 {
     expect(context, FUNCTION);
+    Token functionKeywordToken = {.lexeme = "Function", .value = FUNCTION};
+    ASTNode *functionKeywordNode = createASTNode(functionKeywordToken);
     consume(context);
-    expect(context, IDENTIFIER);
 
-    Token funtion_token = context->current;
-    ASTNode *funtion_node = createASTNode(funtion_token);
-    insertFuntionEntry(context, funtion_token);
+    Token functionNameToken = context->current;
+    ASTNode *functionNamenode = createASTNode(functionNameToken);
+    expect(context, IDENTIFIER);
+    insertFuntionEntry(context, functionNameToken);
     consume(context);
+    functionKeywordNode->left = functionNamenode;
     expect(context, OPEN_PAREN);
     consume(context);
-    Token args_token = {.lexeme = "Args", .value = UNKNOWN};
-    ASTNode *args = createASTNode(args_token);
-    args->right = parse_fun_def_param(context, funtion_token);
-    funtion_node->left = args;
+    Token args_start_token = {.lexeme = "Args_start", .value = ARGS_START};
+    ASTNode *args_start = createASTNode(args_start_token);
+    args_start->right = parse_fun_def_param(context, functionNameToken);
+
+    Token args_end_token = {.lexeme = "Args_start", .value = ARGS_END};
+    ASTNode *args_end = createASTNode(args_end_token);
+    args_start->next = args_end;
     expect(context, CLOSE_PAREN);
     consume(context);
+    FunctionTableEntry *funtionEntry = checkFuntionEntry(context, functionNameToken);
     ASTNode *body;
+    pushSymbolTable(context->symbolTableStack, funtionEntry->parameterTable);
+    insertSymbolTableToQueue(context, funtionEntry->parameterTable);
     body = parse_block(context);
-    funtion_node->right = body;
+    args_end->next = body;
+    
+    popSymbolTable(context->symbolTableStack);
+    functionKeywordNode->right = args_start;
 
-    return funtion_node;
+    return functionKeywordNode;
 }

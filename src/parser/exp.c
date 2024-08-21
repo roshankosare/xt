@@ -147,7 +147,7 @@ ASTNode *parse_uni_stmt(Context *context)
         consume(context); // consume op
         expect(context, IDENTIFIER);
         // TODO:= here identifer should not funtion name
-        op->right = createASTNode(context->current);
+        op->left = createASTNode(context->current);
         return op;
     }
     int x;
@@ -158,8 +158,9 @@ ASTNode *parse_uni_stmt(Context *context)
         consume(context);
         if (match(context, INC) || match(context, DEC))
         {
-            node->right = createASTNode(context->current);
-            return node;
+            ASTNode *op = createASTNode(context->current);
+            op->left = node;
+            return op;
         }
         free(node);
         unconsume(context);
@@ -170,7 +171,7 @@ ASTNode *parse_uni_stmt(Context *context)
     {
         ASTNode *node = createASTNode(context->current);
         consume(context);
-        node->right = exp(context);
+        node->left = exp(context);
         return node;
     }
 
@@ -188,7 +189,7 @@ ASTNode *parse_fun_call(Context *context)
         consume(context);
         if (match(context, OPEN_PAREN))
         {
-            checkFuntionEntry(context,funtion_name);
+            checkFuntionEntry(context, funtion_name);
             consume(context); // consume "("
             Token token = {.lexeme = "Args", .value = UNKNOWN};
             ASTNode *args = createASTNode(token);
@@ -229,7 +230,7 @@ ASTNode *parse_assign(Context *context)
     if (match(context, IDENTIFIER))
     {
         ASTNode *identifierNode = createASTNode(context->current);
-        checkSymbolEntry(context,identifierNode->token); // check for symbol entry
+        checkSymbolEntry(context, identifierNode->token); // check for symbol entry
         consume(context);
         if (match(context, ASSIGN))
         {
@@ -321,3 +322,5 @@ ASTNode *parse_primary(Context *context)
     expect(context, IDENTIFIER);
     return NULL;
 }
+
+

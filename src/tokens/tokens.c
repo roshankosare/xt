@@ -78,9 +78,12 @@ char *getTokenStringValue(int token)
         return "LOGICAL_NOT";
     case NOT_EQLTO:
         return "NOT_EQLTO";
+    case ARGS_START:
+        return "ARGS";
+    case ARGS_END:
+        return "ARGS_END";
 
-    default:
-        return "UNKNOWN";
+            default : return "UNKNOWN";
     }
 }
 

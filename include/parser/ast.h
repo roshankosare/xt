@@ -34,6 +34,7 @@ typedef struct ASTStack
 
 ASTNode *createASTNode(Token token);
 void pushASTQnodeInQueue(ASTQueue *queue, ASTNode *ast, char *label);
+void pushASTNodeInQueueFront(ASTQueue *queue, ASTNode *ast, char *label);
 ASTQNode *popFromASTQueueFront(ASTQueue *queue);
 ASTQNode *popFromASTQueueRear(ASTQueue *queue);
 void pushASTStack(ASTStack *stack,ASTQNode *node);

@@ -44,6 +44,15 @@ void pushASTQnodeInQueue(ASTQueue *queue, ASTNode *ast, char *label)
     queuefront->next = node;
     return;
 }
+void pushASTNodeInQueueFront(ASTQueue *queue, ASTNode *ast, char *label)
+{
+    ASTQNode *node = (ASTQNode *)malloc(sizeof(ASTQNode));
+    node->next = queue->queueFront;
+    node->ast = ast;
+    node->label = label;
+    queue->queueFront = node;
+    return;
+}
 
 ASTQNode *popFromASTQueueFront(ASTQueue *queue)
 {

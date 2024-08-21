@@ -38,6 +38,7 @@
 #define INT_TOKEN_LOGICAL_OR            33
 #define INT_TOKEN_LOGICAL_NOT           34
 #define INT_TOKEN_NOT_EQLTO             35
+#define INT_TOKEN_ARGS                  36
 #define INVALID_TOKEN                   -1
 
 
@@ -85,6 +86,8 @@ typedef enum
     BODYSTART,
     BODYEND,
     EXP_TOKEN,
+    ARGS_START,
+    ARGS_END,
     TEOF
     
 } TokenValue;

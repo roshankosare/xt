@@ -7,122 +7,57 @@ section .text          ; Section for code
     mov eax, 10
     push eax
     pop eax
-    mov [x], eax
-    push eax
-    mov eax, [x]
-    mov eax, 10
-    push eax
-    pop eax
-    pop ebx
-    cmp ebx,eax
-    setg al
-    movzx eax, al
-    push eax
-    pop eax
-    test eax eax
-    jnz .label_1804289383      ;; jump if expression  is zero
-    mov eax, 10
-    push eax
-    mov eax, 20
-    push eax
-    ;; plus
-    pop eax
-    pop ebx
-    add eax ,ebx
-    push eax
-    pop eax
-    mov [x], eax
+    mov [x] , eax
     push eax
 ; Exit the program
     mov eax, 1         ; syscall number for sys_exit
     xor ebx, ebx       ; exit code 0
     int 0x80           ; make syscall
+fun
+    push rbp                ; Save base pointer
+    mov rbp, rsp            ; Establish new base pointer
+    sub esp , 4
+    mov eax , [ebp + 4 - 0  ]     ;; a
+    push eax
+    mov eax , [ebp + 4 - 0  ]     ;; b
+    push eax
+    ;; plus
+    pop eax
+    pop ebx
+    add eax , ebx
+    push eax
+    pop eax
+    mov [ebp + 0 - 4  ] , eax   ;;z
+    push eax
+    mov eax , [ebp + 0 - 4  ]     ;; z
+    push eax
+    mov eax, 19
+    push eax
+    pop eax
+    pop ebx
+    cmp ebx , eax
+    setg al
+    movzx eax , al
+    push eax
+    pop eax
+    test eax , eax
+    jnz .label_1804289383      ;; jump if expression  is zero
+    mov rsp, rbp            ; Restore the stack pointer
+    pop rbp                 ; Restore the base pointer
 .label_1804289383
     push rbp                ; Save base pointer
     mov rbp, rsp            ; Establish new base pointer
-    sub esp, 4
-    mov eax, 60
+    mov eax, 59
     push eax
-    pop eax
-    mov [ebp + 0 - 4  ], eax   ;;j
+    mov eax , [ebp + 8 - 0  ]     ;; b
     push eax
-    mov eax, [ebp + 0 - 4  ]     ;; j
-    push eax
-    mov eax, 50
-    push eax
+    ;; mul
     pop eax
     pop ebx
-    cmp ebx,eax
-    setl al
-    movzx eax, al
+    imul eax , ebx
     push eax
     pop eax
-    test eax eax
-    jnz .label_846930886      ;; jump if expression  is zero
-    mov eax, 50
-    push eax
-    mov eax, 60
-    push eax
-    ;; plus
-    pop eax
-    pop ebx
-    add eax ,ebx
-    push eax
-    pop eax
-    mov [x], eax
-    push eax
-    mov rsp, rbp            ; Restore the stack pointer
-    pop rbp                 ; Restore the base pointer
-.label_846930886
-    push rbp                ; Save base pointer
-    mov rbp, rsp            ; Establish new base pointer
-    sub esp, 4
-    mov eax, 80
-    push eax
-    mov eax, [ebp + 4 - 4  ]     ;; j
-    push eax
-    ;; plus
-    pop eax
-    pop ebx
-    add eax ,ebx
-    push eax
-    pop eax
-    mov [ebp + 0 - 4  ], eax   ;;k
-    push eax
-    mov eax, [ebp + 0 - 4  ]     ;; k
-    push eax
-    mov eax, 100
-    push eax
-    pop eax
-    pop ebx
-    cmp ebx,eax
-    setg al
-    movzx eax, al
-    push eax
-    pop eax
-    test eax eax
-    jnz .label_1681692777      ;; jump if expression  is zero
-    mov eax, 50
-    push eax
-    pop eax
-    mov [ebp + 0 - 4  ], eax   ;;k
-    push eax
-    mov rsp, rbp            ; Restore the stack pointer
-    pop rbp                 ; Restore the base pointer
-.label_1681692777
-    push rbp                ; Save base pointer
-    mov rbp, rsp            ; Establish new base pointer
-    mov eax, [ebp + 8 - 4  ]     ;; j
-    push eax
-    mov eax, [ebp + 4 - 4  ]     ;; k
-    push eax
-    ;; plus
-    pop eax
-    pop ebx
-    add eax ,ebx
-    push eax
-    pop eax
-    mov [ebp + 8 - 4  ], eax   ;;j
+    mov [ebp + 8 - 0  ] , eax   ;;a
     push eax
     mov rsp, rbp            ; Restore the stack pointer
     pop rbp                 ; Restore the base pointer
