@@ -2,7 +2,9 @@ var x = 10;
 
 function fun(a,b){
     
-    a + b;
+    while( a < b){
+        a +b;
+    }
     
 }
 

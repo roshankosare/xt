@@ -169,7 +169,16 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
     case RETURN:
         assert(0 && "TODO: RETURN is not implemented");
     case WHILE:
-        assert(0 && "TODO: WHILE is not implemented");
+    {
+        char *label = label_generate();
+        translate(ast->left, context, fp);
+        fprintf(fp, "    pop eax\n");
+        fprintf(fp,"    test eax , eax\n");
+        fprintf(fp, "   jnz %s\n", label);
+        pushASTQnodeInQueue(context->astQueue,ast,label);
+        // assert(0 && "TODO: WHILE is not implemented");
+    }
+    break;
     case LESS_THAN:
     {
         translate(ast->left, context, fp);  // parse left expression
@@ -281,7 +290,7 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
         {
             translate(args, context, fp);
             fprintf(fp, "    pop eax\n");
-            fprintf(fp, "    mov [ebp - %d] , eax       ;; args no:- %d\n", offset,offset/4);
+            fprintf(fp, "    mov [ebp - %d] , eax       ;; args no:- %d\n", offset, offset / 4);
             args = args->next;
             offset = offset + 4;
         }
@@ -384,7 +393,19 @@ void generateLabels(Context *context, FILE *fp)
 
         num_elements = context->astQueue->num_elements;
         fprintf(fp, "%s\n", current->label);
-        translate(current->ast, context, fp);
+        if (current->ast->token.value == WHILE)
+        {
+           
+            translate(current->ast->right, context, fp);
+            translate(current->ast->left, context, fp);
+            fprintf(fp, "    pop eax\n");
+            fprintf(fp,"    test eax , eax\n");
+            fprintf(fp, "    jzn %s\n", current->label);
+        }
+        else
+        {
+            translate(current->ast, context, fp);
+        }
 
         // step 1 : popfromASTQueueRear  and push into astStack till num_elements == context->astQueue->num_elemnts
         // step 2 :  pop  from astStack

@@ -33,6 +33,24 @@ fun
     push eax
     mov eax , [ebp + 8 - 8  ]     ;; b
     push eax
+    pop eax
+    pop ebx
+    cmp ebx , eax
+    setl al
+    movzx eax , al
+    push eax
+    pop eax
+    test eax , eax
+   jnz .label_1804289383
+    mov rsp, rbp            ; Restore the stack pointer
+    pop rbp                 ; Restore the base pointer
+.label_1804289383
+    push rbp                ; Save base pointer
+    mov rbp, rsp            ; Establish new base pointer
+    mov eax , [ebp + 8 - 4  ]     ;; a
+    push eax
+    mov eax , [ebp + 8 - 8  ]     ;; b
+    push eax
     ;; plus
     pop eax
     pop ebx
@@ -40,3 +58,16 @@ fun
     push eax
     mov rsp, rbp            ; Restore the stack pointer
     pop rbp                 ; Restore the base pointer
+    mov eax , [ebp + 8 - 4  ]     ;; a
+    push eax
+    mov eax , [ebp + 8 - 8  ]     ;; b
+    push eax
+    pop eax
+    pop ebx
+    cmp ebx , eax
+    setl al
+    movzx eax , al
+    push eax
+    pop eax
+    test eax , eax
+    jzn .label_1804289383
