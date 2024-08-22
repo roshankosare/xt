@@ -118,9 +118,84 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
     break;
 
     case INC:
-        assert(0 && "TODO: INC is not implemented");
+    {
+        if (ast->left != NULL)
+        {
+            SymbolTableEntry *entry = checkSymbolEntry(context, ast->left->token);
+            if (entry->scope == 1)
+            { // this is global var
+                fprintf(fp, "     inc dword [%s]\n", ast->token.lexeme);
+                translate(ast->left, context, fp);
+                // store the value of identifer to eax
+            }
+            else
+            {
+                int offset = getSymbolOffset(context, entry);
+                fprintf(fp, "    inc dword [ebp + %d - %d  ]     ;; %s\n", offset, entry->symbolOffset, entry->token.lexeme);
+                translate(ast->left, context, fp);
+            }
+            break;
+        }
+
+        if (ast->right != NULL)
+        {
+            SymbolTableEntry *entry = checkSymbolEntry(context, ast->right->token);
+            if (entry->scope == 1)
+            { // this is global var
+                translate(ast->right, context, fp);
+                fprintf(fp, "     inc dword [%s]\n", ast->token.lexeme);
+
+                // store the value of identifer to eax
+            }
+            else
+            {
+                int offset = getSymbolOffset(context, entry);
+                translate(ast->right, context, fp);
+                fprintf(fp, "    inc dword [ebp + %d - %d  ]     ;; %s\n", offset, entry->symbolOffset, entry->token.lexeme);
+            }
+            break;
+        }
+    }
+
     case DEC:
-        assert(0 && "TODO: DEC is not implemented");
+    {
+        if (ast->left != NULL)
+        {
+            SymbolTableEntry *entry = checkSymbolEntry(context, ast->left->token);
+            if (entry->scope == 1)
+            { // this is global var
+                fprintf(fp, "     dec dword [%s]\n", ast->token.lexeme);
+                translate(ast->left, context, fp);
+                // store the value of identifer to eax
+            }
+            else
+            {
+                int offset = getSymbolOffset(context, entry);
+                fprintf(fp, "    dec dword [ebp + %d - %d  ]     ;; %s\n", offset, entry->symbolOffset, entry->token.lexeme);
+                translate(ast->left, context, fp);
+            }
+            break;
+        }
+
+        if (ast->right != NULL)
+        {
+            SymbolTableEntry *entry = checkSymbolEntry(context, ast->right->token);
+            if (entry->scope == 1)
+            { // this is global var
+                translate(ast->right, context, fp);
+                fprintf(fp, "     inc dword [%s]\n", ast->token.lexeme);
+
+                // store the value of identifer to eax
+            }
+            else
+            {
+                int offset = getSymbolOffset(context, entry);
+                translate(ast->right, context, fp);
+                fprintf(fp, "    inc dword [ebp + %d - %d  ]     ;; %s\n", offset, entry->symbolOffset, entry->token.lexeme);
+            }
+            break;
+        }
+    }
     case VAR:
     {
         if (ast->right->token.value == ASSIGN) // decleration with assignment
@@ -149,8 +224,6 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
     }
 
     break;
-    case BLOCK_VAR:
-        assert(0 && "TODO: BLOCK_VAR is not implemented");
     case IF:
         translate(ast->left, context, fp);
         // prase  condition first
@@ -173,9 +246,9 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
         char *label = label_generate();
         translate(ast->left, context, fp);
         fprintf(fp, "    pop eax\n");
-        fprintf(fp,"    test eax , eax\n");
+        fprintf(fp, "    test eax , eax\n");
         fprintf(fp, "   jnz %s\n", label);
-        pushASTQnodeInQueue(context->astQueue,ast,label);
+        pushASTQnodeInQueue(context->astQueue, ast, label);
         // assert(0 && "TODO: WHILE is not implemented");
     }
     break;
@@ -395,11 +468,11 @@ void generateLabels(Context *context, FILE *fp)
         fprintf(fp, "%s\n", current->label);
         if (current->ast->token.value == WHILE)
         {
-           
+
             translate(current->ast->right, context, fp);
             translate(current->ast->left, context, fp);
             fprintf(fp, "    pop eax\n");
-            fprintf(fp,"    test eax , eax\n");
+            fprintf(fp, "    test eax , eax\n");
             fprintf(fp, "    jzn %s\n", current->label);
         }
         else

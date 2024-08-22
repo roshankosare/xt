@@ -30,7 +30,12 @@ ASTNode *stmt(Context *context)
         node = dec_stmt(context);
         return node;
     }
-    if (match(context, IDENTIFIER) || match(context, OPEN_PAREN) || match(context, CONSTANT))
+    if (match(context, IDENTIFIER) || match(context, OPEN_PAREN))
+    {
+        node = exp_stmt(context);
+        return node;
+    }
+    if (match(context, CONSTANT) || match(context, INC) || match(context, DEC))
     {
         node = exp_stmt(context);
         return node;
@@ -120,7 +125,7 @@ ASTNode *jump_stmt(Context *context)
         ASTNode *returnNode = createASTNode(context->current);
         consume(context);
         returnNode->right = exp(context);
-        expect(context,SEMI_COLAN);
+        expect(context, SEMI_COLAN);
         consume(context);
         return returnNode;
     }

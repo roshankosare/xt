@@ -31,6 +31,12 @@ fun
     mov rbp, rsp            ; Establish new base pointer
     mov eax , [ebp + 8 - 4  ]     ;; a
     push eax
+    inc dword [ebp + 8 - 4  ]     ;; a
+    dec dword [ebp + 8 - 8  ]     ;; b
+    mov eax , [ebp + 8 - 8  ]     ;; b
+    push eax
+    mov eax , [ebp + 8 - 4  ]     ;; a
+    push eax
     mov eax , [ebp + 8 - 8  ]     ;; b
     push eax
     pop eax

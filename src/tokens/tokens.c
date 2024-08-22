@@ -86,6 +86,10 @@ char *getTokenStringValue(int token)
         return "PARAM_START";
     case PARAM_END:
         return "PARAM_END";
+    case INC:
+    return "INC";
+    case DEC:
+    return "DEC";
 
     default:
         return "UNKNOWN";
@@ -126,7 +130,8 @@ int getTokenIntCodeValue(char *token)
     if (strcmp(token, ">=") == 0)       return INT_TOKEN_GRATER_THAN_EQTO;
     if (strcmp(token,"!=") == 0)        return INT_TOKEN_NOT_EQLTO;
     if (strcmp(token, ",") == 0)        return INT_TOKEN_COMMA;
-    if(isKeywordToken(token))           return INT_TOKEN_KEYWORD;
+    if(strcmp(token,"++") == 0)         return INT_TOKEN_INC;
+    if(strcmp(token,"--")== 0)          return INT_TOKEN_DEC;
     if(isIdentifierToken(token))        return INT_TOKEN_IDENTIFIER;   
     if(isConstantToken(token))          return INT_TOKEN_CONSTANT;
     return INT_TOKEN_UNKNOWN;
