@@ -79,14 +79,19 @@ int main(int argc, char *argv[])
 
     Context *context = initContext(tokens);
     SymbolTable *symbolTable = initSymbolTable();
-    pushSymbolTable(context->symbolTableStack,symbolTable);
+    pushSymbolTable(context->symbolTableStack, symbolTable);
     ASTNode *start = parseProgram(context, tokens, &index, tokenCount);
+    fclose(fp);
 
     printf("\nLexical anaysis completed without any error\n");
     printAST(start, 0);
 
     FILE *op;
-    op = fopen(outputfile, "w+");
+    
+    char *asmFile = malloc(50 * sizeof(char));
+    snprintf(asmFile, 50, "%s.asm", outputfile);
+
+    op = fopen(asmFile, "w+");
     if (fp == NULL)
     {
         printf("\nERROR: %s file cannot be creted\n", inputfile);
@@ -94,6 +99,28 @@ int main(int argc, char *argv[])
     }
     printf("\n Parsing is completed successfully..\n");
     createASMFile(start, context, op);
-    
+    fclose(op);
+
+    char *asmCommand = malloc(50 * sizeof(char));
+    char *linkCommand = malloc(50 * sizeof(char));
+    // Execute the command using system()
+
+    snprintf(asmCommand, 50, "nasm -f elf32 %s.asm  -o %s.o", outputfile, outputfile);
+    snprintf(linkCommand, 50, "ld -m elf_i386  -o %s %s.o", outputfile, outputfile);
+
+    int asmResult = system(asmCommand);
+    int linkResult = system(linkCommand);
+
+    if (asmResult != 0) {
+        fprintf(stderr, "Assembly failed with error code %d\n", asmResult);
+        return 1;
+    }
+
+    if (linkResult != 0) {
+        fprintf(stderr, "Linking failed with error code %d\n", linkResult);
+        return 1;
+    }
+
+
     return 0;
 }

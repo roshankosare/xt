@@ -5,7 +5,9 @@ BUILD_DIR = build
 TEST_DIR = test
 SOURCES = $(wildcard $(SRC_DIR)/*/*.c) main.c
 OBJECTS = $(patsubst %.c,$(BUILD_DIR)/%.o,$(SOURCES))
+TARGET = out
 EXECUTABLE = xt
+
 
 all: $(EXECUTABLE)
 

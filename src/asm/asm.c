@@ -11,11 +11,12 @@ void createASMFile(ASTNode *ast, Context *context, FILE *fp)
 {
     fprintf(fp, "section .data          ; Section for initialized data\n");
     translateGlobalVar(ast, fp);
-    fprintf(fp, "section .bss           ; Section for uninitialized data\n");
+    fprintf(fp,"\n");
+   
     fprintf(fp, "section .text          ; Section for code\n");
-    fprintf(fp, "    global _start      ; Make the _start symbol available to the linker");
+    fprintf(fp, "    global _start      ; Make the _start symbol available to the linker\n");
     fprintf(fp, "\n");
-    fprintf(fp, " _start: \n");
+    fprintf(fp, "_start: \n");
     translate(ast, context, fp); // translate code;
     fprintf(fp, "; Exit the program\n");
     fprintf(fp, "    mov eax, 1         ; syscall number for sys_exit\n");
@@ -240,7 +241,15 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
     case FOR:
         assert(0 && "TODO: FOR is not implemented");
     case RETURN:
-        assert(0 && "TODO: RETURN is not implemented");
+    {
+        if (ast->left != NULL)
+        {
+            translate(ast->left, context, fp);
+        }
+        fprintf(fp, "    ret\n");
+        break;
+    }
+
     case WHILE:
     {
         char *label = label_generate();

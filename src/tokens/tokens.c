@@ -87,9 +87,9 @@ char *getTokenStringValue(int token)
     case PARAM_END:
         return "PARAM_END";
     case INC:
-    return "INC";
+        return "INC";
     case DEC:
-    return "DEC";
+        return "DEC";
 
     default:
         return "UNKNOWN";
