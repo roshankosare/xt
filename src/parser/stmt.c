@@ -35,7 +35,7 @@ ASTNode *stmt(Context *context)
         node = exp_stmt(context);
         return node;
     }
-    if (match(context, CONSTANT) || match(context, INC) || match(context, DEC))
+    if (match(context, INTEGER_CONSTANT) || match(context, INC) || match(context, DEC))
     {
         node = exp_stmt(context);
         return node;

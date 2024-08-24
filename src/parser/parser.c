@@ -7,6 +7,7 @@
 #include "../../include/context/context.h"
 #include "../../include/parser/program.h"
 #include "../../include/parser/helper.h"
+#include "../../include/tokens/tokenizer.h"
 
 ASTNode *parseProgram(Context *context, Token *tokens, int *index, int token_count)
 {

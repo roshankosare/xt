@@ -54,7 +54,7 @@ int main(int argc, char *argv[])
     }
 
     FILE *fp;
-    int tokenCount;
+    int tokenCount = 0;
 
     // Open file for reading
     fp = fopen(inputfile, "r");
@@ -63,16 +63,20 @@ int main(int argc, char *argv[])
         printf("\nERROR: %s file not found\n", inputfile);
         exit(1);
     }
+    Token *tokens = lexer(fp, &tokenCount);
+    
+    
+   
 
-    Token *tokens = tokenize(fp, &tokenCount);
-    for (int i = 0; i < tokenCount; i++)
-    {
-        if (tokens[i].value == UNKNOWN)
-        {
-            printf("\nERROR: at line %d and col %d [unknown token]-> '%s'\n", tokens[i].pos.line, tokens[i].pos.col, tokens[i].lexeme);
-            exit(1);
-        }
-    }
+    // Token *tokens = tokenize(fp, &tokenCount);
+    // for (int i = 0; i < tokenCount; i++)
+    // {
+    //     if (tokens[i].value == UNKNOWN)
+    //     {
+    //         printf("\nERROR: at line %d and col %d [unknown token]-> '%s'\n", tokens[i].pos.line, tokens[i].pos.col, tokens[i].lexeme);
+    //         exit(1);
+    //     }
+    // }
 
     int index = 0;
     printTokens(tokens, tokenCount);
@@ -87,7 +91,7 @@ int main(int argc, char *argv[])
     printAST(start, 0);
 
     FILE *op;
-    
+
     char *asmFile = malloc(50 * sizeof(char));
     snprintf(asmFile, 50, "%s.asm", outputfile);
 
@@ -120,7 +124,6 @@ int main(int argc, char *argv[])
         fprintf(stderr, "Linking failed with error code %d\n", linkResult);
         return 1;
     }
-
 
     return 0;
 }

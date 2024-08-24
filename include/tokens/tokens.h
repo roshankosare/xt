@@ -39,6 +39,11 @@
 #define INT_TOKEN_LOGICAL_NOT           34
 #define INT_TOKEN_NOT_EQLTO             35
 #define INT_TOKEN_ARGS                  36
+#define INT_TOKEN_OPEN_SQ_PARAN         37
+#define INT_TOKEN_CLOSE_SQ_PARAN        38
+#define INT_TOKEN_STRING_CONSTANT       39
+#define INT_TOKEN_INTEGER_CONSTANT      40
+#define INT_TOKEN_FLOAT_CONSTANT        41
 #define INVALID_TOKEN                   -1
 
 
@@ -49,6 +54,8 @@ typedef enum
     CLOSE_PAREN,
     OPEN_CURLY_PAREN,
     CLOSE_CURLY_PAREN,
+    OPEN_SQ_PARAN,
+    CLOSE_SQ_PARAN,
     PLUS,
     MUL,
     DIV,
@@ -76,7 +83,6 @@ typedef enum
     NOT_EQLTO,
     KEYWORD,
     IDENTIFIER,
-    CONSTANT,
     FUNCTION,
     UNKNOWN,
     CONDITIONAL_TOKEN,
@@ -91,6 +97,9 @@ typedef enum
     PARAM_START,
     PARAM_END,
     FUNCTION_CALL,
+    STRING_CONSTANT ,
+    INTEGER_CONSTANT ,
+    FLOAT_CONSTANT  , 
     TEOF
     
 } TokenValue;
@@ -110,16 +119,9 @@ typedef struct
 
 } Token;
 
-// Token *createToken(char *lexme, TokenValue value,Position pos){
-//     Token *t = (Token *)malloc(sizeof(Token));
-//     strcpy(t->lexeme,lexme);
-//     t->pos = pos;
-//     t->value = value;
-//     return t;
-// }
 
-int getTokenIntCodeValue(char *token);
-char *getTokenStringValue(int token);
+
+
 
 
 

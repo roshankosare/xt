@@ -322,7 +322,7 @@ ASTNode *parse_multi(Context *context)
 ASTNode *parse_primary(Context *context)
 {
 
-    if (match(context, IDENTIFIER) || match(context, CONSTANT) || match(context,INC) || match(context,DEC))
+    if (match(context, IDENTIFIER) || match(context, INTEGER_CONSTANT) || match(context,INC) || match(context,DEC))
     {
         ASTNode *funCall = parse_fun_call(context);
         if (funCall)

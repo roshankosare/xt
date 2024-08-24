@@ -350,7 +350,7 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
         fprintf(fp, "    push eax\n");
     }
     break;
-    case CONSTANT:
+    case INTEGER_CONSTANT:
         fprintf(fp, "    mov eax, %s\n", ast->token.lexeme);
         fprintf(fp, "    push eax\n");
         break;
