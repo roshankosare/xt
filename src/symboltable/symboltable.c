@@ -28,6 +28,7 @@ SymbolTable *initSymbolTable()
 // Function to push a new symbol table onto the stack
 void pushSymbolTable(SymbolTableStack *stack, SymbolTable *symbolTable)
 {
+   
     stack->scope++;
     symbolTable->next = stack->top;
     stack->top = symbolTable;
@@ -38,6 +39,7 @@ SymbolTable *popSymbolTable(SymbolTableStack *stack)
 {
     if (stack->top != NULL)
     {
+       
         SymbolTable *top = stack->top;
         stack->top = stack->top->next;
         stack->scope--;

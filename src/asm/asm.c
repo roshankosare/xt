@@ -11,8 +11,8 @@ void createASMFile(ASTNode *ast, Context *context, FILE *fp)
 {
     fprintf(fp, "section .data          ; Section for initialized data\n");
     translateGlobalVar(ast, fp);
-    fprintf(fp,"\n");
-   
+    fprintf(fp, "\n");
+
     fprintf(fp, "section .text          ; Section for code\n");
     fprintf(fp, "    global _start      ; Make the _start symbol available to the linker\n");
     fprintf(fp, "\n");
@@ -22,6 +22,7 @@ void createASMFile(ASTNode *ast, Context *context, FILE *fp)
     fprintf(fp, "    mov eax, 1         ; syscall number for sys_exit\n");
     fprintf(fp, "    xor ebx, ebx       ; exit code 0\n");
     fprintf(fp, "    int 0x80           ; make syscall\n");
+
     generateLabels(context, fp);
 }
 
@@ -228,12 +229,15 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
     case IF:
         translate(ast->left, context, fp);
         // prase  condition first
-        char *label = label_generate(); // generate label for  this if block
-
+        char *label_true = label_generate(); // generate label for  this if block
+        char *label_false = label_generate();
         fprintf(fp, "    pop eax\n");        // get value of expression from stack
         fprintf(fp, "    test eax , eax\n"); // check if value is non zero
-        fprintf(fp, "    jnz %s      ;; jump if expression  is zero\n", label);
-        pushASTQnodeInQueue(context->astQueue, ast->right, label);
+        fprintf(fp, "    lea eax , [%s]\n", label_false);
+        fprintf(fp, "    push eax\n");
+        fprintf(fp, "    jnz %s      ;; jump if expression  is zero\n", label_true);
+        pushASTQnodeInQueue(context->astQueue, ast->right, label_true);
+        fprintf(fp, "%s:\n", label_false);
 
         break;
     case ELSE:
@@ -358,6 +362,7 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
         // FUNTION ->LEFT.TOKEN == IDENTIFIER
         FunctionTableEntry *entry = checkFuntionEntry(context, ast->left->token);
         // FUNTION ->RIGHT = ARGS + BODY
+
         pushASTQnodeInQueue(context->astQueue, ast->right, entry->token.lexeme);
         break;
 
@@ -381,9 +386,10 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
     break;
     case PARAM_START:
     {
-        SymbolTableEntry *entry = getSymboTableFromQueue(context);
-        pushSymbolTable(context->symbolTableStack, entry);
-        pushSymbolTable(context->symbolTableTempStack, entry);
+
+        SymbolTable *symboltable = getSymboTableFromQueue(context);
+        pushSymbolTable(context->symbolTableStack, symboltable);
+        // pushSymbolTable(context->symbolTableTempStack, symboltable);
     }
 
     break;
@@ -443,17 +449,20 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
     case BODYSTART:
     {
 
-        fprintf(fp, "    push rbp                ; Save base pointer\n");
-        fprintf(fp, "    mov rbp, rsp            ; Establish new base pointer\n");
+        fprintf(fp, "    push ebp                ; Save base pointer\n");
+        fprintf(fp, "    mov ebp, esp            ; Establish new base pointer\n");
         SymbolTable *symboltable = getSymboTableFromQueue(context);
         pushSymbolTable(context->symbolTableStack, symboltable);
     }
     break;
     case BODYEND:
     {
-        fprintf(fp, "    mov rsp, rbp            ; Restore the stack pointer\n");
-        fprintf(fp, "    pop rbp                 ; Restore the base pointer\n");
+        fprintf(fp, "    mov esp, ebp            ; Restore the stack pointer\n");
+        fprintf(fp, "    pop ebp                 ; Restore the base pointer\n");
+        fprintf(fp, "    pop eax\n");
+        fprintf(fp, "    jmp eax\n");
         SymbolTable *symbolTable = popSymbolTable(context->symbolTableStack);
+
         pushSymbolTable(context->symbolTableTempStack, symbolTable);
         break;
     }
@@ -474,7 +483,7 @@ void generateLabels(Context *context, FILE *fp)
     {
 
         num_elements = context->astQueue->num_elements;
-        fprintf(fp, "%s\n", current->label);
+        fprintf(fp, "%s:\n", current->label);
         if (current->ast->token.value == WHILE)
         {
 
@@ -482,11 +491,12 @@ void generateLabels(Context *context, FILE *fp)
             translate(current->ast->left, context, fp);
             fprintf(fp, "    pop eax\n");
             fprintf(fp, "    test eax , eax\n");
-            fprintf(fp, "    jzn %s\n", current->label);
+            fprintf(fp, "    jnz %s\n", current->label);
         }
         else
         {
             translate(current->ast, context, fp);
+            
         }
 
         // step 1 : popfromASTQueueRear  and push into astStack till num_elements == context->astQueue->num_elemnts
@@ -518,6 +528,7 @@ void generateLabels(Context *context, FILE *fp)
 
         while (getTopSymbolTable(context->symbolTableTempStack) != NULL)
         {
+
             if (getTopSymbolTable(context->symbolTableStack)->next != NULL)
             {
                 popSymbolTable(context->symbolTableStack);

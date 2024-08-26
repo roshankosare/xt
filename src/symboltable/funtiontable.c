@@ -6,7 +6,7 @@
 
 FunctionTable *initFuntionTable()
 {
-    FunctionTable *funtionTable = (SymbolTable *)malloc(sizeof(SymbolTable));
+    FunctionTable *funtionTable = (FunctionTable *)malloc(sizeof(FunctionTable));
     for (int i = 0; i < FUNTION_TABLE_SIZE; i++)
     {
         funtionTable->table[i] = NULL;

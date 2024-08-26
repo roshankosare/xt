@@ -339,12 +339,14 @@ ASTNode *parse_primary(Context *context)
         {
             checkSymbolEntry(context, symbol);
         }
+       
         ASTNode *node;
         node = createASTNode(context->current);
+        
         consume(context);
         return node;
     }
-    printf("\nthis runs");
+   
     expect(context, IDENTIFIER);
     return NULL;
 }

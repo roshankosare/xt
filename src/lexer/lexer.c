@@ -25,4 +25,12 @@ void printTokens(Token *tokens, int tokenCount)
         printf("\npos: line %d  col %d ", tokens[i].pos.line, tokens[i].pos.col);
         printf("\n----------------------------------------------------------");
     }
+
+    for (int i = 0; i <= tokenCount; i++)
+    {
+        if (tokens[i].value == UNKNOWN)
+        {
+            printf("\nERROR:- unkown token at line %d and col %d", tokens[i].pos.line, tokens[i].pos.col);
+        }
+    }
 }

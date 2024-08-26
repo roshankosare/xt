@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <regex.h>
 #include <string.h>
+#include <ctype.h>
 #include "../../include/tokens/tokenizer.h"
 
 #define MAX_TOKEN_LENGTH 100
@@ -15,15 +16,16 @@ typedef struct
 } TokenPattern;
 
 TokenPattern token_patterns[] = {
-    {{0}, "INCREMENT_OPERATOR", "\\+\\+|--"},
+    {{0}, "KEYWORD", "\\b(var|if|else|while|return|function)\\b"}, // KEYWORDS
     {{0}, "IDENTIFIER", "[a-zA-Z_][a-zA-Z0-9_]*"},
-    {{0}, "FLOAT", "[+-]?[0-9]*\\.[0-9]+([eE][+-]?[0-9]+)?"},
-    {{0}, "INTEGER", "[+-]?[0-9]+"},
-    {{0}, "OPERATOR", "[+*/=-]"},                         // Properly escaped hyphen
-    {{0}, "KEYWORD", "\\b(var|if|else|while|return)\\b"}, // Keywords with word boundaries
-    {{0}, "CONDITIONAL_OPERATOR", "==|!=|<=|>=|<|>"},
-    {{0}, "PUNCTUATION", "\\(|\\)|\\{|\\}|\\[|\\]|:|;|,"}, // Escaped brackets and parentheses
-    {{0}, "STRING_CONSTANT", "\"[^\"]*\"|'[^']*'"}         // Handles double and single quotes
+    {{0}, "INVALID_IDENTIFIER", "[0-9]+\\.[a-zA-Z]+"},                         // IDENTIFIER
+    {{0}, "INCREMENT_OPERATOR", "\\+\\+|--"},                               // INC/DEC
+    {{0}, "FLOAT", "[+-]?([0-9]+\\.[0-9]*|\\.[0-9]+)([eE][+-]?[0-9]+)\\b)"}, // FLOAT
+    {{0}, "INTEGER", "[+-]?[0-9]+"},                                        // NUMBER
+    {{0}, "OPERATOR", "[+*/=-]"},                                           // OPERATOR
+    {{0}, "CONDITIONAL_OPERATOR", "==|!=|<=|>=|<|>"},                       // CONDITIONAL OPERATORS
+    {{0}, "PUNCTUATION", "\\(|\\)|\\{|\\}|\\[|\\]|:|;|,"},                  // PUNCTUATION
+    {{0}, "STRING_CONSTANT", "\"[^\"]*\"|'[^']*'"},                         // STRING CONSTANT
 
 };
 
@@ -39,7 +41,7 @@ int compile_token_patterns()
             char error_buf[100];
             regerror(result, &token_patterns[i].regex, error_buf, sizeof(error_buf));
             fprintf(stderr, "Could not compile regex for %s: %s\n", token_patterns[i].name, error_buf);
-            return 1;
+            exit(1);
         }
     }
     return 0;
@@ -50,6 +52,8 @@ Token *getNextToken(FILE *file)
     static char buffer[MAX_TOKEN_LENGTH] = "";
     static int buffer_pos = 0;
     static int buffer_len = 0;
+    static int current_row = 0;
+    static int current_col = 0;
 
     Token *token = (Token *)malloc(sizeof(Token));
     if (token == NULL)
@@ -68,6 +72,8 @@ Token *getNextToken(FILE *file)
             return NULL; // Return NULL at EOF
         }
         buffer_len = strlen(buffer);
+        current_row++;
+        current_col++;
     }
 
     while (buffer_pos < buffer_len)
@@ -78,11 +84,17 @@ Token *getNextToken(FILE *file)
             regmatch_t match;
             if (regexec(&token_patterns[i].regex, &buffer[buffer_pos], 1, &match, 0) == 0 && match.rm_so == 0)
             {
+
                 int token_length = match.rm_eo;
+                // Check if the character following the FLOAT is alphanumeric or an underscore
+
                 strncpy(token->lexeme, &buffer[buffer_pos], token_length);
                 token->lexeme[token_length] = '\0';
                 buffer_pos += token_length;
+                token->pos.col = current_col + match.rm_so;
+                token->pos.line = current_row;
                 matched = 1;
+                current_col += token_length;
                 return token;
             }
         }
@@ -90,6 +102,7 @@ Token *getNextToken(FILE *file)
         if (!matched)
         {
             buffer_pos++;
+            current_col++;
         }
 
         // If the end of the buffer is reached and no token is matched, read the next line
@@ -102,6 +115,8 @@ Token *getNextToken(FILE *file)
                 return NULL; // Return NULL at EOF
             }
             buffer_len = strlen(buffer);
+            current_row++;
+            current_col = 0;
         }
     }
 
@@ -178,7 +193,7 @@ int isIdentifierToken(char *token)
 
     while (*token != '\0')
     {
-        if (!isalpha(*token))
+        if (!isalnum(*token))
         {
             return 0;
         }

@@ -293,7 +293,7 @@ char *label_generate()
         perror("Failed to allocate memory");
         exit(EXIT_FAILURE);
     }
-    snprintf(label, 20, ".label_%d", rand());
+    snprintf(label, 20, "label_%d", rand());
 
     return label;
 }
