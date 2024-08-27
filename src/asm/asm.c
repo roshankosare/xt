@@ -2,11 +2,13 @@
 #include "../../include/parser/helper.h"
 #include "../../include/symboltable/functiontable.h"
 #include "../../include/symboltable/symboltable.h"
+#include "../../include/litrals/litrals.h"
 #include <assert.h>
 
 void translateGlobalVar(ASTNode *ast, FILE *fp);
 void generateLabels(Context *context, FILE *fp);
 void tranlateLocalVar(ASTNode *ast, FILE *fp);
+void createLitralConstansts(Context *Context, FILE *fp);
 
 void createASMFile(ASTNode *ast, Context *context, FILE *fp)
 {
@@ -25,6 +27,9 @@ void createASMFile(ASTNode *ast, Context *context, FILE *fp)
     fprintf(fp, "    int 0x80           ; make syscall\n");
 
     generateLabels(context, fp);
+
+    fprintf(fp, "section .rodata\n");
+    createLitralConstansts(context, fp);
 }
 
 void translateGlobalVar(ASTNode *ast, FILE *fp)
@@ -75,6 +80,18 @@ void tranlateLocalVar(ASTNode *ast, FILE *fp)
         // for int
     }
     tranlateLocalVar(ast->next, fp);
+}
+
+void createLitralConstansts(Context *context, FILE *fp)
+{
+
+    Litral *entry;
+    entry = popLitlralTable(context->litralTable);
+    while (entry != NULL)
+    {
+        fprintf(fp, "    %s: dd %s, 0\n", entry->label, entry->value);
+        entry = popLitlralTable(context->litralTable);
+    }
 }
 
 void translate(ASTNode *ast, Context *context, FILE *fp)
@@ -366,6 +383,16 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
     break;
     case INTEGER_CONSTANT:
         fprintf(fp, "    mov eax, %s\n", ast->token.lexeme);
+        fprintf(fp, "    push eax\n");
+        break;
+
+    case STRING_CONSTANT:
+        char *litral_label = label_generate();
+        // printf("\n %s",ast->token.lexeme);
+        // printf("\n %s",litral_label);
+
+        pushLitralTable(context->litralTable, litral_label, ast->token.lexeme);
+        fprintf(fp, "    lea eax, [%s]  ; Load the address of litral into eax\n", litral_label);
         fprintf(fp, "    push eax\n");
         break;
     case FUNCTION:

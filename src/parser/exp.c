@@ -25,7 +25,6 @@ ASTNode *parse_fun_call(Context *context);
 ASTNode *parse_fun_call_args(Context *context);
 // ASTNode *parse_conditional_exp(Context *context);
 
-
 // STMT := { exp | DEC_STMT  ";" }
 ASTNode *exp_stmt(Context *context)
 {
@@ -318,38 +317,44 @@ ASTNode *parse_multi(Context *context)
     return node;
 }
 
-// PRIMARY_EXP := { "IDENTIFER" | "CONSTANT" }
+// PRIMARY_EXP := { "IDENTIFER" | "CONSTANT" |INC_EXP | DEC_EXP| FUN_CALL |  }
 ASTNode *parse_primary(Context *context)
 {
-
-    if (match(context, IDENTIFIER) || match(context, INTEGER_CONSTANT) || match(context, INC) || match(context, DEC))
+    switch (context->current.value)
     {
+    case INC:
+        /* code */
+        return parse_uni_stmt(context);
+
+    case DEC:
+        return parse_uni_stmt(context);
+
+    case INTEGER_CONSTANT:
+        break;
+    case STRING_CONSTANT:
+        break;
+    case FLOAT_CONSTANT:
+        break;
+    case IDENTIFIER:
         ASTNode *funCall = parse_fun_call(context);
         if (funCall)
         {
             return funCall;
-        }
-        ASTNode *uniExp = parse_uni_stmt(context);
-        if (uniExp)
-        {
-            return uniExp;
         }
         Token symbol = context->current;
         if (match(context, IDENTIFIER))
         {
             checkSymbolEntry(context, symbol);
         }
+        break;
 
-        ASTNode *node;
-        node = createASTNode(context->current);
-
-        consume(context);
-        return node;
+    default:
+        expect(context, IDENTIFIER);
+        break;
     }
 
-    expect(context, IDENTIFIER);
-    return NULL;
+    ASTNode *node;
+    node = createASTNode(context->current);
+    consume(context);
+    return node;
 }
-
-// ASM := "asm" "(" "[" STRING_ASM "]" ")"
-// this function will

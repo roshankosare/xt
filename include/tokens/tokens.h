@@ -45,6 +45,10 @@
 #define INT_TOKEN_INTEGER_CONSTANT      40
 #define INT_TOKEN_FLOAT_CONSTANT        41
 #define INT_TOKEN_ASM                   42
+#define INT_TOKEN_CHAR                  43
+#define INT_TOKEN_INT                   44
+#define INT_TOKEN_FLOAT                 45
+#define INT_TOKEN_STRING                46
 #define INVALID_TOKEN                   -1
 
 
@@ -101,6 +105,10 @@ typedef enum
     STRING_CONSTANT ,
     INTEGER_CONSTANT ,
     FLOAT_CONSTANT  , 
+    CHAR_T,
+    INT_T,
+    FLOAT_T,
+    STRING_T,
     ASM,
     TEOF
     
@@ -120,11 +128,6 @@ typedef struct
     Position pos;
 
 } Token;
-
-
-
-
-
 
 
 #endif

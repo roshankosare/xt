@@ -11,6 +11,7 @@ Context *initContext(Token *tokens)
     context->symbolTableTempStack = (SymbolTableStack *)malloc(sizeof(SymbolTableStack));
     context->astQueue = initASTQueue();
     context->astStack = initASTStack();
+    context->litralTable = initLitralTable();
     context->tokens = tokens;
     context->index = 0;
     context->current = tokens[0];

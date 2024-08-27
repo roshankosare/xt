@@ -1,7 +1,11 @@
 var x = 30;
 
+ function fun(){
+    var msg = "hello world";
+    
+ }
 
-asm(["mov eax , 10","mov eax , 20","mov eax , 30"]);
+ fun();
 
 
 

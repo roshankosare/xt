@@ -16,7 +16,7 @@ typedef struct
 } TokenPattern;
 
 TokenPattern token_patterns[] = {
-    {{0}, "KEYWORD", "\\b(var|if|else|while|return|function|asm)\\b"}, // KEYWORDS
+    {{0}, "KEYWORD", "\\b(var|if|else|while|return|function|asm|char|int|float|string)\\b"}, // KEYWORDS
     {{0}, "IDENTIFIER", "[a-zA-Z_][a-zA-Z0-9_]*"},
     {{0}, "INVALID_IDENTIFIER", "[0-9]+\\.[a-zA-Z]+"},                       // IDENTIFIER
     {{0}, "INCREMENT_OPERATOR", "\\+\\+|--"},                                // INC/DEC
@@ -374,6 +374,18 @@ char *getTokenStringValue(int token)
     case TEOF:
         return "EOF";
 
+    case CHAR_T:
+        return "CHAR";
+
+    case FLOAT_T:
+        return "FLOAT";
+
+    case INT_T:
+        return "INT";
+
+    case STRING_T:
+        return "STRING";
+
     default:
         return "UNKNOWN";
     }
@@ -507,6 +519,18 @@ void fillTokenValue(Token *token)
     case INT_TOKEN_ASM:
         token->value = ASM;
         break;
+    case INT_TOKEN_CHAR:
+        token->value = CHAR_T;
+        break;
+    case INT_TOKEN_INT:
+        token->value = INT_T;
+        break;
+    case INT_TOKEN_FLOAT:
+        token->value = FLOAT_T;
+        break;
+    case INT_TOKEN_STRING:
+        token->value = STRING_T;
+        break;
 
     default:
         token->value = UNKNOWN;
@@ -527,6 +551,10 @@ int getTokenIntCodeValue(char *token)
     if(strcmp("or",token)== 0)          return INT_TOKEN_LOGICAL_OR;
     if(strcmp("not",token)==0 )         return INT_TOKEN_LOGICAL_NOT;
     if(strcmp("asm",token) == 0)        return INT_TOKEN_ASM;
+    if(strcmp("int",token)== 0)         return INT_TOKEN_INT;
+    if(strcmp("char",token) == 0)       return INT_TOKEN_CHAR;
+    if(strcmp("float",token) == 0)      return INT_TOKEN_FLOAT;
+    if(strcmp("string",token)== 0)      return INT_TOKEN_STRING;
     
     if (strcmp(token, "+") == 0)        return INT_TOKEN_PLUS;
     if (strcmp(token, "-") == 0)        return INT_TOKEN_MINUS;
