@@ -6,6 +6,7 @@
 
 void translateGlobalVar(ASTNode *ast, FILE *fp);
 void generateLabels(Context *context, FILE *fp);
+void tranlateLocalVar(ASTNode *ast, FILE *fp);
 
 void createASMFile(ASTNode *ast, Context *context, FILE *fp)
 {
@@ -49,6 +50,31 @@ void translateGlobalVar(ASTNode *ast, FILE *fp)
         // for int
     }
     translateGlobalVar(ast->next, fp);
+}
+
+void tranlateLocalVar(ASTNode *ast, FILE *fp)
+{
+    if (ast == NULL)
+    {
+        return;
+    }
+    if (ast->token.value == UNKNOWN)
+    {
+        tranlateLocalVar(ast->right, fp);
+    }
+    if (ast->token.value == VAR)
+    {
+        if (ast->right->token.value == ASSIGN)
+        {
+            fprintf(fp, "    sub esp , 4\n");
+        }
+        else
+        {
+            fprintf(fp, "    sub esp , 4\n");
+        }
+        // for int
+    }
+    tranlateLocalVar(ast->next, fp);
 }
 
 void translate(ASTNode *ast, Context *context, FILE *fp)
@@ -204,25 +230,9 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
         {
 
             SymbolTableEntry *entry = checkSymbolEntry(context, ast->right->left->token);
-            if (entry->scope != 1)
-            { // means variable is local we have to allocate it meemory in stack first then assign value
-              // TODO allocate different size of memeory based on type of symbol; for int and float = 4byte char = 2byte
-                fprintf(fp, "    sub esp , 4\n");
-                // for integers and float// for integer and float
-            }
             translate(ast->right, context, fp);
             break;
         }
-        // decleration only
-        SymbolTableEntry *entry = checkSymbolEntry(context, ast->right->token);
-        if (entry->scope == 1)
-        {
-            // global variable
-            break;
-        }
-        // allocate  memory in stack for local variables
-        // TODO allocate different size of memeory based on type of symbol; for int and float = 4byte char = 2byte
-        fprintf(fp, "    sub esp, 4\n"); // for integers// for integer and float
     }
 
     break;
@@ -368,8 +378,8 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
 
     case FUNCTION_CALL:
     {
-        fprintf(fp, "    push rbp                ; Save base pointer\n");
-        fprintf(fp, "    mov rbp, rsp            ; Establish new base pointer\n");
+        fprintf(fp, "    push ebp                ; Save base pointer\n");
+        fprintf(fp, "    mov ebp, esp            ; Establish new base pointer\n");
         ASTNode *args = ast->right->right;
 
         int offset = 4;
@@ -382,6 +392,8 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
             offset = offset + 4;
         }
         fprintf(fp, "    call  %s\n", ast->left->token.lexeme);
+        fprintf(fp, "    mov esp, ebp            ; Restore the stack pointer\n");
+        fprintf(fp, "    pop ebp                 ; Restore the base pointer\n");
     }
     break;
     case PARAM_START:
@@ -451,6 +463,7 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
 
         fprintf(fp, "    push ebp                ; Save base pointer\n");
         fprintf(fp, "    mov ebp, esp            ; Establish new base pointer\n");
+        tranlateLocalVar(ast, fp);
         SymbolTable *symboltable = getSymboTableFromQueue(context);
         pushSymbolTable(context->symbolTableStack, symboltable);
     }
@@ -484,6 +497,7 @@ void generateLabels(Context *context, FILE *fp)
 
         num_elements = context->astQueue->num_elements;
         fprintf(fp, "%s:\n", current->label);
+
         if (current->ast->token.value == WHILE)
         {
 
@@ -496,7 +510,6 @@ void generateLabels(Context *context, FILE *fp)
         else
         {
             translate(current->ast, context, fp);
-            
         }
 
         // step 1 : popfromASTQueueRear  and push into astStack till num_elements == context->astQueue->num_elemnts
