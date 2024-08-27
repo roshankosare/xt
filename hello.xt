@@ -1,11 +1,7 @@
-var x = 10;
+var x = 30;
 
-function fun(a,b){
-    a + b;
-}
 
-fun(10,20);
-
+asm(["mov eax , 10","mov eax , 20","mov eax , 30"]);
 
 
 

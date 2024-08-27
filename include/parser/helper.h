@@ -18,5 +18,6 @@ void insertSymbolTableToQueue(Context *context, SymbolTable *symbolTable);
 SymbolTable *getSymboTableFromQueue(Context *context);
 int getSymbolOffset(Context *context, SymbolTableEntry *entry);
 char *label_generate();
+char* remove_quotes(const char* input);
 
 #endif

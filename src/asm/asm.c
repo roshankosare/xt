@@ -480,6 +480,19 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
         break;
     }
 
+    case ASM:
+    {
+
+        ASTNode *temp = ast->right;
+        while (temp != NULL)
+        {
+
+            fprintf(fp, "    %s\n", remove_quotes(temp->token.lexeme));
+            temp = temp->next;
+        }
+        break;
+    }
+
     default:
         printf("\nERROR: %s token handle not implemented", ast->token.lexeme);
         exit(1);

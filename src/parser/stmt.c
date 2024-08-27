@@ -7,6 +7,8 @@
 // SELC_STMT :=  IF_STMT
 //  IF_STMT := "if" "(" exp | CONDITIONAL_STMT ")" BLOCK_STMT | EXP
 
+ASTNode *parseASTString(Context *context);
+
 ASTNode *stmt(Context *context)
 {
     ASTNode *node;
@@ -38,6 +40,12 @@ ASTNode *stmt(Context *context)
     if (match(context, INTEGER_CONSTANT) || match(context, INC) || match(context, DEC))
     {
         node = exp_stmt(context);
+        return node;
+    }
+
+    if (match(context, ASM))
+    {
+        node = parseAsm(context);
         return node;
     }
 
@@ -157,4 +165,47 @@ ASTNode *parse_block(Context *context)
     popSymbolTable(context->symbolTableStack);
 
     return start;
+}
+
+// ASM := "asm" "(" "[" STRING_ASM "]" ")" ";"
+// this function will push assembly instuction directly in asm file to make sys calls
+ASTNode *parseAsm(Context *context)
+{
+    if (match(context, ASM))
+    {
+        ASTNode *asmNode = createASTNode(context->current);
+        consume(context); // consume asm token
+
+        expect(context, OPEN_PAREN);
+        consume(context); // consume "("
+        expect(context, OPEN_SQ_PARAN);
+        consume(context); // consume "["
+        asmNode->right = parseASTString(context);
+        expect(context, CLOSE_SQ_PARAN);
+        consume(context); // consume "]"
+        expect(context, CLOSE_PAREN);
+        consume(context); // consume ")"
+        expect(context,SEMI_COLAN);
+        consume(context); // consume ";"
+        return asmNode;
+    }
+    return NULL;
+}
+ASTNode *parseASTString(Context *context)
+{
+    if (match(context, CLOSE_SQ_PARAN))
+    {
+        return NULL;
+    }
+    expect(context, STRING_CONSTANT);
+    ASTNode *node = createASTNode(context->current);
+    consume(context); // consume "string"
+    if (match(context, CLOSE_SQ_PARAN))
+    {
+        return node;
+    }
+    expect(context, COMMA);
+    consume(context); // consume ","
+    node->next = parseASTString(context);
+    return node;
 }

@@ -16,16 +16,16 @@ typedef struct
 } TokenPattern;
 
 TokenPattern token_patterns[] = {
-    {{0}, "KEYWORD", "\\b(var|if|else|while|return|function)\\b"}, // KEYWORDS
+    {{0}, "KEYWORD", "\\b(var|if|else|while|return|function|asm)\\b"}, // KEYWORDS
     {{0}, "IDENTIFIER", "[a-zA-Z_][a-zA-Z0-9_]*"},
-    {{0}, "INVALID_IDENTIFIER", "[0-9]+\\.[a-zA-Z]+"},                         // IDENTIFIER
-    {{0}, "INCREMENT_OPERATOR", "\\+\\+|--"},                               // INC/DEC
+    {{0}, "INVALID_IDENTIFIER", "[0-9]+\\.[a-zA-Z]+"},                       // IDENTIFIER
+    {{0}, "INCREMENT_OPERATOR", "\\+\\+|--"},                                // INC/DEC
     {{0}, "FLOAT", "[+-]?([0-9]+\\.[0-9]*|\\.[0-9]+)([eE][+-]?[0-9]+)\\b)"}, // FLOAT
-    {{0}, "INTEGER", "[+-]?[0-9]+"},                                        // NUMBER
-    {{0}, "OPERATOR", "[+*/=-]"},                                           // OPERATOR
-    {{0}, "CONDITIONAL_OPERATOR", "==|!=|<=|>=|<|>"},                       // CONDITIONAL OPERATORS
-    {{0}, "PUNCTUATION", "\\(|\\)|\\{|\\}|\\[|\\]|:|;|,"},                  // PUNCTUATION
-    {{0}, "STRING_CONSTANT", "\"[^\"]*\"|'[^']*'"},                         // STRING CONSTANT
+    {{0}, "INTEGER", "[+-]?[0-9]+"},                                         // NUMBER
+    {{0}, "OPERATOR", "[+*/=-]"},                                            // OPERATOR
+    {{0}, "CONDITIONAL_OPERATOR", "==|!=|<=|>=|<|>"},                        // CONDITIONAL OPERATORS
+    {{0}, "PUNCTUATION", "\\(|\\)|\\{|\\}|\\[|\\]|:|;|,"},                   // PUNCTUATION
+    {{0}, "STRING_CONSTANT", "\"[^\"]*\"|'[^']*'"},                          // STRING CONSTANT
 
 };
 
@@ -369,6 +369,8 @@ char *getTokenStringValue(int token)
         return "FLOAT_CONSTANT";
     case STRING_CONSTANT:
         return "STRING_CONSTANT";
+    case ASM:
+        return "ASM";
     case TEOF:
         return "EOF";
 
@@ -502,6 +504,10 @@ void fillTokenValue(Token *token)
     case INT_TOKEN_CLOSE_SQ_PARAN:
         token->value = CLOSE_SQ_PARAN;
         break;
+    case INT_TOKEN_ASM:
+        token->value = ASM;
+        break;
+
     default:
         token->value = UNKNOWN;
     }
@@ -520,6 +526,7 @@ int getTokenIntCodeValue(char *token)
     if(strcmp("and",token)== 0)         return INT_TOKEN_LOGICAL_AND;
     if(strcmp("or",token)== 0)          return INT_TOKEN_LOGICAL_OR;
     if(strcmp("not",token)==0 )         return INT_TOKEN_LOGICAL_NOT;
+    if(strcmp("asm",token) == 0)        return INT_TOKEN_ASM;
     
     if (strcmp(token, "+") == 0)        return INT_TOKEN_PLUS;
     if (strcmp(token, "-") == 0)        return INT_TOKEN_MINUS;

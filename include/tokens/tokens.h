@@ -44,6 +44,7 @@
 #define INT_TOKEN_STRING_CONSTANT       39
 #define INT_TOKEN_INTEGER_CONSTANT      40
 #define INT_TOKEN_FLOAT_CONSTANT        41
+#define INT_TOKEN_ASM                   42
 #define INVALID_TOKEN                   -1
 
 
@@ -100,6 +101,7 @@ typedef enum
     STRING_CONSTANT ,
     INTEGER_CONSTANT ,
     FLOAT_CONSTANT  , 
+    ASM,
     TEOF
     
 } TokenValue;

@@ -297,3 +297,34 @@ char *label_generate()
 
     return label;
 }
+
+char* remove_quotes(const char* input) {
+    // Ensure input is valid
+    if (input == NULL || strlen(input) < 2) {
+        return NULL;
+    }
+
+    // Check if the string starts and ends with the same type of quote
+    char start_quote = input[0];
+    char end_quote = input[strlen(input) - 1];
+
+    if ((start_quote != '"' && start_quote != '\'') ||
+        (end_quote != '"' && end_quote != '\'') ||
+        (start_quote != end_quote)) {
+        return NULL;
+    }
+
+    // Calculate the length of the new string (excluding the quotes)
+    size_t length = strlen(input) - 2;
+    char* result = (char*)malloc(length + 1);
+
+    if (result == NULL) {
+        return NULL;
+    }
+
+    // Copy the string without the quotes
+    strncpy(result, input + 1, length);
+    result[length] = '\0';  // Null-terminate the string
+
+    return result;
+}

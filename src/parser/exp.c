@@ -23,7 +23,8 @@ ASTNode *parse_multi(Context *context);
 ASTNode *parse_primary(Context *context);
 ASTNode *parse_fun_call(Context *context);
 ASTNode *parse_fun_call_args(Context *context);
-ASTNode *parse_conditional_exp(Context *context);
+// ASTNode *parse_conditional_exp(Context *context);
+
 
 // STMT := { exp | DEC_STMT  ";" }
 ASTNode *exp_stmt(Context *context)
@@ -124,13 +125,12 @@ ASTNode *exp(Context *context)
 // UNI_STMT := {"++" | "--" "IDENTIFIER"}  | {"IDENTIFIER" "++" | "--"  } | {"not" exp }
 ASTNode *parse_uni_stmt(Context *context)
 {
-    
+
     // UNI_STMT := {"++" | "--" "IDENTIFIER"}
     if (match(context, INC) || match(context, DEC))
     {
         printf("\nthis runs");
-       
-        
+
         ASTNode *op = createASTNode(context->current);
         consume(context); // consume op
         expect(context, IDENTIFIER);
@@ -322,7 +322,7 @@ ASTNode *parse_multi(Context *context)
 ASTNode *parse_primary(Context *context)
 {
 
-    if (match(context, IDENTIFIER) || match(context, INTEGER_CONSTANT) || match(context,INC) || match(context,DEC))
+    if (match(context, IDENTIFIER) || match(context, INTEGER_CONSTANT) || match(context, INC) || match(context, DEC))
     {
         ASTNode *funCall = parse_fun_call(context);
         if (funCall)
@@ -339,14 +339,17 @@ ASTNode *parse_primary(Context *context)
         {
             checkSymbolEntry(context, symbol);
         }
-       
+
         ASTNode *node;
         node = createASTNode(context->current);
-        
+
         consume(context);
         return node;
     }
-   
+
     expect(context, IDENTIFIER);
     return NULL;
 }
+
+// ASM := "asm" "(" "[" STRING_ASM "]" ")"
+// this function will
