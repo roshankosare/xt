@@ -287,7 +287,7 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
         translate(ast->left, context, fp);
         fprintf(fp, "    pop eax\n");
         fprintf(fp, "    test eax , eax\n");
-        fprintf(fp, "   jnz %s\n", label);
+        fprintf(fp, "    jnz %s\n", label);
         pushASTQnodeInQueue(context->astQueue, ast, label);
         // assert(0 && "TODO: WHILE is not implemented");
     }
@@ -386,6 +386,17 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
         fprintf(fp, "    push eax\n");
         break;
 
+    case FLOAT_CONSTANT:
+        assert(0 && "TODO:- handle FLOAT_CONSTANT not implemented");
+        break;
+
+    case VALUE_AT:
+        translate(ast->left, context, fp);
+        fprintf(fp, "    pop eax\n");
+        fprintf(fp, "    mov eax , [eax]             ;; mov value to eax from address stored at eax\n");
+        fprintf(fp, "    push eax\n");
+        break;
+
     case STRING_CONSTANT:
         char *litral_label = label_generate();
         // printf("\n %s",ast->token.lexeme);
@@ -410,6 +421,12 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
         ASTNode *args = ast->right->right;
 
         int offset = 4;
+        while (args != NULL)
+        {
+            fprintf(fp, "    sub esp , 4           ;; allocate space for args on stack\n");
+            args = args->next;
+        }
+        args = ast->right->right;
         while (args != NULL)
         {
             translate(args, context, fp);

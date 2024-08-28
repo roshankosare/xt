@@ -8,6 +8,8 @@
 #include "include/asm/asm.h"
 #include "include/context/context.h"
 
+#define FLAG 0
+
 #define MAX_LINE_LENGTH 1024
 void usage(char *programName)
 {
@@ -64,9 +66,6 @@ int main(int argc, char *argv[])
         exit(1);
     }
     Token *tokens = lexer(fp, &tokenCount);
-    
-    
-   
 
     // Token *tokens = tokenize(fp, &tokenCount);
     // for (int i = 0; i < tokenCount; i++)
@@ -90,6 +89,7 @@ int main(int argc, char *argv[])
     printf("\nLexical anaysis completed without any error\n");
     printAST(start, 0);
 
+#ifdef FLAG
     FILE *op;
 
     char *asmFile = malloc(50 * sizeof(char));
@@ -115,15 +115,19 @@ int main(int argc, char *argv[])
     int asmResult = system(asmCommand);
     int linkResult = system(linkCommand);
 
-    if (asmResult != 0) {
+    if (asmResult != 0)
+    {
         fprintf(stderr, "Assembly failed with error code %d\n", asmResult);
         return 1;
     }
 
-    if (linkResult != 0) {
+    if (linkResult != 0)
+    {
         fprintf(stderr, "Linking failed with error code %d\n", linkResult);
         return 1;
     }
+
+#endif
 
     return 0;
 }

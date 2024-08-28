@@ -49,6 +49,7 @@
 #define INT_TOKEN_INT                   44
 #define INT_TOKEN_FLOAT                 45
 #define INT_TOKEN_STRING                46
+#define INT_TOKEN_VALUE_AT              47
 #define INVALID_TOKEN                   -1
 
 
@@ -109,6 +110,7 @@ typedef enum
     INT_T,
     FLOAT_T,
     STRING_T,
+    VALUE_AT,
     ASM,
     TEOF
     

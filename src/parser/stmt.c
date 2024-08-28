@@ -37,7 +37,12 @@ ASTNode *stmt(Context *context)
         node = exp_stmt(context);
         return node;
     }
-    if (match(context, INTEGER_CONSTANT) || match(context, INC) || match(context, DEC))
+    if (match(context, INC) || match(context, DEC) || match(context,VALUE_AT))
+    {
+        node = exp_stmt(context);
+        return node;
+    }
+    if (match(context, STRING_CONSTANT) || match(context, INTEGER_CONSTANT) || match(context, FLOAT_CONSTANT))
     {
         node = exp_stmt(context);
         return node;
@@ -185,7 +190,7 @@ ASTNode *parseAsm(Context *context)
         consume(context); // consume "]"
         expect(context, CLOSE_PAREN);
         consume(context); // consume ")"
-        expect(context,SEMI_COLAN);
+        expect(context, SEMI_COLAN);
         consume(context); // consume ";"
         return asmNode;
     }

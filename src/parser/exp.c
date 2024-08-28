@@ -23,6 +23,7 @@ ASTNode *parse_multi(Context *context);
 ASTNode *parse_primary(Context *context);
 ASTNode *parse_fun_call(Context *context);
 ASTNode *parse_fun_call_args(Context *context);
+ASTNode *parse_valueAt(Context *context);
 // ASTNode *parse_conditional_exp(Context *context);
 
 // STMT := { exp | DEC_STMT  ";" }
@@ -47,7 +48,7 @@ ASTNode *exp(Context *context)
         expect(context, CLOSE_PAREN);
         consume(context);
         // exp := { exp  "EXP_TOKEN" exp }
-        // EXP_TOKEN := { "+" | "-" | "*" | "/" | ">" | "<" | "==" | "and" | "or" }
+        // EXP_TOKEN := { "+" | "-" | "*" | "/" | ">" | "<" | "==" | "and" | "or" | "!=" }
         if (match(context, EXP_TOKEN))
         {
             ASTNode *op = createASTNode(context->current);
@@ -284,6 +285,23 @@ ASTNode *parse_additive(Context *context)
 
     ASTNode *primaryLeft = parse_multi(context);
     ASTNode *node = primaryLeft;
+    if (match(context, INTEGER_CONSTANT) || match(context, FLOAT_CONSTANT))
+    {
+
+        if (context->current.lexeme[0] != '+' && context->current.lexeme[0] != '-')
+        {
+            expect(context, EXP_TOKEN);
+        }
+
+        Token plusToken = {
+            .lexeme = "+", .value = PLUS, .pos = {.col = context->tokens->pos.col - 1, .line = context->tokens->pos.line}};
+
+        ASTNode *plus = createASTNode(plusToken);
+        ASTNode *oprand = parse_primary(context);
+        plus->left = primaryLeft;
+        plus->right = oprand;
+        node = plus;
+    }
     while (match(context, PLUS) || match(context, MINUS))
     {
         ASTNode *op = createASTNode(context->current);
@@ -335,12 +353,27 @@ ASTNode *parse_primary(Context *context)
         break;
     case FLOAT_CONSTANT:
         break;
+    case VALUE_AT:
+    {
+        ASTNode *valueAt = parse_valueAt(context);
+        if (valueAt)
+        {
+            return valueAt;
+        }
+    }
+
     case IDENTIFIER:
         ASTNode *funCall = parse_fun_call(context);
         if (funCall)
         {
             return funCall;
         }
+        ASTNode *uniExp = parse_uni_stmt(context);
+        if (uniExp)
+        {
+            return uniExp;
+        }
+
         Token symbol = context->current;
         if (match(context, IDENTIFIER))
         {
@@ -357,4 +390,23 @@ ASTNode *parse_primary(Context *context)
     node = createASTNode(context->current);
     consume(context);
     return node;
+}
+
+ASTNode *parse_valueAt(Context *context)
+{
+    if (match(context, VALUE_AT))
+    {
+        ASTNode *valueAtNode = createASTNode(context->current);
+        consume(context); // consume "@"
+        expect(context, IDENTIFIER);
+        Token symbol = context->current;
+        if (match(context, IDENTIFIER))
+        {
+            checkSymbolEntry(context, symbol);
+        }
+        valueAtNode->left = createASTNode(context->current);
+        consume(context); //consume IDENTIFIER
+        return valueAtNode;
+    }
+    return NULL;
 }

@@ -2,6 +2,7 @@
 #include "../../include/tokens/tokens.h"
 #include "../../include/symboltable/symboltable.h"
 #include "../../include/symboltable/functiontable.h"
+#include "../../include/tokens/tokenizer.h"
 #include "ast.h"
 
 void unexpected(Context *context)
@@ -112,6 +113,8 @@ int isExpToken(TokenValue t)
     case LESS_THAN_EQTO:
         return 1;
     case GRATER_THAN_EQTO:
+        return 1;
+    case NOT_EQLTO:
         return 1;
 
     default:
@@ -275,11 +278,15 @@ int getSymbolOffset(Context *context, SymbolTableEntry *entry)
 
     int scope = context->symbolTableStack->scope;
     int offset = 0;
-    while (entry->scope != scope && table->next != NULL)
+    while (entry->scope < scope && table->next->next != NULL)
     {
-        table = table->next;
         offset = offset + table->offset;
+        table = table->next;
         scope--;
+        if (entry->scope == scope){
+            offset = offset + table->offset - entry->symbolOffset;
+            return offset;
+        }
     }
     return offset;
 }
@@ -298,9 +305,11 @@ char *label_generate()
     return label;
 }
 
-char* remove_quotes(const char* input) {
+char *remove_quotes(const char *input)
+{
     // Ensure input is valid
-    if (input == NULL || strlen(input) < 2) {
+    if (input == NULL || strlen(input) < 2)
+    {
         return NULL;
     }
 
@@ -310,21 +319,23 @@ char* remove_quotes(const char* input) {
 
     if ((start_quote != '"' && start_quote != '\'') ||
         (end_quote != '"' && end_quote != '\'') ||
-        (start_quote != end_quote)) {
+        (start_quote != end_quote))
+    {
         return NULL;
     }
 
     // Calculate the length of the new string (excluding the quotes)
     size_t length = strlen(input) - 2;
-    char* result = (char*)malloc(length + 1);
+    char *result = (char *)malloc(length + 1);
 
-    if (result == NULL) {
+    if (result == NULL)
+    {
         return NULL;
     }
 
     // Copy the string without the quotes
     strncpy(result, input + 1, length);
-    result[length] = '\0';  // Null-terminate the string
+    result[length] = '\0'; // Null-terminate the string
 
     return result;
 }

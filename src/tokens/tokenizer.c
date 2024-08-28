@@ -22,7 +22,7 @@ TokenPattern token_patterns[] = {
     {{0}, "INCREMENT_OPERATOR", "\\+\\+|--"},                                // INC/DEC
     {{0}, "FLOAT", "[+-]?([0-9]+\\.[0-9]*|\\.[0-9]+)([eE][+-]?[0-9]+)\\b)"}, // FLOAT
     {{0}, "INTEGER", "[+-]?[0-9]+"},                                         // NUMBER
-    {{0}, "OPERATOR", "[+*/=-]"},                                            // OPERATOR
+    {{0}, "OPERATOR", "[@+*/=-]"},                                           // OPERATOR
     {{0}, "CONDITIONAL_OPERATOR", "==|!=|<=|>=|<|>"},                        // CONDITIONAL OPERATORS
     {{0}, "PUNCTUATION", "\\(|\\)|\\{|\\}|\\[|\\]|:|;|,"},                   // PUNCTUATION
     {{0}, "STRING_CONSTANT", "\"[^\"]*\"|'[^']*'"},                          // STRING CONSTANT
@@ -33,6 +33,7 @@ TokenPattern token_patterns[] = {
 
 int compile_token_patterns()
 {
+
     for (int i = 0; i < NUM_PATTERNS; i++)
     {
         int result = regcomp(&token_patterns[i].regex, token_patterns[i].pattern, REG_EXTENDED);
@@ -231,6 +232,7 @@ int isIntegerConstant(char *token)
     {
         return 0;
     }
+    token++;
 
     while (*token != '\0')
     {
@@ -373,18 +375,16 @@ char *getTokenStringValue(int token)
         return "ASM";
     case TEOF:
         return "EOF";
-
     case CHAR_T:
         return "CHAR";
-
     case FLOAT_T:
         return "FLOAT";
-
     case INT_T:
         return "INT";
-
     case STRING_T:
         return "STRING";
+    case VALUE_AT:
+        return "VALUE_AT";
 
     default:
         return "UNKNOWN";
@@ -531,6 +531,9 @@ void fillTokenValue(Token *token)
     case INT_TOKEN_STRING:
         token->value = STRING_T;
         break;
+    case INT_TOKEN_VALUE_AT:
+        token->value = VALUE_AT;
+        break;
 
     default:
         token->value = UNKNOWN;
@@ -560,6 +563,7 @@ int getTokenIntCodeValue(char *token)
     if (strcmp(token, "-") == 0)        return INT_TOKEN_MINUS;
     if (strcmp(token, "*") == 0)        return INT_TOKEN_MUL;
     if (strcmp(token, "/") == 0)        return INT_TOKEN_DIV;
+    if (strcmp(token,"@") == 0)          return INT_TOKEN_VALUE_AT;
     if (strcmp(token, "=") == 0)        return INT_TOKEN_ASSIGN;
     if (strcmp(token, "==") == 0)       return INT_TOKEN_EQUALS;
     if (strcmp(token, "(") == 0)        return INT_TOKEN_OPEN_PAREN;
@@ -578,12 +582,12 @@ int getTokenIntCodeValue(char *token)
     if (strcmp(token, ">=") == 0)       return INT_TOKEN_GRATER_THAN_EQTO;
     if (strcmp(token,"!=") == 0)        return INT_TOKEN_NOT_EQLTO;
     if (strcmp(token, ",") == 0)        return INT_TOKEN_COMMA;
-    if(strcmp(token,"++") == 0)         return INT_TOKEN_INC;
-    if(strcmp(token,"--")== 0)          return INT_TOKEN_DEC;
-    if(isIdentifierToken(token))        return INT_TOKEN_IDENTIFIER;
-    if(isIntegerConstant(token))        return INT_TOKEN_INTEGER_CONSTANT;  
-    if(isFloatConstant(token))          return INT_TOKEN_FLOAT_CONSTANT; 
-    if(isStringConstant(token))         return INT_TOKEN_STRING_CONSTANT;
+    if (strcmp(token,"++") == 0)         return INT_TOKEN_INC;
+    if (strcmp(token,"--")== 0)          return INT_TOKEN_DEC;
+    if (isIdentifierToken(token))        return INT_TOKEN_IDENTIFIER;
+    if (isIntegerConstant(token))        return INT_TOKEN_INTEGER_CONSTANT;  
+    if (isFloatConstant(token))          return INT_TOKEN_FLOAT_CONSTANT; 
+    if (isStringConstant(token))         return INT_TOKEN_STRING_CONSTANT;
     
     return INT_TOKEN_UNKNOWN;
     // clang-format onSS

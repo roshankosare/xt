@@ -1,10 +1,12 @@
-var x = 30;
-
- function print(x){
-   var length = 50;
-  
+function print(x){
+   var length = 0;
+   var temp = x;
+   while(@temp != 0){  
+      temp++;
+      length++;
+   }
+   var strpointer = x;
    var strlength = length;
-    var strpointer = x;
   
    asm([    "pop ecx                           ; load the address of the string",
             "pop edx                           ; load the length of the string",                   
@@ -14,13 +16,3 @@ var x = 30;
          ]);
       
  }
- print("hello world my name is roshan ksoare  and i am from wadsa desaiganj");
-
-
-
-
- 
-
-
-
-
