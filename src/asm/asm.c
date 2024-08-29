@@ -189,14 +189,15 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
             SymbolTableEntry *entry = checkSymbolEntry(context, ast->left->token);
             if (entry->scope == 1)
             { // this is global var
-                fprintf(fp, "     inc dword [%s]\n", ast->token.lexeme);
+                fprintf(fp, "     inc dword [%s]\n", ast->left->token.lexeme);
                 translate(ast->left, context, fp);
                 // store the value of identifer to eax
             }
             else
             {
                 int offset = getSymbolOffset(context, entry);
-                fprintf(fp, "    inc dword [ebp + (%d)]     ;; %s\n", offset, entry->token.lexeme);
+                fprintf(fp, "    mov eax , [pebp]           ;; move address stored in pebp to eax\n");
+                fprintf(fp, "    inc dword [eax + (%d)]     ;; %s\n", offset, entry->token.lexeme);
                 translate(ast->left, context, fp);
             }
             break;
@@ -208,7 +209,7 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
             if (entry->scope == 1)
             { // this is global var
                 translate(ast->right, context, fp);
-                fprintf(fp, "     inc dword [%s]\n", ast->token.lexeme);
+                fprintf(fp, "     inc dword [%s]\n", ast->right->token.lexeme);
 
                 // store the value of identifer to eax
             }
@@ -216,7 +217,9 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
             {
                 int offset = getSymbolOffset(context, entry);
                 translate(ast->right, context, fp);
-                fprintf(fp, "    inc dword [ebp + (%d)]     ;; %s\n", offset, entry->token.lexeme);
+                fprintf(fp, "    mov eax , [pebp]           ;; move address stored in pebp to eax\n");
+                fprintf(fp, "    inc dword [eax + (%d)]     ;; %s\n", offset, entry->token.lexeme);
+                // fprintf(fp, "    inc dword [ebp + (%d)]     ;; %s\n", offset, entry->token.lexeme);
             }
             break;
         }
@@ -229,14 +232,15 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
             SymbolTableEntry *entry = checkSymbolEntry(context, ast->left->token);
             if (entry->scope == 1)
             { // this is global var
-                fprintf(fp, "     dec dword [%s]\n", ast->token.lexeme);
+                fprintf(fp, "     dec dword [%s]\n", ast->left->token.lexeme);
                 translate(ast->left, context, fp);
                 // store the value of identifer to eax
             }
             else
             {
                 int offset = getSymbolOffset(context, entry);
-                fprintf(fp, "    dec dword [ebp + (%d)  ]     ;; %s\n", offset, entry->token.lexeme);
+                fprintf(fp, "    mov eax , [pebp] \n");
+                fprintf(fp, "    dec dword [eax + (%d)  ]     ;; %s\n", offset, entry->token.lexeme);
                 translate(ast->left, context, fp);
             }
             break;
@@ -248,7 +252,7 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
             if (entry->scope == 1)
             { // this is global var
                 translate(ast->right, context, fp);
-                fprintf(fp, "     inc dword [%s]\n", ast->token.lexeme);
+                fprintf(fp, "     inc dword [%s]\n", ast->right->token.lexeme);
 
                 // store the value of identifer to eax
             }
@@ -256,7 +260,8 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
             {
                 int offset = getSymbolOffset(context, entry);
                 translate(ast->right, context, fp);
-                fprintf(fp, "    inc dword [ebp + (%d) ]     ;; %s\n", offset, entry->token.lexeme);
+                fprintf(fp, "    mov eax , [pebp] \n");
+                fprintf(fp, "    dec dword [eax + (%d)  ]     ;; %s\n", offset, entry->token.lexeme);
             }
             break;
         }

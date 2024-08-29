@@ -1,19 +1,16 @@
-var a = 30;
+var a = 0;
 
  function print(x){
-   
-   var length = 50;
-    if (length > 10){
-     length = 5;
-     x = "welcome";
-     if ( length < 10){
-      length = 12;
-      x = "hello world";
-     }
-    }
-    var strlength = length;
-    var strpointer = x;
-
+   var length = 0;
+   var temp = x;
+   while(@temp != 0){ 
+      a++; 
+      temp++;
+      length++;
+   }
+   length = a;
+   var strpointer = x;
+   var strlength = length;
   
    asm([    "pop ecx                           ; load the address of the string",
             "pop edx                           ; load the length of the string",                   
@@ -21,10 +18,6 @@ var a = 30;
             "mov ebx, 1                        ; file descriptor 1 (stdout)",             
             "int 0x80                          ; make syscall to write",
          ]);
-
-         x = 0;
-         length = 50;
-         x + 50;
       
  }
  print("hello world ");
