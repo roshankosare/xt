@@ -174,8 +174,8 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
         else
         {
             int offset = getSymbolOffset(context, entry);
-            fprintf(fp, "   mov ebx , [pebp]                    ;; store the address to ebx\n");
-            fprintf(fp, "   mov [ebx + (%d)] , eax              ;; store the value at location ebx\n", offset, entry->token.lexeme);
+            fprintf(fp, "    mov ebx , [pebp]                    ;; store the address to ebx\n");
+            fprintf(fp, "    mov [ebx + (%d)] , eax              ;; store the value at location ebx\n", offset, entry->token.lexeme);
             // fprintf(fp, "    mov [ebp + (%d) ] , eax   ;;%s\n", offset, entry->token.lexeme);
             fprintf(fp, "    push eax\n");
         }
@@ -398,7 +398,7 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
         {
             int symbolOffset = getSymbolOffset(context, entry);
             // fprintf(fp, "    mov eax , [ebp + (%d) ]     ;; %s\n", symbolOffset, entry->token.lexeme);
-            fprintf(fp, "    mov eax , [pebp]\n              ;; load the address stored in pebp to eax\n");
+            fprintf(fp, "    mov eax , [pebp]              ;; load the address stored in pebp to eax\n");
             fprintf(fp, "    mov eax , [eax + (%d) ]     ;; %s\n", symbolOffset, entry->token.lexeme);
         }
         fprintf(fp, "    push eax\n");

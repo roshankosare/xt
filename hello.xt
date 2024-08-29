@@ -1,10 +1,15 @@
-var x = 30;
+var a = 30;
 
  function print(x){
    
    var length = 50;
-    if (length < 100){
+    if (length > 10){
      length = 5;
+     x = "welcome";
+     if ( length < 10){
+      length = 12;
+      x = "hello world";
+     }
     }
     var strlength = length;
     var strpointer = x;
