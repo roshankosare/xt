@@ -4,7 +4,7 @@ var x = 30;
    
    var length = 50;
     if (length < 100){
-     length = 200;
+     length = 5;
     }
     var strlength = length;
     var strpointer = x;
