@@ -1,10 +1,14 @@
 var x = 30;
 
  function print(x){
+   
    var length = 50;
-  
-   var strlength = length;
+    if (length < 100){
+     length = 200;
+    }
+    var strlength = length;
     var strpointer = x;
+
   
    asm([    "pop ecx                           ; load the address of the string",
             "pop edx                           ; load the length of the string",                   
@@ -12,9 +16,14 @@ var x = 30;
             "mov ebx, 1                        ; file descriptor 1 (stdout)",             
             "int 0x80                          ; make syscall to write",
          ]);
+
+         x = 0;
+         length = 50;
+         x + 50;
       
  }
- print("hello world my name is roshan ksoare  and i am from wadsa desaiganj");
+ print("hello world ");
+ 
 
 
 

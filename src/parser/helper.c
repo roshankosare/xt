@@ -278,15 +278,21 @@ int getSymbolOffset(Context *context, SymbolTableEntry *entry)
 
     int scope = context->symbolTableStack->scope;
     int offset = 0;
+    if (scope == entry->scope)
+    {
+        return 0;
+    }
     while (entry->scope < scope && table->next->next != NULL)
     {
-        offset = offset + table->offset;
+
         table = table->next;
         scope--;
-        if (entry->scope == scope){
-            offset = offset + table->offset - entry->symbolOffset;
+        if (entry->scope == scope)
+        {
+            offset = offset + table->offset + entry->symbolOffset ;
             return offset;
         }
+        offset = offset + table ->offset ;
     }
     return offset;
 }
