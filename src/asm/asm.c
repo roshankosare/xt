@@ -11,6 +11,7 @@ void tranlateLocalVar(ASTNode *ast, FILE *fp);
 void createLitralConstansts(Context *Context, FILE *fp);
 void call_stack_operations(FILE *fp);
 void param_stack_operations(FILE *fp);
+void print_eax(FILE *fp);
 
 void createASMFile(ASTNode *ast, Context *context, FILE *fp)
 {
@@ -19,6 +20,9 @@ void createASMFile(ASTNode *ast, Context *context, FILE *fp)
     fprintf(fp, "    call_stack_top dd 0\n");
     fprintf(fp, "    pesp dd 0\n");
     fprintf(fp, "    pebp dd 0\n");
+    fprintf(fp, "    buffer db '0000000000', 0       ; Buffer to hold the converted number (10 digits max)\n");
+    fprintf(fp, "    len equ 10                      ; Length of the buffer\n");
+
     fprintf(fp, "section .bss\n");
     fprintf(fp, "    call_stack resb 4096               ;; Reserve 4096 bytes (4 KB) for the call stack\n");
     fprintf(fp, "    param_stack resb 4096              ;; Reserve 4096 bytes (4 KB) for the param stack\n");
@@ -41,6 +45,7 @@ void createASMFile(ASTNode *ast, Context *context, FILE *fp)
 
     call_stack_operations(fp);
     param_stack_operations(fp);
+    print_eax(fp);
 
     generateLabels(context, fp);
 
@@ -289,6 +294,7 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
         fprintf(fp, "    push eax\n");
         fprintf(fp, "    jnz %s                 ;; jump if expression  is not  zero\n", label_true);
         pushASTQnodeInQueue(context->astQueue, ast->right, label_true);
+        fprintf(fp, "    pop eax\n");
         fprintf(fp, "    lea eax , [%s]         ;; save the false label to eax\n", label_false);
         fprintf(fp, "    jmp eax\n");
         fprintf(fp, "%s:                        ;; defination of false label \n", label_false);
@@ -309,12 +315,20 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
 
     case WHILE:
     {
-        char *label = label_generate();
+        char *label_true = label_generate(); // generate label for  this if block
+        char *label_false = label_generate();
         translate(ast->left, context, fp);
+
         fprintf(fp, "    pop eax\n");
         fprintf(fp, "    test eax , eax\n");
-        fprintf(fp, "    jnz %s\n", label);
-        pushASTQnodeInQueue(context->astQueue, ast, label);
+        fprintf(fp, "    lea eax , [%s]\n", label_false);
+        fprintf(fp, "    push eax\n");
+        fprintf(fp, "    jnz %s\n", label_true);
+        pushASTQnodeInQueue(context->astQueue, ast, label_true);
+        fprintf(fp, "    pop eax\n");
+        fprintf(fp, "    lea eax , [%s]         ;; save the false label to eax\n", label_false);
+        fprintf(fp, "    jmp eax\n");
+        fprintf(fp, "%s:                        ;; defination of false label \n", label_false);
         // assert(0 && "TODO: WHILE is not implemented");
     }
     break;
@@ -322,9 +336,9 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
     {
         translate(ast->left, context, fp);  // parse left expression
         translate(ast->right, context, fp); // parse right expression
-        fprintf(fp, "    pop eax\n");       // right oprand
-        fprintf(fp, "    pop ebx\n");       // left oprand
-        fprintf(fp, "    cmp ebx , eax\n");
+        fprintf(fp, "    pop ebx\n");       // right oprand
+        fprintf(fp, "    pop eax\n");       // left oprand
+        fprintf(fp, "    cmp eax , ebx\n");
         fprintf(fp, "    setl al\n");
         fprintf(fp, "    movzx eax , al\n");
         fprintf(fp, "    push eax\n");
@@ -334,9 +348,9 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
     {
         translate(ast->left, context, fp);  // parse left expression
         translate(ast->right, context, fp); // parse right expression
-        fprintf(fp, "    pop eax\n");       // right oprand
-        fprintf(fp, "    pop ebx\n");       // left oprand
-        fprintf(fp, "    cmp ebx , eax\n");
+        fprintf(fp, "    pop ebx\n");       // right oprand
+        fprintf(fp, "    pop eax\n");       // left oprand
+        fprintf(fp, "    cmp eax , ebx\n");
         fprintf(fp, "    setg al\n");
         fprintf(fp, "    movzx eax , al\n");
         fprintf(fp, "    push eax\n");
@@ -346,9 +360,9 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
     {
         translate(ast->left, context, fp);  // parse left expression
         translate(ast->right, context, fp); // parse right expression
-        fprintf(fp, "    pop eax\n");       // right oprand
-        fprintf(fp, "    pop ebx\n");       // left oprand
-        fprintf(fp, "    cmp ebx , eax\n");
+        fprintf(fp, "    pop ebx\n");       // right oprand
+        fprintf(fp, "    pop eax\n");       // left oprand
+        fprintf(fp, "    cmp eax , ebx\n");
         fprintf(fp, "    setle al\n");
         fprintf(fp, "    movzx eax , al\n");
         fprintf(fp, "    push eax\n");
@@ -358,9 +372,9 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
     {
         translate(ast->left, context, fp);  // parse left expression
         translate(ast->right, context, fp); // parse right expression
-        fprintf(fp, "    pop eax\n");       // right oprand
-        fprintf(fp, "    pop ebx\n");       // left oprand
-        fprintf(fp, "    cmp ebx , eax\n");
+        fprintf(fp, "    pop ebx\n");       // right oprand
+        fprintf(fp, "    pop eax\n");       // left oprand
+        fprintf(fp, "    cmp eax , ebx\n");
         fprintf(fp, "    setge al\n");
         fprintf(fp, "    movzx eax , al\n");
         fprintf(fp, "    push eax\n");
@@ -370,9 +384,9 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
     {
         translate(ast->left, context, fp);  // parse left expression
         translate(ast->right, context, fp); // parse right expression
-        fprintf(fp, "    pop eax\n");       // right oprand
-        fprintf(fp, "    pop ebx\n");       // left oprand
-        fprintf(fp, "    cmp ebx , eax\n");
+        fprintf(fp, "    pop ebx\n");       // right oprand
+        fprintf(fp, "    pop eax\n");       // left oprand
+        fprintf(fp, "    cmp eax , ebx\n");
         fprintf(fp, "    sete al\n");
         fprintf(fp, "    movzx eax , al\n");
         fprintf(fp, "    push eax\n");
@@ -384,7 +398,7 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
         translate(ast->right, context, fp); // parse right expression
         fprintf(fp, "    pop eax\n");       // right oprand
         fprintf(fp, "    pop ebx\n");       // left oprand
-        fprintf(fp, "    cmp ebx , eax\n");
+        fprintf(fp, "    cmp eax , ebx\n");
         fprintf(fp, "    setne al\n");
         fprintf(fp, "    movzx eax , al\n");
         fprintf(fp, "    push eax\n");
@@ -598,12 +612,17 @@ void generateLabels(Context *context, FILE *fp)
         {
             fprintf(fp, "    pop eax                        ;; pop the return address to eax\n");
             fprintf(fp, "    call push_call                 ;; store the return address to ra location\n");
+            // fprintf(fp, "    call print_eax\n");
             translate(current->ast->right, context, fp);
             translate(current->ast->left, context, fp);
             fprintf(fp, "    pop eax\n");
+            // fprintf(fp, "    call print_eax\n");
             fprintf(fp, "    test eax , eax\n");
-            fprintf(fp, "    jnz %s\n", current->label);
             fprintf(fp, "    call pop_call                  ;; store the return address to eax\n");
+            fprintf(fp, "    push eax\n");
+            // fprintf(fp, "    call print_eax\n");
+            fprintf(fp, "    jnz %s\n", current->label);
+            fprintf(fp, "    pop eax\n");
             fprintf(fp, "    jmp eax                        ;; jmp to return address\n");
         }
         else
@@ -701,4 +720,37 @@ void param_stack_operations(FILE *fp)
     fprintf(fp, "   ret\n");
 
     return;
+}
+
+void print_eax(FILE *fp)
+{
+
+    fprintf(fp, "print_eax:\n");
+    fprintf(fp, "    ; Convert number in eax to string\n");
+    fprintf(fp, "    mov edi, len                    ; Point to the end of the buffer\n");
+    fprintf(fp, "    mov ecx, 10                     ; Base 10 for division\n");
+    fprintf(fp, "    lea esi, [buffer + len]         ; Point esi to the last digit in buffer\n");
+    fprintf(fp, ".print_loop:\n");
+    fprintf(fp, "    xor edx, edx                    ; Clear edx for division\n");
+    fprintf(fp, "    div ecx                         ; Divide eax by 10, quotient in eax, remainder in edx\n");
+    fprintf(fp, "    add dl, '0'                     ; Convert remainder to ASCII\n");
+    fprintf(fp, "    dec esi                         ; Move the buffer pointer backwards\n");
+    fprintf(fp, "    mov [esi], dl                   ; Store the ASCII character in buffer\n");
+    fprintf(fp, "    dec edi                         ; Decrease digit count\n");
+    fprintf(fp, "    test eax, eax                   ; Check if eax is 0\n");
+    fprintf(fp, "    jnz .print_loop                 ; If not, continue the loop\n");
+    fprintf(fp, "    ; Check if the number was zero\n");
+    fprintf(fp, "    cmp edi, len\n");
+    fprintf(fp, "    jne .not_zero\n");
+    fprintf(fp, "    mov byte [esi - 1], '0'         ; Handle case where eax was 0\n");
+    fprintf(fp, "    dec esi\n");
+    fprintf(fp, ".not_zero:\n");
+    fprintf(fp, "    ; Print the string\n");
+    fprintf(fp, "    mov eax, 4                      ; sys_write system call number\n");
+    fprintf(fp, "    mov ebx, 1                      ; File descriptor 1 (stdout)\n");
+    fprintf(fp, "    mov edx, len                    ; Number of bytes to write\n");
+    fprintf(fp, "    sub edx, edi                    ; Adjust the length to the actual number length\n");
+    fprintf(fp, "    lea ecx, [buffer + edi]         ; Adjust buffer pointer to start of the number string\n");
+    fprintf(fp, "    int 0x80                        ; Interrupt to make system call\n");
+    fprintf(fp, "    ret                             ; Return to caller\n");
 }

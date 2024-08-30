@@ -2,15 +2,12 @@ var a = 0;
 
  function print(x){
    var length = 0;
-   var temp = x;
-   while(@temp != 0){ 
-      a++; 
-      temp++;
-      length++;
-   }
-   length = a;
-   var strpointer = x;
-   var strlength = length;
+   var temp = 0;
+ while( a < 10){
+  a = a + 1;
+ }
+   var strlength = a;
+    var strpointer = x;
   
    asm([    "pop ecx                           ; load the address of the string",
             "pop edx                           ; load the length of the string",                   
