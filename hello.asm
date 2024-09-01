@@ -5,6 +5,8 @@ section .data                        ;; Section for initialized data
     pebp dd 0
     buffer db '0000000000', 0       ; Buffer to hold the converted number (10 digits max)
     len equ 10                      ; Length of the buffer
+    space db  " "                       ; Space character to print
+    condition dd 0
 section .bss
     call_stack resb 4096               ;; Reserve 4096 bytes (4 KB) for the call stack
     param_stack resb 4096              ;; Reserve 4096 bytes (4 KB) for the param stack
@@ -93,7 +95,20 @@ print_eax:
     sub edx, edi                    ; Adjust the length to the actual number length
     lea ecx, [buffer + edi]         ; Adjust buffer pointer to start of the number string
     int 0x80                        ; Interrupt to make system call
+    ; Print a space after the number
+    mov eax, 4                      ; sys_write system call number
+    mov ebx, 1                      ; File descriptor 1 (stdout)
+    mov ecx, space                  ; Address of the space character
+    mov edx, 1                      ; Length of the space character (1 byte)
+    int 0x80                        ; Interrupt to make system call
     ret                             ; Return to caller
+delay:
+    ; Assumes the delay duration is passed in ecx
+    mov eax, ecx          ; Load the delay duration into eax
+.loop:
+    dec eax               ; Decrement eax
+    jnz .loop             ; If eax is not zero, repeat the loop
+    ret                   ; Return to the caller
 print:
     pop eax                        ;; pop the return address to eax
     call push_call                 ;; store the return address to ra location
@@ -111,32 +126,40 @@ print:
     mov ebx , [pebp]                    ;; store the address to ebx
     mov [ebx + (-4)] , eax              ;; store the value at location ebx
     push eax
-    mov eax, 0
+    mov eax , [pebp]              ;; load the address stored in pebp to eax
+    mov eax , [eax + (4) ]     ;; x
     push eax
     pop eax
     mov ebx , [pebp]                    ;; store the address to ebx
     mov [ebx + (-8)] , eax              ;; store the value at location ebx
     push eax
-    mov eax , [a]
+    mov eax , [pebp]              ;; load the address stored in pebp to eax
+    mov eax , [eax + (-8) ]     ;; temp
     push eax
-    mov eax, 10
-    push eax
-    pop ebx
     pop eax
+    mov eax , [eax]             ;; mov value to eax from address stored at eax
+    push eax
+    mov eax, 0
+    push eax
+    pop eax
+    pop ebx
     cmp eax , ebx
-    setl al
+    setne al
     movzx eax , al
     push eax
     pop eax
-    test eax , eax
+    mov [condition] , eax
     lea eax , [label_1681692777]
     push eax
+    mov eax , [condition]
+    test eax , eax
     jnz label_846930886
     pop eax
     lea eax , [label_1681692777]         ;; save the false label to eax
     jmp eax
 label_1681692777:                        ;; defination of false label 
-    mov eax , [a]
+    mov eax , [pebp]              ;; load the address stored in pebp to eax
+    mov eax , [eax + (-4) ]     ;; length
     push eax
     pop eax
     mov ebx , [pebp]                    ;; store the address to ebx
@@ -163,43 +186,46 @@ label_1681692777:                        ;; defination of false label
 label_846930886:
     pop eax                        ;; pop the return address to eax
     call push_call                 ;; store the return address to ra location
-    call print_eax
     mov eax , [pebp]                  ;; store value at pebp to eax
     call push_stack                   ;; push [pebp] to stack
     mov eax , [pesp]                  ;; store the value at pesp to eax
     mov [pebp] , eax                ;; allocate new base pointer
-    mov eax , [a]
+    mov eax , [pebp]              ;; load the address stored in pebp to eax
+    mov eax , [eax + (12) ]     ;; temp
     push eax
-    mov eax, 1
+    mov eax , [pebp]           ;; move address stored in pebp to eax
+    inc dword [eax + (12)]     ;; temp
+    mov eax , [pebp]              ;; load the address stored in pebp to eax
+    mov eax , [eax + (16) ]     ;; length
     push eax
-    ;; plus
-    pop eax
-    pop ebx
-    add eax , ebx
-    push eax
-    pop eax
-    mov [a] , eax
-    push eax
+    mov eax , [pebp]           ;; move address stored in pebp to eax
+    inc dword [eax + (16)]     ;; length
     mov eax , [pebp]                   ;; store the value at pebp to eax
     mov [pesp] , eax                ;; restore the stack pointer
     call pop_stack                     ;; pop stack top to eax
     mov [pebp] , eax                    ; restore the base pointer
-    mov eax , [a]
+    mov eax , [pebp]              ;; load the address stored in pebp to eax
+    mov eax , [eax + (-8) ]     ;; temp
     push eax
-    mov eax, 10
-    push eax
-    pop ebx
     pop eax
+    mov eax , [eax]             ;; mov value to eax from address stored at eax
+    push eax
+    mov eax, 0
+    push eax
+    pop eax
+    pop ebx
     cmp eax , ebx
-    setl al
+    setne al
     movzx eax , al
     push eax
     pop eax
-    test eax , eax
+    mov [condition] ,  eax
     call pop_call                  ;; store the return address to eax
     push eax
+    mov eax , [condition]
+    test eax , eax
     jnz label_846930886
     pop eax
     jmp eax                        ;; jmp to return address
 section .rodata
-    label_1804289383: dd "hello world ", 0
+    label_1804289383: dd "hello world oisdhfoi popsod jfpospf pojsdofpjspdojfpsdpfjsdpfj ", 0

@@ -12,6 +12,7 @@ void createLitralConstansts(Context *Context, FILE *fp);
 void call_stack_operations(FILE *fp);
 void param_stack_operations(FILE *fp);
 void print_eax(FILE *fp);
+void printDelay(FILE *fp);
 
 void createASMFile(ASTNode *ast, Context *context, FILE *fp)
 {
@@ -22,6 +23,8 @@ void createASMFile(ASTNode *ast, Context *context, FILE *fp)
     fprintf(fp, "    pebp dd 0\n");
     fprintf(fp, "    buffer db '0000000000', 0       ; Buffer to hold the converted number (10 digits max)\n");
     fprintf(fp, "    len equ 10                      ; Length of the buffer\n");
+    fprintf(fp, "    space db  \" \"                       ; Space character to print\n");
+    fprintf(fp, "    condition dd 0\n");
 
     fprintf(fp, "section .bss\n");
     fprintf(fp, "    call_stack resb 4096               ;; Reserve 4096 bytes (4 KB) for the call stack\n");
@@ -46,6 +49,7 @@ void createASMFile(ASTNode *ast, Context *context, FILE *fp)
     call_stack_operations(fp);
     param_stack_operations(fp);
     print_eax(fp);
+    printDelay(fp);
 
     generateLabels(context, fp);
 
@@ -320,9 +324,12 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
         translate(ast->left, context, fp);
 
         fprintf(fp, "    pop eax\n");
-        fprintf(fp, "    test eax , eax\n");
+        fprintf(fp, "    mov [condition] , eax\n");
+
         fprintf(fp, "    lea eax , [%s]\n", label_false);
         fprintf(fp, "    push eax\n");
+        fprintf(fp, "    mov eax , [condition]\n");
+        fprintf(fp, "    test eax , eax\n");
         fprintf(fp, "    jnz %s\n", label_true);
         pushASTQnodeInQueue(context->astQueue, ast, label_true);
         fprintf(fp, "    pop eax\n");
@@ -616,11 +623,19 @@ void generateLabels(Context *context, FILE *fp)
             translate(current->ast->right, context, fp);
             translate(current->ast->left, context, fp);
             fprintf(fp, "    pop eax\n");
+
+            fprintf(fp, "    mov [condition] ,  eax\n");
             // fprintf(fp, "    call print_eax\n");
-            fprintf(fp, "    test eax , eax\n");
+
+            // fprintf(fp, "    mov ecx , 100000000\n");
+            // fprintf(fp, "    call delay\n");
+            // fprintf(fp, "    call delay\n");
+
             fprintf(fp, "    call pop_call                  ;; store the return address to eax\n");
             fprintf(fp, "    push eax\n");
             // fprintf(fp, "    call print_eax\n");
+            fprintf(fp, "    mov eax , [condition]\n");
+            fprintf(fp, "    test eax , eax\n");
             fprintf(fp, "    jnz %s\n", current->label);
             fprintf(fp, "    pop eax\n");
             fprintf(fp, "    jmp eax                        ;; jmp to return address\n");
@@ -752,5 +767,26 @@ void print_eax(FILE *fp)
     fprintf(fp, "    sub edx, edi                    ; Adjust the length to the actual number length\n");
     fprintf(fp, "    lea ecx, [buffer + edi]         ; Adjust buffer pointer to start of the number string\n");
     fprintf(fp, "    int 0x80                        ; Interrupt to make system call\n");
+
+    fprintf(fp, "    ; Print a space after the number\n");
+    fprintf(fp, "    mov eax, 4                      ; sys_write system call number\n");
+    fprintf(fp, "    mov ebx, 1                      ; File descriptor 1 (stdout)\n");
+    fprintf(fp, "    mov ecx, space                  ; Address of the space character\n");
+    fprintf(fp, "    mov edx, 1                      ; Length of the space character (1 byte)\n");
+    fprintf(fp, "    int 0x80                        ; Interrupt to make system call\n");
     fprintf(fp, "    ret                             ; Return to caller\n");
+}
+
+void printDelay(FILE *fp)
+{
+
+    fprintf(fp, "delay:\n");
+    fprintf(fp, "    ; Assumes the delay duration is passed in ecx\n");
+    fprintf(fp, "    mov eax, ecx          ; Load the delay duration into eax\n");
+    fprintf(fp, ".loop:\n");
+    fprintf(fp, "    dec eax               ; Decrement eax\n");
+    fprintf(fp, "    jnz .loop             ; If eax is not zero, repeat the loop\n");
+    fprintf(fp, "    ret                   ; Return to the caller\n");
+
+    return;
 }

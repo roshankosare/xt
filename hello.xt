@@ -1,12 +1,13 @@
 var a = 0;
 
  function print(x){
-   var length = 0;
-   var temp = 0;
- while( a < 10){
-  a = a + 1;
- }
-   var strlength = a;
+    var length = 0;
+   var temp = x;
+   while(@temp != 0){  
+      temp++;
+      length++;
+   }
+   var strlength = length;
     var strpointer = x;
   
    asm([    "pop ecx                           ; load the address of the string",
@@ -17,7 +18,7 @@ var a = 0;
          ]);
       
  }
- print("hello world ");
+ print("hello world oisdhfoi popsod jfpospf pojsdofpjspdojfpsdpfjsdpfj ");
  
 
 
