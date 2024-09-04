@@ -1,12 +1,28 @@
 var a = 0;
+var MSIZE = 0;
+var MMEM = 0;
+
+function memalloc(size){
+   MSIZE = size;
+   asm([
+      "mov eax , [MSIZE]",
+      "push eax",
+      "call malloc",
+      "mov [MMEM] , eax"
+   ]);
+  return MMEM;
+}
 
  function print(x){
     var length = 0;
    var temp = x;
+   var tempBuffer = x;
+   var buffer = memalloc(1024);
    while(@temp != 0){  
       temp++;
       length++;
    }
+   
    var strlength = length;
     var strpointer = x;
   
@@ -18,7 +34,10 @@ var a = 0;
          ]);
       
  }
- print("hello world oisdhfoi popsod jfpospf pojsdofpjspdojfpsdpfjsdpfj ");
+ print("hello world  ");
+ print("welcome");
+
+
  
 
 

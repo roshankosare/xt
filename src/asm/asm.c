@@ -4,6 +4,7 @@
 #include "../../include/symboltable/symboltable.h"
 #include "../../include/litrals/litrals.h"
 #include <assert.h>
+#include <string.h>
 
 void translateGlobalVar(ASTNode *ast, FILE *fp);
 void generateLabels(Context *context, FILE *fp);
@@ -11,33 +12,51 @@ void tranlateLocalVar(ASTNode *ast, FILE *fp);
 void createLitralConstansts(Context *Context, FILE *fp);
 void call_stack_operations(FILE *fp);
 void param_stack_operations(FILE *fp);
+void function_base_stack_operations(FILE *fp);
+void function_call_stack_operations(FILE *fp);
 void print_eax(FILE *fp);
 void printDelay(FILE *fp);
+void printMemAlloc(FILE *fp);
 
 void createASMFile(ASTNode *ast, Context *context, FILE *fp)
 {
     fprintf(fp, "section .data                        ;; Section for initialized data\n");
     translateGlobalVar(ast, fp);
     fprintf(fp, "    call_stack_top dd 0\n");
+    fprintf(fp, "    fcall_stack_top dd 0\n");
+    fprintf(fp, "    base_stack_top dd 0\n");
     fprintf(fp, "    pesp dd 0\n");
     fprintf(fp, "    pebp dd 0\n");
     fprintf(fp, "    buffer db '0000000000', 0       ; Buffer to hold the converted number (10 digits max)\n");
     fprintf(fp, "    len equ 10                      ; Length of the buffer\n");
     fprintf(fp, "    space db  \" \"                       ; Space character to print\n");
     fprintf(fp, "    condition dd 0\n");
+    fprintf(fp, "    BASE_ESP dd 0\n");
+    fprintf(fp, "    BASE_RETURN dd 0\n");
+    fprintf(fp, "    RETURN_VALUE dd 0\n");
+    fprintf(fp, "    RETURN_ADDRESS dd 0\n");
+    fprintf(fp, "    POPED_ADDRESS dd 00\n");
 
     fprintf(fp, "section .bss\n");
-    fprintf(fp, "    call_stack resb 4096               ;; Reserve 4096 bytes (4 KB) for the call stack\n");
-    fprintf(fp, "    param_stack resb 4096              ;; Reserve 4096 bytes (4 KB) for the param stack\n");
+    fprintf(fp, "    call_stack resb 1024               ;; Reserve 1024 bytes (4 KB) for the call stack\n");
+    fprintf(fp, "    param_stack resb 1024              ;; Reserve 1024 bytes (4 KB) for the param stack\n");
+    fprintf(fp, "    fcall_stack resb 1024               ;; Reserve 1024 bytes (4 KB) for the call stack\n");
+    fprintf(fp, "    base_stack resb 1024              ;; Reserve 1024 bytes (4 KB) for the param stack\n");
     fprintf(fp, "\n");
 
     fprintf(fp, "section .text                        ;; Section for code\n");
     fprintf(fp, "    global _start                    ;; Make the _start symbol available to the linker\n");
     fprintf(fp, "\n");
     fprintf(fp, "_start: \n");
-    fprintf(fp, "    mov eax , call_stack + 4096\n");
+    fprintf(fp, "    mov eax , call_stack + 1024\n");
     fprintf(fp, "    mov [call_stack_top] , eax                 ;; init call stack \n");
-    fprintf(fp, "    mov eax , param_stack + 4096\n");
+    fprintf(fp, "    mov eax , fcall_stack + 1024\n");
+    fprintf(fp, "    mov [fcall_stack_top] , eax                 ;; init call stack \n");
+
+    fprintf(fp, "    mov eax , base_stack + 1024\n");
+    fprintf(fp, "    mov [base_stack_top] , eax                 ;; init call stack \n");
+
+    fprintf(fp, "    mov eax , param_stack + 1024\n");
     fprintf(fp, "    mov [pesp] , eax\n");
     fprintf(fp, "    mov [pebp] , eax\n");
     translate(ast, context, fp); // translate code;
@@ -47,9 +66,12 @@ void createASMFile(ASTNode *ast, Context *context, FILE *fp)
     fprintf(fp, "    int 0x80                         ;; make syscall\n");
 
     call_stack_operations(fp);
+    function_base_stack_operations(fp);
+    function_call_stack_operations(fp);
     param_stack_operations(fp);
     print_eax(fp);
     printDelay(fp);
+    printMemAlloc(fp);
 
     generateLabels(context, fp);
 
@@ -294,14 +316,14 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
         char *label_false = label_generate();
         fprintf(fp, "    pop eax\n");        // get value of expression from stack
         fprintf(fp, "    test eax , eax\n"); // check if value is non zero
-        fprintf(fp, "    lea eax , [%s]\n", label_false);
+        fprintf(fp, "    lea eax , [.%s]\n", label_false);
         fprintf(fp, "    push eax\n");
         fprintf(fp, "    jnz %s                 ;; jump if expression  is not  zero\n", label_true);
         pushASTQnodeInQueue(context->astQueue, ast->right, label_true);
         fprintf(fp, "    pop eax\n");
-        fprintf(fp, "    lea eax , [%s]         ;; save the false label to eax\n", label_false);
+        fprintf(fp, "    lea eax , [.%s]         ;; save the false label to eax\n", label_false);
         fprintf(fp, "    jmp eax\n");
-        fprintf(fp, "%s:                        ;; defination of false label \n", label_false);
+        fprintf(fp, ".%s:                        ;; defination of false label \n", label_false);
         break;
     case ELSE:
         assert(0 && "TODO: ELSE is not implemented");
@@ -309,12 +331,36 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
         assert(0 && "TODO: FOR is not implemented");
     case RETURN:
     {
+        fprintf(fp, "    mov  dword [RETURN_VALUE] , 0\n");
         if (ast->left != NULL)
         {
             translate(ast->left, context, fp);
+            fprintf(fp, "    pop eax\n");
+            fprintf(fp, "    mov [RETURN_VALUE] , eax\n");
         }
-        fprintf(fp, "    ret\n");
-        break;
+
+        fprintf(fp, "    call pop_base                 ;; pop base pointer value of caller\n");
+        fprintf(fp, "    mov [pebp] , eax                ;; restore the stack pointer\n");
+        fprintf(fp, "    call pop_fcall\n");
+        fprintf(fp, "    mov [RETURN_ADDRESS], eax\n");
+        fprintf(fp, ".loop:                                 ;; function to clean up call stack \n");
+        // fprintf(fp, "    mov ecx , 500000000\n");
+        // fprintf(fp, "    call delay\n");
+        // fprintf(fp, "    call delay\n");
+        // fprintf(fp, "    mov eax , [RETURN_ADDRESS]\n");
+        // fprintf(fp, "    call print_eax\n");
+        fprintf(fp, "    call pop_call\n");
+        fprintf(fp, "    mov [POPED_ADDRESS] , eax\n");
+        // fprintf(fp, "    mov eax , [POPED_ADDRESS]\n");
+        // fprintf(fp, "    call print_eax\n");
+        fprintf(fp, "    mov eax ,[POPED_ADDRESS]\n");
+        fprintf(fp, "    cmp eax, [RETURN_ADDRESS]\n");
+        fprintf(fp, "    jne .loop\n");
+        fprintf(fp, "    mov eax , [RETURN_ADDRESS]\n");
+        fprintf(fp, "    push eax\n");
+        fprintf(fp, "    mov eax , [RETURN_ADDRESS]\n");
+        fprintf(fp, "    jmp eax\n");
+        return;
     }
 
     case WHILE:
@@ -326,16 +372,16 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
         fprintf(fp, "    pop eax\n");
         fprintf(fp, "    mov [condition] , eax\n");
 
-        fprintf(fp, "    lea eax , [%s]\n", label_false);
+        fprintf(fp, "    lea eax , [.%s]\n", label_false);
         fprintf(fp, "    push eax\n");
         fprintf(fp, "    mov eax , [condition]\n");
         fprintf(fp, "    test eax , eax\n");
         fprintf(fp, "    jnz %s\n", label_true);
         pushASTQnodeInQueue(context->astQueue, ast, label_true);
         fprintf(fp, "    pop eax\n");
-        fprintf(fp, "    lea eax , [%s]         ;; save the false label to eax\n", label_false);
+        fprintf(fp, "    lea eax , [.%s]         ;; save the false label to eax\n", label_false);
         fprintf(fp, "    jmp eax\n");
-        fprintf(fp, "%s:                        ;; defination of false label \n", label_false);
+        fprintf(fp, ".%s:                        ;; defination of false label \n", label_false);
         // assert(0 && "TODO: WHILE is not implemented");
     }
     break;
@@ -460,7 +506,7 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
         FunctionTableEntry *entry = checkFuntionEntry(context, ast->left->token);
         // FUNTION ->RIGHT = ARGS + BODY
 
-        pushASTQnodeInQueue(context->astQueue, ast->right, entry->token.lexeme);
+        pushASTQnodeInQueue(context->astQueue, ast, entry->token.lexeme);
         break;
 
     case FUNCTION_CALL:
@@ -565,9 +611,10 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
         fprintf(fp, "    mov [pebp] , eax                ;; allocate new base pointer\n");
         // fprintf(fp, "    push ebp                ; Save base pointer\n");
         // fprintf(fp, "    mov ebp, esp            ; Establish new base pointer\n");
-        tranlateLocalVar(ast, fp);
+        tranlateLocalVar(ast->right, fp);
         SymbolTable *symboltable = getSymboTableFromQueue(context);
         pushSymbolTable(context->symbolTableStack, symboltable);
+        translate(ast->right, context, fp);
     }
     break;
     case BODYEND:
@@ -640,6 +687,21 @@ void generateLabels(Context *context, FILE *fp)
             fprintf(fp, "    pop eax\n");
             fprintf(fp, "    jmp eax                        ;; jmp to return address\n");
         }
+        else if (current->ast->token.value == FUNCTION)
+        {
+            fprintf(fp, "    pop eax                        ;; pop the return address to eax\n");
+            fprintf(fp, "    call push_call                 ;; store the return address to ra location\n");
+            fprintf(fp, "    call push_fcall\n");
+            fprintf(fp, "    mov eax , [pebp]\n");
+            fprintf(fp, "    call push_base\n");
+            // here we have to push callers return addresF
+            // and push push callers base address
+            translate(current->ast->right, context, fp);
+            fprintf(fp, "    call pop_base\n");
+            fprintf(fp, "    call pop_fcall\n");
+            fprintf(fp, "    call pop_call                  ;; store the return address to eax\n");
+            fprintf(fp, "    jmp eax                        ;; jmp to return address\n");
+        }
         else
         {
             fprintf(fp, "    pop eax                        ;; pop the return address to eax\n");
@@ -710,6 +772,50 @@ void call_stack_operations(FILE *fp)
     fprintf(fp, "   mov eax , [call_stack_top]                  ;; load value of call_stack_top to eax\n");
     fprintf(fp, "   mov eax , [eax]                             ;; load value from addressed stored in eax to eax\n ");
     fprintf(fp, "   add dword [call_stack_top] , 4          ;; increment stack by 4\n");
+    fprintf(fp, "   ret\n");
+
+    return;
+}
+
+void function_base_stack_operations(FILE *fp)
+{
+
+    // push stack method
+    fprintf(fp, ";; this method is used for pushing the callers base address to stack store in eax register\n");
+    fprintf(fp, "push_base:\n");
+    fprintf(fp, "   sub dword [base_stack_top] , 4              ;; decrement stack by 4\n");
+    fprintf(fp, "   mov ebx , [base_stack_top]                  ;; load value of call_stack_top to ebx\n");
+    fprintf(fp, "   mov dword [ebx] , eax                       ;; store the value of eax to location stored in ebx\n ");
+    fprintf(fp, "   ret\n");
+
+    // pop stack method
+    fprintf(fp, ";; this method is used for poping  callers base address from stack and  store  it in eax register\n");
+    fprintf(fp, "pop_base:\n");
+    fprintf(fp, "   mov eax , [base_stack_top]                  ;; load value of call_stack_top to eax\n");
+    fprintf(fp, "   mov eax , [eax]                             ;; load value from addressed stored in eax to eax\n ");
+    fprintf(fp, "   add dword [base_stack_top] , 4          ;; increment stack by 4\n");
+    fprintf(fp, "   ret\n");
+
+    return;
+}
+
+void function_call_stack_operations(FILE *fp)
+{
+
+    // push stack method
+    fprintf(fp, ";; this method is used for pushing the callers return address to stack store in eax register\n");
+    fprintf(fp, "push_fcall:\n");
+    fprintf(fp, "   sub dword [fcall_stack_top] , 4              ;; decrement stack by 4\n");
+    fprintf(fp, "   mov ebx , [fcall_stack_top]                  ;; load value of call_stack_top to ebx\n");
+    fprintf(fp, "   mov dword [ebx] , eax                       ;; store the value of eax to location stored in ebx\n ");
+    fprintf(fp, "   ret\n");
+
+    // pop stack method
+    fprintf(fp, ";; this method is used for poping the callers return address from stack and  store  it in eax register\n");
+    fprintf(fp, "pop_fcall:\n");
+    fprintf(fp, "   mov eax , [fcall_stack_top]                  ;; load value of call_stack_top to eax\n");
+    fprintf(fp, "   mov eax , [eax]                             ;; load value from addressed stored in eax to eax\n ");
+    fprintf(fp, "   add dword [fcall_stack_top] , 4          ;; increment stack by 4\n");
     fprintf(fp, "   ret\n");
 
     return;
@@ -789,4 +895,26 @@ void printDelay(FILE *fp)
     fprintf(fp, "    ret                   ; Return to the caller\n");
 
     return;
+}
+
+void printMemAlloc(FILE *fp)
+{
+
+    fprintf(fp, "malloc:\n");
+    fprintf(fp, "    pop ecx\n");
+    fprintf(fp, "    push esi\n");
+    fprintf(fp, "    ; mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0)\n");
+    fprintf(fp, "    xor eax, eax\n");
+    fprintf(fp, "    mov eax, 90        ; sys_mmap system call number\n");
+    fprintf(fp, "    xor ebx, ebx       ; addr = NULL (let kernel choose the address)\n");
+
+    // fprintf(fp, "    mov ecx, [size]    ; size of the memory to allocate (1024 bytes)\n");
+    fprintf(fp, "    mov edx, 3         ; prot = PROT_READ | PROT_WRITE (read/write access)\n");
+    fprintf(fp, "    mov esi, 0x22      ; flags = MAP_PRIVATE | MAP_ANONYMOUS\n");
+    fprintf(fp, "    mov edi, -1        ; fd = -1 (no file descriptor since MAP_ANONYMOUS)\n");
+    fprintf(fp, "    xor ebp, ebp       ; offset = 0 (not applicable since no file is mapped)\n");
+    fprintf(fp, "    int 0x80           ; Call kernel to perform mmap\n");
+    fprintf(fp, "    pop esi\n");
+    fprintf(fp, "    push eax\n");
+    fprintf(fp, "    ret\n");
 }

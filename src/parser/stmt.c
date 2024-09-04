@@ -37,7 +37,7 @@ ASTNode *stmt(Context *context)
         node = exp_stmt(context);
         return node;
     }
-    if (match(context, INC) || match(context, DEC) || match(context,VALUE_AT))
+    if (match(context, INC) || match(context, DEC) || match(context, VALUE_AT))
     {
         node = exp_stmt(context);
         return node;
@@ -137,6 +137,11 @@ ASTNode *jump_stmt(Context *context)
     {
         ASTNode *returnNode = createASTNode(context->current);
         consume(context);
+        if (match(context, SEMI_COLAN))
+        {
+            consume(context); // consume ";"
+            return returnNode;
+        }
         returnNode->left = exp(context);
         expect(context, SEMI_COLAN);
         consume(context);
@@ -155,17 +160,27 @@ ASTNode *parse_block(Context *context)
     pushSymbolTable(context->symbolTableStack, symbolTable);
     insertSymbolTableToQueue(context, symbolTable);
     Token body_start = {.lexeme = "Body_start", .value = BODYSTART};
-    ASTNode *body = createASTNode(body_start);
-    ASTNode *start = body;
+    ASTNode *bodyStartNode = createASTNode(body_start);
+    ASTNode *start = bodyStartNode;
+    ASTNode *body;
+    int first = 1;
     while (context->current.value != CLOSE_CURLY_PAREN && context->current.value != TEOF)
     {
+
+        if (first)
+        {
+            body = stmt(context);
+            bodyStartNode->right = body;
+            first = 0;
+            continue;
+        }
         body->next = stmt(context);
         body = body->next;
     }
     expect(context, CLOSE_CURLY_PAREN);
     Token body_end_token = {.lexeme = "Body_end", .value = BODYEND};
     ASTNode *body_end = createASTNode(body_end_token);
-    body->next = body_end;
+    bodyStartNode->next = body_end;
     consume(context);
     popSymbolTable(context->symbolTableStack);
 
