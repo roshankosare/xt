@@ -55,8 +55,23 @@ _start:
     mov eax , [pesp]                  ;; store the value at pesp to eax
     mov [pebp] , eax                ;; allocate new base pointer
     sub dword [pesp] , 4                         ;; allocate space for args on stack
+    mov eax , [pesp]
+    call push_base
+    mov eax , [pebp]                   ;; store the value at pebp to eax
+    mov [pesp] , eax                ;; restore the stack pointer
+    call pop_stack                     ;; pop stack top to eax
+    mov [pebp] , eax                    ; restore the base pointer
+    call push_base
     lea eax, [label_1804289383]              ;; Load the address of litral into eax
     push eax
+    call pop_base
+    mov [pebp], eax
+    mov eax , [pebp]                  ;; store value at pebp to eax
+    call push_stack                   ;; push [pebp] to stack
+    mov eax , [pesp]                  ;; store the value at pesp to eax
+    mov [pebp] , eax                ;; allocate new base pointer
+    call pop_base
+    mov [pesp] , eax
     pop eax
     mov ebx , [pebp]                        ;; store the address value to ebx
     mov [ebx - 4] , eax                   ;; args no:- 1
@@ -262,8 +277,24 @@ print:
     mov eax , [pesp]                  ;; store the value at pesp to eax
     mov [pebp] , eax                ;; allocate new base pointer
     sub dword [pesp] , 4                         ;; allocate space for args on stack
-    mov eax, 1024
+    mov eax , [pesp]
+    call push_base
+    mov eax , [pebp]                   ;; store the value at pebp to eax
+    mov [pesp] , eax                ;; restore the stack pointer
+    call pop_stack                     ;; pop stack top to eax
+    mov [pebp] , eax                    ; restore the base pointer
+    call push_base
+    mov eax , [pebp]              ;; load the address stored in pebp to eax
+    mov eax , [eax + (-12) ]     ;; maxBuffer
     push eax
+    call pop_base
+    mov [pebp], eax
+    mov eax , [pebp]                  ;; store value at pebp to eax
+    call push_stack                   ;; push [pebp] to stack
+    mov eax , [pesp]                  ;; store the value at pesp to eax
+    mov [pebp] , eax                ;; allocate new base pointer
+    call pop_base
+    mov [pesp] , eax
     pop eax
     mov ebx , [pebp]                        ;; store the address value to ebx
     mov [ebx - 4] , eax                   ;; args no:- 1

@@ -549,12 +549,30 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
             args = args->next;
         }
         args = ast->right->right;
+
         while (args != NULL)
         {
+            fprintf(fp, "    mov eax , [pesp]\n");
+            fprintf(fp, "    call push_base\n");
+            fprintf(fp, "    mov eax , [pebp]                   ;; store the value at pebp to eax\n");
+            fprintf(fp, "    mov [pesp] , eax                ;; restore the stack pointer\n");
+            fprintf(fp, "    call pop_stack                     ;; pop stack top to eax\n");
+            fprintf(fp, "    mov [pebp] , eax                    ; restore the base pointer\n");
+            fprintf(fp, "    call push_base\n");
+
             translate(args, context, fp);
+            fprintf(fp, "    call pop_base\n");
+            fprintf(fp, "    mov [pebp], eax\n");
+            fprintf(fp, "    mov eax , [pebp]                  ;; store value at pebp to eax\n");
+            fprintf(fp, "    call push_stack                   ;; push [pebp] to stack\n");
+            fprintf(fp, "    mov eax , [pesp]                  ;; store the value at pesp to eax\n");
+            fprintf(fp, "    mov [pebp] , eax                ;; allocate new base pointer\n");
+            fprintf(fp, "    call pop_base\n");
+            fprintf(fp, "    mov [pesp] , eax\n");
             fprintf(fp, "    pop eax\n");
             fprintf(fp, "    mov ebx , [pebp]                        ;; store the address value to ebx\n");
             fprintf(fp, "    mov [ebx - %d] , eax                   ;; args no:- %d\n", offset, offset / 4);
+            // fprintf(fp, "    call print_eax\n");
             // fprintf(fp, "    mov [ebp - %d] , eax                   ;; args no:- %d\n", offset, offset / 4);
             args = args->next;
             offset = offset + 4;

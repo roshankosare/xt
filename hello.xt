@@ -19,7 +19,7 @@ function print(x){
    var length = 0;
    var temp = x;
    var maxBuffer = 1024;
-   var buffer = memalloc(1024);
+   var buffer = memalloc(maxBuffer);
    var tempBuffer = buffer;
    var ch = 0;
    while(@temp != 0){
