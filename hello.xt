@@ -6,25 +6,37 @@ function memalloc(size){
    MSIZE = size;
    asm([
       "mov eax , [MSIZE]",
-      "push eax",
+      "mov ecx , eax",
       "call malloc",
-      "mov [MMEM] , eax"
+       "mov [MMEM] , eax",
    ]);
   return MMEM;
 }
 
- function print(x){
-    var length = 0;
+
+function print(x){
+   
+   var length = 0;
    var temp = x;
-   var tempBuffer = x;
+   var maxBuffer = 1024;
    var buffer = memalloc(1024);
-   while(@temp != 0){  
+   var tempBuffer = buffer;
+   var ch = 0;
+   while(@temp != 0){
+      @tempBuffer = @temp;
+      ch = @temp;
+      asm([
+         "pop eax",
+         "and eax , 0xFF",
+         "call print_eax"
+      ]);
       temp++;
+      tempBuffer++;
       length++;
    }
-   
    var strlength = length;
-    var strpointer = x;
+   var strpointer = buffer;
+   
   
    asm([    "pop ecx                           ; load the address of the string",
             "pop edx                           ; load the length of the string",                   
@@ -34,12 +46,12 @@ function memalloc(size){
          ]);
       
  }
- print("hello world  ");
- print("welcome");
+
+ 
+print(" hello world ");
 
 
  
-
 
 
 

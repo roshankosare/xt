@@ -233,17 +233,33 @@ ASTNode *parse_fun_call_args(Context *context)
 // ASSIGN_STMT := { "IDENTIFIER" "=" exp }
 ASTNode *parse_assign(Context *context)
 {
-    if (match(context, IDENTIFIER))
+    if (match(context, IDENTIFIER) || match(context, VALUE_AT))
     {
-
-        ASTNode *identifierNode = createASTNode(context->current);
-        consume(context);
-        if (!match(context, ASSIGN))
+        ASTNode *identifierNode;
+        if (match(context, VALUE_AT))
         {
-            unconsume(context);
-            return NULL;
+            identifierNode = parse_valueAt(context);
+            if (!match(context, ASSIGN))
+            {
+                unconsume(context);
+                unconsume(context);
+                return NULL;
+            }
         }
-        checkSymbolEntry(context, identifierNode->token); // check for symbol entry
+        else
+        {
+            identifierNode = createASTNode(context->current);
+            consume(context);
+            if (!match(context, ASSIGN))
+            {
+                unconsume(context);
+                return NULL;
+            }
+
+            checkSymbolEntry(context, identifierNode->token);
+            // check for symbol entry
+        }
+
         if (match(context, ASSIGN))
         {
             ASTNode *assignNode = createASTNode(context->current);
@@ -400,12 +416,10 @@ ASTNode *parse_valueAt(Context *context)
         consume(context); // consume "@"
         expect(context, IDENTIFIER);
         Token symbol = context->current;
-        if (match(context, IDENTIFIER))
-        {
-            checkSymbolEntry(context, symbol);
-        }
+
+        checkSymbolEntry(context, symbol);
         valueAtNode->left = createASTNode(context->current);
-        consume(context); //consume IDENTIFIER
+        consume(context); // consume IDENTIFIER
         return valueAtNode;
     }
     return NULL;

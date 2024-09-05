@@ -194,11 +194,37 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
     {
         translate(ast->right, context, fp); // convert expression to asm which will store value of evaluated expresion to stack
         fprintf(fp, "    pop eax\n");
+        // fprintf(fp, "    mov ebx, eax\n");
+        // fprintf(fp, "    push ebx\n");
+        // fprintf(fp, "    call print_eax\n");
+        // fprintf(fp, "    pop ebx\n");
+        // fprintf(fp, "    mov eax , ebx\n");
+        if (ast->left->token.value == VALUE_AT)
+        {
 
+            SymbolTableEntry *entry = checkSymbolEntry(context, ast->left->left->token);
+
+            if (entry->scope == 1)
+            {
+                // this is global var
+                fprintf(fp, "    mov ebx , [%s]\n", ast->left->left->token.lexeme);
+                fprintf(fp, "    mov [ebx] , eax\n");
+                fprintf(fp, "    push eax\n"); // store the to address of identifier
+            }
+            else
+            {
+                int offset = getSymbolOffset(context, entry);
+
+                fprintf(fp, "    mov ebx , [pebp]                    ;; store the address to ebx\n");
+                fprintf(fp, "    mov ebx , [ebx + (%d)]            ;; store the value at location ebx\n", offset);
+                fprintf(fp, "    mov [ebx] , eax   ;;%s\n", entry->token.lexeme);
+                fprintf(fp, "    push eax\n");
+            }
+            break;
+        }
         SymbolTableEntry *entry = checkSymbolEntry(context, ast->left->token);
         if (entry->scope == 1)
         {
-            // this is global var
             fprintf(fp, "    mov [%s] , eax\n", ast->left->token.lexeme);
             fprintf(fp, "    push eax\n"); // store the to address of identifier
         }
@@ -207,7 +233,6 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
             int offset = getSymbolOffset(context, entry);
             fprintf(fp, "    mov ebx , [pebp]                    ;; store the address to ebx\n");
             fprintf(fp, "    mov [ebx + (%d)] , eax              ;; store the value at location ebx\n", offset, entry->token.lexeme);
-            // fprintf(fp, "    mov [ebp + (%d) ] , eax   ;;%s\n", offset, entry->token.lexeme);
             fprintf(fp, "    push eax\n");
         }
     }
@@ -356,8 +381,8 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
         fprintf(fp, "    mov eax ,[POPED_ADDRESS]\n");
         fprintf(fp, "    cmp eax, [RETURN_ADDRESS]\n");
         fprintf(fp, "    jne .loop\n");
-        fprintf(fp, "    mov eax , [RETURN_ADDRESS]\n");
-        fprintf(fp, "    push eax\n");
+        // fprintf(fp, "    mov eax , [RETURN_ADDRESS]\n");
+        // fprintf(fp, "    push eax\n");
         fprintf(fp, "    mov eax , [RETURN_ADDRESS]\n");
         fprintf(fp, "    jmp eax\n");
         return;
@@ -539,6 +564,8 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
         fprintf(fp, "    mov [pesp] , eax                ;; restore the stack pointer\n");
         fprintf(fp, "    call pop_stack                     ;; pop stack top to eax\n");
         fprintf(fp, "    mov [pebp] , eax                    ; restore the base pointer\n");
+        fprintf(fp, "    mov eax , [RETURN_VALUE]\n");
+        fprintf(fp, "    push eax\n");
     }
     break;
     case PARAM_START:
@@ -901,20 +928,18 @@ void printMemAlloc(FILE *fp)
 {
 
     fprintf(fp, "malloc:\n");
-    fprintf(fp, "    pop ecx\n");
-    fprintf(fp, "    push esi\n");
-    fprintf(fp, "    ; mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0)\n");
-    fprintf(fp, "    xor eax, eax\n");
-    fprintf(fp, "    mov eax, 90        ; sys_mmap system call number\n");
-    fprintf(fp, "    xor ebx, ebx       ; addr = NULL (let kernel choose the address)\n");
-
-    // fprintf(fp, "    mov ecx, [size]    ; size of the memory to allocate (1024 bytes)\n");
-    fprintf(fp, "    mov edx, 3         ; prot = PROT_READ | PROT_WRITE (read/write access)\n");
-    fprintf(fp, "    mov esi, 0x22      ; flags = MAP_PRIVATE | MAP_ANONYMOUS\n");
-    fprintf(fp, "    mov edi, -1        ; fd = -1 (no file descriptor since MAP_ANONYMOUS)\n");
-    fprintf(fp, "    xor ebp, ebp       ; offset = 0 (not applicable since no file is mapped)\n");
-    fprintf(fp, "    int 0x80           ; Call kernel to perform mmap\n");
-    fprintf(fp, "    pop esi\n");
-    fprintf(fp, "    push eax\n");
-    fprintf(fp, "    ret\n");
+    fprintf(fp, "     push esi           ; Save esi on the stack\n");
+    fprintf(fp, "     push ebp           ; Save ebp on the stack\n");
+    fprintf(fp, "     xor eax, eax       ; Clear eax\n");
+    fprintf(fp, "     mov al, 192        ; sys_mmap system call number (9)\n");
+    fprintf(fp, "     xor ebx, ebx       ; addr = NULL (let kernel choose the address)\n");
+    fprintf(fp, "     mov edx, 3         ; prot = PROT_READ | PROT_WRITE (read/write access)\n");
+    fprintf(fp, "     mov esi, 0x22      ; flags = MAP_PRIVATE | MAP_ANONYMOUS\n");
+    fprintf(fp, "     mov edi, -1        ; fd = -1 (no file descriptor since MAP_ANONYMOUS)\n");
+    fprintf(fp, "     xor ebp, ebp       ; offset = 0 (not applicable since no file is mapped)\n");
+    fprintf(fp, "     ; At this point, ecx contains the size for mmap, which should be passed as a parameter\n");
+    fprintf(fp, "     int 0x80           ; Call kernel to perform mmap\n");
+    fprintf(fp, "     pop ebp            ; Restore ebp\n");
+    fprintf(fp, "     pop esi            ; Restore esi\n");
+    fprintf(fp, "     ret\n");
 }

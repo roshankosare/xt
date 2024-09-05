@@ -22,10 +22,10 @@ TokenPattern token_patterns[] = {
     {{0}, "INCREMENT_OPERATOR", "\\+\\+|--"},                                // INC/DEC
     {{0}, "FLOAT", "[+-]?([0-9]+\\.[0-9]*|\\.[0-9]+)([eE][+-]?[0-9]+)\\b)"}, // FLOAT
     {{0}, "INTEGER", "[+-]?[0-9]+"},                                         // NUMBER
-    {{0}, "OPERATOR", "[@+*/=-]"},                                           // OPERATOR
-    {{0}, "CONDITIONAL_OPERATOR", "==|!=|<=|>=|<|>"},                        // CONDITIONAL OPERATORS
-    {{0}, "PUNCTUATION", "\\(|\\)|\\{|\\}|\\[|\\]|:|;|,"},                   // PUNCTUATION
-    {{0}, "STRING_CONSTANT", "\"[^\"]*\"|'[^']*'"},                          // STRING CONSTANT
+    {{0}, "CONDITIONAL_OPERATOR", "==|!=|<=|>=|<|>"},
+    {{0}, "OPERATOR", "[@+*/=-]"},                         // OPERATOR                                                       // CONDITIONAL OPERATORS
+    {{0}, "PUNCTUATION", "\\(|\\)|\\{|\\}|\\[|\\]|:|;|,"}, // PUNCTUATION
+    {{0}, "STRING_CONSTANT", "\"[^\"]*\"|'[^']*'"},        // STRING CONSTANT
 
 };
 
