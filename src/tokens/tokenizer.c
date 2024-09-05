@@ -23,7 +23,7 @@ TokenPattern token_patterns[] = {
     {{0}, "FLOAT", "[+-]?([0-9]+\\.[0-9]*|\\.[0-9]+)([eE][+-]?[0-9]+)\\b)"}, // FLOAT
     {{0}, "INTEGER", "[+-]?[0-9]+"},                                         // NUMBER
     {{0}, "CONDITIONAL_OPERATOR", "==|!=|<=|>=|<|>"},
-    {{0}, "OPERATOR", "[@+*/=-]"},                         // OPERATOR                                                       // CONDITIONAL OPERATORS
+    {{0}, "OPERATOR", "[&|!@+*/=-]"},                      // OPERATOR                                                       // CONDITIONAL OPERATORS
     {{0}, "PUNCTUATION", "\\(|\\)|\\{|\\}|\\[|\\]|:|;|,"}, // PUNCTUATION
     {{0}, "STRING_CONSTANT", "\"[^\"]*\"|'[^']*'"},        // STRING CONSTANT
 
@@ -194,7 +194,7 @@ int isIdentifierToken(char *token)
 
     while (*token != '\0')
     {
-        if (!isalnum(*token))
+        if (!isalnum(*token) && *token != '_')
         {
             return 0;
         }
@@ -385,6 +385,12 @@ char *getTokenStringValue(int token)
         return "STRING";
     case VALUE_AT:
         return "VALUE_AT";
+    case BIT_AND:
+        return "BIT_AND";
+    case BIT_OR:
+        return "BIT_OR";
+    case BIT_NOT:
+        return "BIT_NOT";
 
     default:
         return "UNKNOWN";
@@ -534,6 +540,15 @@ void fillTokenValue(Token *token)
     case INT_TOKEN_VALUE_AT:
         token->value = VALUE_AT;
         break;
+    case INT_TOKEN_BIT_AND:
+        token->value = BIT_AND;
+        break;
+    case INT_TOKEN_BIT_OR:
+        token->value = BIT_OR;
+        break;
+    case INT_TOKEN_BIT_NOT:
+        token->value = BIT_NOT;
+        break;
 
     default:
         token->value = UNKNOWN;
@@ -584,6 +599,9 @@ int getTokenIntCodeValue(char *token)
     if (strcmp(token, ",") == 0)        return INT_TOKEN_COMMA;
     if (strcmp(token,"++") == 0)         return INT_TOKEN_INC;
     if (strcmp(token,"--")== 0)          return INT_TOKEN_DEC;
+    if(strcmp(token,"&") == 0)           return INT_TOKEN_BIT_AND;
+    if(strcmp(token,"|") == 0)           return INT_TOKEN_BIT_OR;
+    if(strcmp(token,"!") == 0)           return INT_TOKEN_BIT_NOT;   
     if (isIdentifierToken(token))        return INT_TOKEN_IDENTIFIER;
     if (isIntegerConstant(token))        return INT_TOKEN_INTEGER_CONSTANT;  
     if (isFloatConstant(token))          return INT_TOKEN_FLOAT_CONSTANT; 

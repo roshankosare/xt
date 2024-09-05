@@ -2,6 +2,8 @@ section .data                        ;; Section for initialized data
     a dd 0
     MSIZE dd 0
     MMEM dd 0
+    x_t dd 0
+    g dd 0
     call_stack_top dd 0
     fcall_stack_top dd 0
     base_stack_top dd 0
@@ -49,6 +51,20 @@ _start:
     push eax
     pop eax
     mov [MMEM] , eax
+    push eax
+    mov eax, 3
+    push eax
+    pop eax
+    mov [x_t] , eax
+    push eax
+    mov eax, 5
+    push eax
+    mov eax , [a]
+    push eax
+    pop eax
+    pop ebx
+    pop eax
+    mov [g] , eax
     push eax
     mov eax , [pebp]                  ;; store value at pebp to eax
     call push_stack                   ;; push [pebp] to stack

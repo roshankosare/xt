@@ -116,6 +116,10 @@ int isExpToken(TokenValue t)
         return 1;
     case NOT_EQLTO:
         return 1;
+    case BIT_AND:
+        return 1;
+    case BIT_OR:
+        return 1;
 
     default:
         return 0;
@@ -289,10 +293,10 @@ int getSymbolOffset(Context *context, SymbolTableEntry *entry)
         scope--;
         if (entry->scope == scope)
         {
-            offset = offset + table->offset - entry->symbolOffset + 4 ;
+            offset = offset + table->offset - entry->symbolOffset + 4;
             return offset;
         }
-        offset = offset + table ->offset + 4;
+        offset = offset + table->offset + 4;
     }
     return offset;
 }

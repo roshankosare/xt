@@ -648,6 +648,27 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
         fprintf(fp, "    push eax\n");
         break;
 
+    case BIT_AND:
+        translate(ast->left, context, fp);
+        translate(ast->right, context, fp);
+        fprintf(fp, "    pop eax\n");
+        fprintf(fp, "    pop ebx\n");
+        fprintf(fp, "    and eax ,ebx\n");
+        fprintf(fp, "    push eax\n");
+        break;
+
+    case BIT_OR:
+        translate(ast->left, context, fp);
+        translate(ast->right, context, fp);
+        fprintf(fp, "    pop eax\n");
+        fprintf(fp, "    pop ebx\n");
+        fprintf(fp, "    or eax ,ebx\n");
+        fprintf(fp, "    push eax\n");
+        break;
+
+    case BIT_NOT:
+        break;
+
     case BODYSTART:
     {
         fprintf(fp, "    mov eax , [pebp]                  ;; store value at pebp to eax\n");

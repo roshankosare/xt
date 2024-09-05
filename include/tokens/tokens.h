@@ -50,6 +50,9 @@
 #define INT_TOKEN_FLOAT                 45
 #define INT_TOKEN_STRING                46
 #define INT_TOKEN_VALUE_AT              47
+#define INT_TOKEN_BIT_AND               48
+#define INT_TOKEN_BIT_OR                49
+#define INT_TOKEN_BIT_NOT               50
 #define INVALID_TOKEN                   -1
 
 
@@ -112,6 +115,9 @@ typedef enum
     STRING_T,
     VALUE_AT,
     ASM,
+    BIT_AND,
+    BIT_OR,
+    BIT_NOT,
     TEOF
     
 } TokenValue;

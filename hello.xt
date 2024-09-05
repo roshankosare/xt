@@ -1,6 +1,8 @@
 var a = 0;
 var MSIZE = 0;
 var MMEM = 0;
+var x_t = 3;
+var g = 5 & a;
 
 function memalloc(size){
    MSIZE = size;
