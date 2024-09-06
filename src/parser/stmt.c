@@ -54,6 +54,10 @@ ASTNode *stmt(Context *context)
         return node;
     }
 
+    printf("\nERROR : unexpected token %s at line %d and col %d \n",
+           context->current.lexeme, context->current.pos.line, context->current.pos.col);
+    exit(1);
+
     return NULL;
 }
 

@@ -79,7 +79,7 @@ int main(int argc, char *argv[])
 
     int index = 0;
     printTokens(tokens, tokenCount);
-
+#ifdef FLAG
     Context *context = initContext(tokens);
     SymbolTable *symbolTable = initSymbolTable();
     pushSymbolTable(context->symbolTableStack, symbolTable);
@@ -89,7 +89,7 @@ int main(int argc, char *argv[])
     printf("\nLexical anaysis completed without any error\n");
     printAST(start, 0);
 
-#ifdef FLAG
+
     FILE *op;
 
     char *asmFile = malloc(50 * sizeof(char));

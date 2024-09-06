@@ -3,7 +3,10 @@ var MSIZE = 0;
 var MMEM = 0;
 var x_t = 3;
 var g = 5 & a;
+ // comment
 
+/* jkbjk
+ 
 function memalloc(size){
    MSIZE = size;
    asm([
@@ -25,14 +28,12 @@ function print(x){
    var buffer = memalloc(maxBuffer);
    var tempBuffer = buffer;
    var ch = 0;
-   while(@temp != 0){
-      @tempBuffer = @temp;
+   ch = @temp;
+   ch = ch & 0xFF;
+   while(ch != 0){
       ch = @temp;
       ch = ch & 0xFF;
-      asm([
-         "pop eax",
-         "call print_eax"
-      ]);
+      @tempBuffer = ch;
       temp++;
       tempBuffer++;
       length++;

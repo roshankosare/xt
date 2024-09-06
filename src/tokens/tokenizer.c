@@ -17,9 +17,11 @@ typedef struct
 
 TokenPattern token_patterns[] = {
     {{0}, "KEYWORD", "\\b(var|if|else|while|return|function|asm|char|int|float|string)\\b"}, // KEYWORDS
-    {{0}, "IDENTIFIER", "[a-zA-Z_][a-zA-Z0-9_]*"},                                           // NUMBER
+    {{0}, "IDENTIFIER", "[a-zA-Z_][a-zA-Z0-9_]*"},                                           // IDENTIFIER
+    {{0}, "SINGLE_LINE_COMMENT", "\\/\\/[^\\n]*"},                                           // Single-line comments
+    // {{0}, "MULTI_LINE_COMMENT", "/\\*([^*]|\\*+[^/*])*\\*+/"}  ,                  // Multi-line comments                                           // NUMBER
     {{0}, "INVALID_IDENTIFIER", "[0-9]+\\.[a-zA-Z]+"},
-    {{0}, "HEX", "0[x][0-9a-fA-F]+"},                                        // IDENTIFIER
+    {{0}, "HEX", "0[x][0-9a-fA-F]+"},
     {{0}, "INCREMENT_OPERATOR", "\\+\\+|--"},                                // INC/DEC
     {{0}, "FLOAT", "[+-]?([0-9]+\\.[0-9]*|\\.[0-9]+)([eE][+-]?[0-9]+)\\b)"}, // FLOAT
     {{0}, "INTEGER", "[+-]?[0-9]+"},
@@ -87,9 +89,25 @@ Token *getNextToken(FILE *file)
             regmatch_t match;
             if (regexec(&token_patterns[i].regex, &buffer[buffer_pos], 1, &match, 0) == 0 && match.rm_so == 0)
             {
-
+               
                 int token_length = match.rm_eo;
-                // Check if the character following the FLOAT is alphanumeric or an underscore
+                 if (strcmp(token_patterns[i].name, "SINGLE_LINE_COMMENT") == 0 
+                //  || 1
+                    // strcmp(token_patterns[i].name, "MULTI_LINE_COMMENT") == 0)
+                 )
+                {
+                    // Move the buffer position past the comment
+                    buffer_pos += token_length;
+                    current_col += token_length;
+
+                    // For single-line comments, move to the next line
+                    if (strcmp(token_patterns[i].name, "SINGLE_LINE_COMMENT") == 0)
+                    {
+                        buffer_pos = buffer_len;  // Force reading a new line
+                    }
+                    continue; // Break out of the for loop and continue
+                }
+                // Check if the character following the FLOAT is alphanumeric or an unders  ascore
 
                 strncpy(token->lexeme, &buffer[buffer_pos], token_length);
                 token->lexeme[token_length] = '\0';
