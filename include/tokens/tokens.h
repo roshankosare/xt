@@ -53,6 +53,7 @@
 #define INT_TOKEN_BIT_AND               48
 #define INT_TOKEN_BIT_OR                49
 #define INT_TOKEN_BIT_NOT               50
+#define INT_TOKEN_HEX_CONSTANT          51
 #define INVALID_TOKEN                   -1
 
 
@@ -118,6 +119,7 @@ typedef enum
     BIT_AND,
     BIT_OR,
     BIT_NOT,
+    HEX_CONSTANT,
     TEOF
     
 } TokenValue;

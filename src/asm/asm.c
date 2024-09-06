@@ -505,6 +505,10 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
         fprintf(fp, "    mov eax, %s\n", ast->token.lexeme);
         fprintf(fp, "    push eax\n");
         break;
+    case HEX_CONSTANT:
+        fprintf(fp, "    mov eax, %s\n", ast->token.lexeme);
+        fprintf(fp, "    push eax\n");
+        break;
 
     case FLOAT_CONSTANT:
         assert(0 && "TODO:- handle FLOAT_CONSTANT not implemented");

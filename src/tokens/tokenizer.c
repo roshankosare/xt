@@ -17,11 +17,13 @@ typedef struct
 
 TokenPattern token_patterns[] = {
     {{0}, "KEYWORD", "\\b(var|if|else|while|return|function|asm|char|int|float|string)\\b"}, // KEYWORDS
-    {{0}, "IDENTIFIER", "[a-zA-Z_][a-zA-Z0-9_]*"},
-    {{0}, "INVALID_IDENTIFIER", "[0-9]+\\.[a-zA-Z]+"},                       // IDENTIFIER
+    {{0}, "IDENTIFIER", "[a-zA-Z_][a-zA-Z0-9_]*"},                                           // NUMBER
+    {{0}, "INVALID_IDENTIFIER", "[0-9]+\\.[a-zA-Z]+"},
+    {{0}, "HEX", "0[x][0-9a-fA-F]+"},                                        // IDENTIFIER
     {{0}, "INCREMENT_OPERATOR", "\\+\\+|--"},                                // INC/DEC
     {{0}, "FLOAT", "[+-]?([0-9]+\\.[0-9]*|\\.[0-9]+)([eE][+-]?[0-9]+)\\b)"}, // FLOAT
-    {{0}, "INTEGER", "[+-]?[0-9]+"},                                         // NUMBER
+    {{0}, "INTEGER", "[+-]?[0-9]+"},
+
     {{0}, "CONDITIONAL_OPERATOR", "==|!=|<=|>=|<|>"},
     {{0}, "OPERATOR", "[&|!@+*/=-]"},                      // OPERATOR                                                       // CONDITIONAL OPERATORS
     {{0}, "PUNCTUATION", "\\(|\\)|\\{|\\}|\\[|\\]|:|;|,"}, // PUNCTUATION
@@ -275,6 +277,28 @@ int isFloatConstant(char *token)
     return 1;
 }
 
+int isHexNumber(char *token)
+{
+
+    if (*token != '0' && *(token + 1) != 'x')
+    {
+        return 0;
+    }
+    token = token + 2;
+    if (*token == '\0')
+    {
+        return 0;
+    }
+    while (*token != '\0')
+    {
+        if (!isxdigit(*token))
+        {
+            return 0;
+        }
+        return 1;
+    }
+}
+
 char *getTokenStringValue(int token)
 {
 
@@ -391,6 +415,8 @@ char *getTokenStringValue(int token)
         return "BIT_OR";
     case BIT_NOT:
         return "BIT_NOT";
+    case HEX_CONSTANT:
+        return "HEX_CONSTANT";
 
     default:
         return "UNKNOWN";
@@ -550,6 +576,10 @@ void fillTokenValue(Token *token)
         token->value = BIT_NOT;
         break;
 
+    case INT_TOKEN_HEX_CONSTANT:
+        token->value = HEX_CONSTANT;
+        break;
+
     default:
         token->value = UNKNOWN;
     }
@@ -601,11 +631,14 @@ int getTokenIntCodeValue(char *token)
     if (strcmp(token,"--")== 0)          return INT_TOKEN_DEC;
     if(strcmp(token,"&") == 0)           return INT_TOKEN_BIT_AND;
     if(strcmp(token,"|") == 0)           return INT_TOKEN_BIT_OR;
-    if(strcmp(token,"!") == 0)           return INT_TOKEN_BIT_NOT;   
+    if(strcmp(token,"!") == 0)           return INT_TOKEN_BIT_NOT;  
+    if(isHexNumber(token))               return INT_TOKEN_HEX_CONSTANT; 
     if (isIdentifierToken(token))        return INT_TOKEN_IDENTIFIER;
     if (isIntegerConstant(token))        return INT_TOKEN_INTEGER_CONSTANT;  
     if (isFloatConstant(token))          return INT_TOKEN_FLOAT_CONSTANT; 
     if (isStringConstant(token))         return INT_TOKEN_STRING_CONSTANT;
+    
+    
     
     return INT_TOKEN_UNKNOWN;
     // clang-format onSS

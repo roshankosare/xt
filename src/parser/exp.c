@@ -369,6 +369,8 @@ ASTNode *parse_primary(Context *context)
         break;
     case FLOAT_CONSTANT:
         break;
+    case HEX_CONSTANT:
+        break;
     case VALUE_AT:
     {
         ASTNode *valueAt = parse_valueAt(context);

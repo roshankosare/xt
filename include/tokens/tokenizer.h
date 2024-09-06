@@ -11,6 +11,7 @@ void fillTokenValue(Token *token);
 int getTokenIntCodeValue(char *token);
 char *getTokenStringValue(int token);
 int isIdentifierToken(char *token);
+int isHexNumber(char *token);
 
 
 #endif

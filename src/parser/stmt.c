@@ -37,12 +37,12 @@ ASTNode *stmt(Context *context)
         node = exp_stmt(context);
         return node;
     }
-    if (match(context, INC) || match(context, DEC) || match(context, VALUE_AT) || match(context,BIT_NOT))
+    if (match(context, INC) || match(context, DEC) || match(context, VALUE_AT) || match(context, BIT_NOT))
     {
         node = exp_stmt(context);
         return node;
     }
-    if (match(context, STRING_CONSTANT) || match(context, INTEGER_CONSTANT) || match(context, FLOAT_CONSTANT))
+    if (match(context, STRING_CONSTANT) || match(context, INTEGER_CONSTANT) || match(context, FLOAT_CONSTANT) || match(context, HEX_CONSTANT))
     {
         node = exp_stmt(context);
         return node;

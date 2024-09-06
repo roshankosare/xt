@@ -21,15 +21,16 @@ function print(x){
    var length = 0;
    var temp = x;
    var maxBuffer = 1024;
+   
    var buffer = memalloc(maxBuffer);
    var tempBuffer = buffer;
    var ch = 0;
    while(@temp != 0){
       @tempBuffer = @temp;
       ch = @temp;
+      ch = ch & 0xFF;
       asm([
          "pop eax",
-         "and eax , 0xFF",
          "call print_eax"
       ]);
       temp++;

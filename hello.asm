@@ -63,6 +63,8 @@ _start:
     push eax
     pop eax
     pop ebx
+    and eax ,ebx
+    push eax
     pop eax
     mov [g] , eax
     push eax
@@ -418,8 +420,20 @@ label_846930886:
     mov ebx , [pebp]                    ;; store the address to ebx
     mov [ebx + (12)] , eax              ;; store the value at location ebx
     push eax
+    mov eax , [pebp]              ;; load the address stored in pebp to eax
+    mov eax , [eax + (12) ]     ;; ch
+    push eax
+    mov eax, 0xFF
+    push eax
     pop eax
-    and eax , 0xFF
+    pop ebx
+    and eax ,ebx
+    push eax
+    pop eax
+    mov ebx , [pebp]                    ;; store the address to ebx
+    mov [ebx + (12)] , eax              ;; store the value at location ebx
+    push eax
+    pop eax
     call print_eax
     mov eax , [pebp]              ;; load the address stored in pebp to eax
     mov eax , [eax + (28) ]     ;; temp
