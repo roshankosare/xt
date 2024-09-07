@@ -16,9 +16,9 @@ typedef struct
 } TokenPattern;
 
 TokenPattern token_patterns[] = {
-    {{0}, "KEYWORD", "\\b(var|if|else|while|return|function|asm|char|int|float|string)\\b"}, // KEYWORDS
-    {{0}, "IDENTIFIER", "[a-zA-Z_][a-zA-Z0-9_]*"},                                           // IDENTIFIER
-    {{0}, "SINGLE_LINE_COMMENT", "\\/\\/[^\\n]*"},                                           // Single-line comments
+    {{0}, "KEYWORD", "\\b(var|if|else|while|return|function|asm|char|int|float|string|continue|break)\\b"}, // KEYWORDS
+    {{0}, "IDENTIFIER", "[a-zA-Z_][a-zA-Z0-9_]*"},                                                          // IDENTIFIER
+    {{0}, "SINGLE_LINE_COMMENT", "\\/\\/[^\\n]*"},                                                          // Single-line comments
     // {{0}, "MULTI_LINE_COMMENT", "/\\*([^*]|\\*+[^/*])*\\*+/"}  ,                  // Multi-line comments                                           // NUMBER
     {{0}, "INVALID_IDENTIFIER", "[0-9]+\\.[a-zA-Z]+"},
     {{0}, "HEX", "0[x][0-9a-fA-F]+"},
@@ -89,12 +89,12 @@ Token *getNextToken(FILE *file)
             regmatch_t match;
             if (regexec(&token_patterns[i].regex, &buffer[buffer_pos], 1, &match, 0) == 0 && match.rm_so == 0)
             {
-               
+
                 int token_length = match.rm_eo;
-                 if (strcmp(token_patterns[i].name, "SINGLE_LINE_COMMENT") == 0 
-                //  || 1
+                if (strcmp(token_patterns[i].name, "SINGLE_LINE_COMMENT") == 0
+                    //  || 1
                     // strcmp(token_patterns[i].name, "MULTI_LINE_COMMENT") == 0)
-                 )
+                )
                 {
                     // Move the buffer position past the comment
                     buffer_pos += token_length;
@@ -103,7 +103,7 @@ Token *getNextToken(FILE *file)
                     // For single-line comments, move to the next line
                     if (strcmp(token_patterns[i].name, "SINGLE_LINE_COMMENT") == 0)
                     {
-                        buffer_pos = buffer_len;  // Force reading a new line
+                        buffer_pos = buffer_len; // Force reading a new line
                     }
                     continue; // Break out of the for loop and continue
                 }
@@ -435,6 +435,10 @@ char *getTokenStringValue(int token)
         return "BIT_NOT";
     case HEX_CONSTANT:
         return "HEX_CONSTANT";
+    case CONTINUE:
+        return "CONTINUE";
+    case BREAK:
+        return "BREAK";
 
     default:
         return "UNKNOWN";
@@ -597,6 +601,13 @@ void fillTokenValue(Token *token)
     case INT_TOKEN_HEX_CONSTANT:
         token->value = HEX_CONSTANT;
         break;
+    case INT_TOKEN_CONTINUE:
+        token->value = CONTINUE;
+        break;
+
+    case INT_TOKEN_BREAK:
+        token->value = BREAK;
+        break;
 
     default:
         token->value = UNKNOWN;
@@ -621,6 +632,8 @@ int getTokenIntCodeValue(char *token)
     if(strcmp("char",token) == 0)       return INT_TOKEN_CHAR;
     if(strcmp("float",token) == 0)      return INT_TOKEN_FLOAT;
     if(strcmp("string",token)== 0)      return INT_TOKEN_STRING;
+    if(strcmp("continue",token) == 0)   return INT_TOKEN_CONTINUE;
+    if(strcmp("break",token) == 0)      return INT_TOKEN_BREAK;
     
     if (strcmp(token, "+") == 0)        return INT_TOKEN_PLUS;
     if (strcmp(token, "-") == 0)        return INT_TOKEN_MINUS;

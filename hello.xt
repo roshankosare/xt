@@ -5,8 +5,7 @@ var x_t = 3;
 var g = 5 & a;
  // comment
 
-/* jkbjk
- 
+
 function memalloc(size){
    MSIZE = size;
    asm([
@@ -20,24 +19,46 @@ function memalloc(size){
 
 
 function print(x){
-   
+
    var length = 0;
    var temp = x;
    var maxBuffer = 1024;
-   
    var buffer = memalloc(maxBuffer);
+   
    var tempBuffer = buffer;
    var ch = 0;
    ch = @temp;
-   ch = ch & 0xFF;
+    
+   ch = ch & 0xFF;  // select lower byte only of value 
+    
    while(ch != 0){
       ch = @temp;
       ch = ch & 0xFF;
+      if(ch == 92){ 
+         // 92 is ASCII for  '/' character
+         
+         temp++;
+         ch = @temp;
+         ch = ch & 0xFF;
+         if(ch == 110){
+            // 110 is ASCII for 'n'
+            ch = 10;  // 10 is ASCII for new line
+         }
+         if(ch == 116){
+            // 116 us ASCII for 't'
+            ch = 9; // 9 is ASSCIIf or tab
+         }
+      }
+
+      //if(ch == )
       @tempBuffer = ch;
       temp++;
       tempBuffer++;
       length++;
    }
+
+  
+   
    var strlength = length;
    var strpointer = buffer;
    
@@ -52,8 +73,10 @@ function print(x){
  }
 
  
-print(" hello world ");
+print(" hello\t world \n");
 
+
+print(" hello world \n");
 
  
 

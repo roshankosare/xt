@@ -22,6 +22,30 @@ ASTNode *stmt(Context *context)
         node = iter_stmt(context);
         return node;
     }
+    if (match(context, CONTINUE))
+    {
+        if(context->loopStack == -1){
+            printf("\nERROR: unexpected 'continue' without loop\n");
+            exit(0);
+        }
+        node = createASTNode(context->current);
+        consume(context); // consume "xontinue"
+        expect(context, SEMI_COLAN);
+        consume(context); // consume ";"
+        return node;
+    }
+    if (match(context, BREAK))
+    {
+        if(context->loopStack == -1){
+            printf("\nERROR: unexpected 'break' without loop or switch\n");
+            exit(0);
+        }
+        node = createASTNode(context->current);
+        consume(context); // consume "xontinue"
+        expect(context, SEMI_COLAN);
+        consume(context); // consume ";"
+        return node;
+    }
     if (match(context, RETURN))
     {
         node = jump_stmt(context);
@@ -117,6 +141,7 @@ ASTNode *iter_stmt(Context *context)
 {
     if (match(context, WHILE))
     {
+        context->loopStack += 1;
         ASTNode *whileNode = createASTNode(context->current);
         consume(context);
         expect(context, OPEN_PAREN);
@@ -127,8 +152,10 @@ ASTNode *iter_stmt(Context *context)
         if (match(context, OPEN_CURLY_PAREN))
         {
             whileNode->right = parse_block(context);
+            context->loopStack -= 1;
             return whileNode;
         }
+        context->loopStack -= 1;
         whileNode->right = stmt(context);
         return whileNode;
     }
