@@ -397,7 +397,7 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
     {
         char *label_true = label_generate(); // generate label for  this if block
         char *label_false = label_generate();
-        pushLoopLabelStack(context->asmContext, label_true);
+
         translate(ast->left, context, fp);
 
         fprintf(fp, "    pop eax\n");
@@ -413,15 +413,32 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
         fprintf(fp, "    lea eax , [.%s]         ;; save the false label to eax\n", label_false);
         fprintf(fp, "    jmp eax\n");
         fprintf(fp, ".%s:                        ;; defination of false label \n", label_false);
-        popLoopLabelEntry(context->asmContext);
+
         // assert(0 && "TODO: WHILE is not implemented");
     }
     break;
 
     case CONTINUE:
     {
+        fprintf(fp, "    call pop_base\n");
+        fprintf(fp, "    mov [pesp] , eax\n");
+        fprintf(fp, "    call pop_base\n");
+        fprintf(fp, "    mov [pebp] , eax\n");
 
-        fprintf(fp, "    jmp %s                 ;; continue\n", context->asmContext->looplabelStack->top->label);
+        // fprintf(fp, "    lea eax , [%s]\n", );
+        fprintf(fp, "    call pop_fcall\n");
+        fprintf(fp, "    mov [RETURN_ADDRESS] , eax\n");
+        fprintf(fp, ".loop:                                 ;; function to clean up call stack \n");
+        fprintf(fp, "    call pop_call\n");
+        fprintf(fp, "    mov [POPED_ADDRESS] , eax\n");
+        fprintf(fp, "    mov eax ,[POPED_ADDRESS]\n");
+        fprintf(fp, "    cmp eax, [RETURN_ADDRESS]\n");
+        fprintf(fp, "    jne .loop\n");
+        fprintf(fp, "    call pop_fcall\n");
+        fprintf(fp, "    call pop_call\n");
+        fprintf(fp, "    push eax\n");
+        fprintf(fp, "    mov eax , [RETURN_ADDRESS]\n");
+        fprintf(fp, "    jmp eax\n");
     }
     break;
 
@@ -432,6 +449,7 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
         fprintf(fp, "    mov [pesp] , eax                ;; restore the base pointer\n");
         fprintf(fp, "    call pop_base\n"); // pop base pesp stack pointer
         fprintf(fp, "    mov [pebp] , eax                ;; restore the base pointer\n");
+        fprintf(fp, "    call pop_fcall\n");
         fprintf(fp, "    call pop_fcall\n");
         fprintf(fp, "    mov [RETURN_ADDRESS], eax\n");
         fprintf(fp, ".loop:                                 ;; function to clean up call stack \n");
@@ -771,6 +789,10 @@ void generateLabels(Context *context, FILE *fp)
             fprintf(fp, "    pop eax                        ;; pop the return address to eax\n");
             fprintf(fp, "    call push_call                 ;; store the return address to ra location\n");
             fprintf(fp, "    call push_fcall\n");
+
+            fprintf(fp, "    lea eax , [%s]\n", current->label);
+            fprintf(fp, "    call push_call\n");
+            fprintf(fp, "    call push_fcall\n");
             fprintf(fp, "    mov eax , [pebp]\n");
             fprintf(fp, "    call push_base\n");
             fprintf(fp, "    mov eax , [pesp]\n");
@@ -790,11 +812,13 @@ void generateLabels(Context *context, FILE *fp)
             fprintf(fp, "    call pop_base\n"); // stack pointer
             fprintf(fp, "    call pop_base\n"); // base pointer
             fprintf(fp, "    call pop_call                  ;; store the return address to eax\n");
+            fprintf(fp, "    call pop_call\n");
             fprintf(fp, "    push eax\n");
             // fprintf(fp, "    call print_eax\n");
             fprintf(fp, "    mov eax , [condition]\n");
             fprintf(fp, "    test eax , eax\n");
             fprintf(fp, "    jnz %s\n", current->label);
+            fprintf(fp, "    call pop_fcall\n");
             fprintf(fp, "    call pop_fcall\n");
             fprintf(fp, "    pop eax\n");
             fprintf(fp, "    jmp eax                        ;; jmp to return address\n");
