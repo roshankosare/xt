@@ -367,9 +367,9 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
             fprintf(fp, "    mov [RETURN_VALUE] , eax\n");
         }
 
-        fprintf(fp, "    call pop_base\n");  // pop base pesp stack pointer 
+        fprintf(fp, "    call pop_base\n"); // pop base pesp stack pointer
         fprintf(fp, "    mov [pesp] , eax                ;; restore the base pointer\n");
-        fprintf(fp, "    call pop_base\n");  // pop base pesp stack pointer 
+        fprintf(fp, "    call pop_base\n"); // pop base pesp stack pointer
         fprintf(fp, "    mov [pebp] , eax                ;; restore the base pointer\n");
         fprintf(fp, "    call pop_fcall\n");
         fprintf(fp, "    mov [RETURN_ADDRESS], eax\n");
@@ -420,12 +420,28 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
 
     case CONTINUE:
     {
+
         fprintf(fp, "    jmp %s                 ;; continue\n", context->asmContext->looplabelStack->top->label);
     }
     break;
 
     case BREAK:
     {
+
+        fprintf(fp, "    call pop_base\n"); // pop base pesp stack pointer
+        fprintf(fp, "    mov [pesp] , eax                ;; restore the base pointer\n");
+        fprintf(fp, "    call pop_base\n"); // pop base pesp stack pointer
+        fprintf(fp, "    mov [pebp] , eax                ;; restore the base pointer\n");
+        fprintf(fp, "    call pop_fcall\n");
+        fprintf(fp, "    mov [RETURN_ADDRESS], eax\n");
+        fprintf(fp, ".loop:                                 ;; function to clean up call stack \n");
+        fprintf(fp, "    call pop_call\n");
+        fprintf(fp, "    mov [POPED_ADDRESS] , eax\n");
+        fprintf(fp, "    mov eax ,[POPED_ADDRESS]\n");
+        fprintf(fp, "    cmp eax, [RETURN_ADDRESS]\n");
+        fprintf(fp, "    jne .loop\n");
+        fprintf(fp, "    mov eax , [RETURN_ADDRESS]\n");
+        fprintf(fp, "    jmp eax\n");
     }
     break;
     case LESS_THAN:
@@ -754,6 +770,11 @@ void generateLabels(Context *context, FILE *fp)
         {
             fprintf(fp, "    pop eax                        ;; pop the return address to eax\n");
             fprintf(fp, "    call push_call                 ;; store the return address to ra location\n");
+            fprintf(fp, "    call push_fcall\n");
+            fprintf(fp, "    mov eax , [pebp]\n");
+            fprintf(fp, "    call push_base\n");
+            fprintf(fp, "    mov eax , [pesp]\n");
+            fprintf(fp, "    call push_base\n");
 
             // fprintf(fp, "    call print_eax\n");
             translate(current->ast->right, context, fp);
@@ -766,13 +787,15 @@ void generateLabels(Context *context, FILE *fp)
             // fprintf(fp, "    mov ecx , 100000000\n");
             // fprintf(fp, "    call delay\n");
             // fprintf(fp, "    call delay\n");
-
+            fprintf(fp, "    call pop_base\n"); // stack pointer
+            fprintf(fp, "    call pop_base\n"); // base pointer
             fprintf(fp, "    call pop_call                  ;; store the return address to eax\n");
             fprintf(fp, "    push eax\n");
             // fprintf(fp, "    call print_eax\n");
             fprintf(fp, "    mov eax , [condition]\n");
             fprintf(fp, "    test eax , eax\n");
             fprintf(fp, "    jnz %s\n", current->label);
+            fprintf(fp, "    call pop_fcall\n");
             fprintf(fp, "    pop eax\n");
             fprintf(fp, "    jmp eax                        ;; jmp to return address\n");
         }
@@ -782,7 +805,7 @@ void generateLabels(Context *context, FILE *fp)
             fprintf(fp, "    call push_call                 ;; store the return address to ra location\n");
             fprintf(fp, "    call push_fcall\n");
             fprintf(fp, "    mov eax , [pebp]\n");
-            fprintf(fp, "    call push_base\n"); // push base pebp base pointer
+            fprintf(fp, "    call push_base\n");   // push base pebp base pointer
             fprintf(fp, "    mov eax , [pesp]\n"); // push base pesp stack pointer
             fprintf(fp, "    call push_base\n");
             // here we have to push callers return addresF
@@ -840,10 +863,9 @@ void generateLabels(Context *context, FILE *fp)
 
             popSymbolTable(context->symbolTableTempStack);
         }
-        
+
         // step 2 :  pop  from astStack
         current = popFromASTQueueFront(context->astQueue);
-        
     }
 }
 

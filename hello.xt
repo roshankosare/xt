@@ -36,7 +36,6 @@ function print(x){
       ch = ch & 0xFF;
       if(ch == 92){ 
          // 92 is ASCII for  '/' character
-         
          temp++;
          ch = @temp;
          ch = ch & 0xFF;

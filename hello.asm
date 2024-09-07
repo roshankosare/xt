@@ -457,6 +457,11 @@ print:
 label_1681692777:
     pop eax                        ;; pop the return address to eax
     call push_call                 ;; store the return address to ra location
+    call push_fcall
+    mov eax , [pebp]
+    call push_base
+    mov eax , [pesp]
+    call push_base
     mov eax , [pebp]                  ;; store value at pebp to eax
     call push_stack                   ;; push [pebp] to stack
     mov eax , [pesp]                  ;; store the value at pesp to eax
@@ -544,11 +549,14 @@ label_1681692777:
     push eax
     pop eax
     mov [condition] ,  eax
+    call pop_base
+    call pop_base
     call pop_call                  ;; store the return address to eax
     push eax
     mov eax , [condition]
     test eax , eax
     jnz label_1681692777
+    call pop_fcall
     pop eax
     jmp eax                        ;; jmp to return address
 label_1957747793:
@@ -558,6 +566,20 @@ label_1957747793:
     call push_stack                   ;; push [pebp] to stack
     mov eax , [pesp]                  ;; store the value at pesp to eax
     mov [pebp] , eax                ;; allocate new base pointer
+    call pop_base
+    mov [pesp] , eax                ;; restore the base pointer
+    call pop_base
+    mov [pebp] , eax                ;; restore the base pointer
+    call pop_fcall
+    mov [RETURN_ADDRESS], eax
+.loop:                                 ;; function to clean up call stack 
+    call pop_call
+    mov [POPED_ADDRESS] , eax
+    mov eax ,[POPED_ADDRESS]
+    cmp eax, [RETURN_ADDRESS]
+    jne .loop
+    mov eax , [RETURN_ADDRESS]
+    jmp eax
     mov eax , [pebp]              ;; load the address stored in pebp to eax
     mov eax , [eax + (32) ]     ;; temp
     push eax
