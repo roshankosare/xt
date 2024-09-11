@@ -1,13 +1,83 @@
+var a = 0;
+var MSIZE = 0;
+var MMEM = 0;
+var STR_LENGTH = 0;
+var STR_POINTER = 0;
+function memalloc(size){
+   MSIZE = size;
+   asm([
+      "mov eax , [MSIZE]",
+      "mov ecx , eax",
+      "call malloc",
+       "mov [MMEM] , eax",
+   ]);
+  return MMEM;
+}
+
+
 function print(x){
+
+   var length = 0;
+   var temp = x;
+   var maxBuffer = 1024;
+   var buffer = memalloc(maxBuffer);
    
-   var strpointer = x;
-   var strlength = length;
+   var tempBuffer = buffer;
+   var ch = 0;
+   ch = @temp;   
+   while(ch != 0){
+      ch = @temp;
+      ch = ch & 0xFF;
+       asm(["pop eax" , "call print_eax"]);
+      if(ch == 92){ 
+         // 92 is ASCII for  '/' character
+         temp++;
+         ch = @temp;
+         ch = ch & 0xFF;
+         if(ch == 110){
+            // 110 is ASCII for 'n'
+            ch = 10;  // 10 is ASCII for new line
+         }
+         if(ch == 116){
+            // 116 is ASCII for 't'
+            ch = 9; // 9 is ASSCII for tab
+         }
+      }
+
+      //if(ch == )
+      @tempBuffer = ch;
+      temp++;
+      tempBuffer++;
+      length++;
+   }
+
   
-   asm([    "pop ecx                           ; load the address of the string",
-            "pop edx                           ; load the length of the string",                   
+   
+   STR_LENGTH = length;
+   STR_POINTER = buffer;
+   
+  
+   asm([    "mov ecx , [STR_POINTER]                           ; load the address of the string",
+            "mov edx , [STR_LENGTH]                          ; load the length of the string",                   
             "mov eax, 4                        ; syscall number for sys_write",
             "mov ebx, 1                        ; file descriptor 1 (stdout)",             
             "int 0x80                          ; make syscall to write",
          ]);
       
  }
+
+ 
+print(" hello\t world \n");
+
+
+print(" hello world \n");
+
+ 
+
+
+
+ 
+
+
+
+

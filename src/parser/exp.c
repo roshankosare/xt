@@ -217,12 +217,17 @@ ASTNode *parse_fun_call_args(Context *context)
     {
         return NULL;
     }
-    ASTNode *node = exp(context);
+    Token arg = {.lexeme =  "ARG", .value = ARG };
+    ASTNode *node = createASTNode(arg);
+    node->left = exp(context);
     if (match(context, COMMA))
     {
+        
         consume(context);
-        node->next = exp(context);
-        node->next->next = parse_fun_call_args(context);
+        
+        node->next = createASTNode(arg);
+        node->next->left = exp(context);
+        node->next->left ->next = parse_fun_call_args(context);
 
         return node;
     }

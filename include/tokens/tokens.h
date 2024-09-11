@@ -56,6 +56,7 @@
 #define INT_TOKEN_HEX_CONSTANT          51
 #define INT_TOKEN_CONTINUE              52
 #define INT_TOKEN_BREAK                 53
+#define INT_TOKEN_ARG                   54
 #define INVALID_TOKEN                   -1
 
 
@@ -124,6 +125,7 @@ typedef enum
     HEX_CONSTANT,
     CONTINUE,
     BREAK,
+    ARG,
     TEOF
     
 } TokenValue;

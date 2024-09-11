@@ -94,7 +94,7 @@ void insertSymbol(SymbolTableStack *stack, Token t)
 
     // TODO handle to calculate offset based on data type of symbol int = 4byte char = 2yte float= 4byte
     int offset = stack->top->offset;
-    offset = offset + 4;
+    offset = offset + 5;
     SymbolTableEntry *newEntry = createEntry(t, stack->scope, offset);
     stack->top->offset = offset;
     newEntry->next = stack->top->table[index];
@@ -137,7 +137,7 @@ void insertSymbolInSymbolTable(SymbolTable *symbolTable, Token t)
 {
 
     unsigned int index = hash(t.lexeme);
-    int offset  = symbolTable->offset + 4;
+    int offset  = symbolTable->offset + 5;
     symbolTable->offset = offset;
     SymbolTableEntry *newEntry = createEntry(t, 2, offset);
     newEntry->isDefined = 1;

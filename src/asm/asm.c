@@ -18,7 +18,7 @@ void function_call_stack_operations(FILE *fp);
 void print_eax(FILE *fp);
 void printDelay(FILE *fp);
 void printMemAlloc(FILE *fp);
-
+void printFreeMem(FILE *fp);
 void createASMFile(ASTNode *ast, Context *context, FILE *fp)
 {
     fprintf(fp, "section .data                        ;; Section for initialized data\n");
@@ -36,7 +36,13 @@ void createASMFile(ASTNode *ast, Context *context, FILE *fp)
     fprintf(fp, "    BASE_RETURN dd 0\n");
     fprintf(fp, "    RETURN_VALUE dd 0\n");
     fprintf(fp, "    RETURN_ADDRESS dd 0\n");
-    fprintf(fp, "    POPED_ADDRESS dd 00\n");
+    fprintf(fp, "    POPED_ADDRESS dd 0\n");
+    fprintf(fp, "    NUM_REF_ALLO dd 0\n");
+    // fprintf(fp, "    REF_LIST_TO:\n");
+    // fprintf(fp, "        size db 0\n");
+    // fprintf(fp, "        alloc_num db 0\n");
+    // fprintf(fp, "        address_value dd 0\n");
+    // fprintf(fp, "        next dd 0\n");
 
     fprintf(fp, "section .bss\n");
     fprintf(fp, "    call_stack resb 1024               ;; Reserve 1024 bytes (4 KB) for the call stack\n");
@@ -62,8 +68,7 @@ void createASMFile(ASTNode *ast, Context *context, FILE *fp)
     fprintf(fp, "    mov [pebp] , eax\n");
     translate(ast, context, fp); // translate code;
     fprintf(fp, "; Exit the program\n");
-    fprintf(fp, "    mov eax , 5\n");
-    fprintf(fp, "    call print_eax\n");
+
     fprintf(fp, "    mov eax, 1                       ;; syscall number for sys_exit\n");
     fprintf(fp, "    xor ebx, ebx                     ;; exit code 0\n");
     fprintf(fp, "    int 0x80                         ;; make syscall\n");
@@ -79,6 +84,10 @@ void createASMFile(ASTNode *ast, Context *context, FILE *fp)
     generateLabels(context, fp);
 
     fprintf(fp, "section .rodata\n");
+    fprintf(fp, "    INT_TYPE: db 1\n");
+    fprintf(fp, "    FLOAT_TYPE: db 2\n");
+    fprintf(fp, "    STRING_TYPE: db 3\n");
+    fprintf(fp, "    REF_TYPE: db 4\n");
     createLitralConstansts(context, fp);
 }
 
@@ -96,11 +105,11 @@ void translateGlobalVar(ASTNode *ast, FILE *fp)
     {
         if (ast->right->token.value == ASSIGN)
         {
-            fprintf(fp, "    %s dd 0\n", ast->right->left->token.lexeme);
+            fprintf(fp, "    %s dd 5 dup(0)\n", ast->right->left->token.lexeme);
         }
         else
         {
-            fprintf(fp, "    %s dd 0\n", ast->right->token.lexeme);
+            fprintf(fp, "    %s dd 5 dup(0)\n", ast->right->token.lexeme);
         }
         // for int
     }
@@ -121,12 +130,12 @@ void tranlateLocalVar(ASTNode *ast, FILE *fp)
     {
         if (ast->right->token.value == ASSIGN)
         {
-            fprintf(fp, "    sub dword [pesp] , 4\n");
+            fprintf(fp, "    sub dword [pesp] , 5\n");
             // fprintf(fp, "    sub esp , 4\n");
         }
         else
         {
-            fprintf(fp, "    sub dword [pesp] , 4\n");
+            fprintf(fp, "    sub dword [pesp] , 5\n");
             // fprintf(fp, "    sub esp , 4\n");
         }
         // for int
@@ -141,7 +150,7 @@ void createLitralConstansts(Context *context, FILE *fp)
     entry = popLitlralTable(context->litralTable);
     while (entry != NULL)
     {
-        fprintf(fp, "    %s: dd %s, 0\n", entry->label, entry->value);
+        fprintf(fp, "    %s: db %s, 0\n", entry->label, entry->value);
         entry = popLitlralTable(context->litralTable);
     }
 }
@@ -162,41 +171,54 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
         translate(ast->right, context, fp);
         fprintf(fp, "    ;; plus\n");
         fprintf(fp, "    pop eax\n");
+        fprintf(fp, "    pop cx \n");
         fprintf(fp, "    pop ebx\n");
+        fprintf(fp, "    pop dx \n");
         fprintf(fp, "    add eax , ebx\n");
+        fprintf(fp, "    push cx\n");
         fprintf(fp, "    push eax\n");
         break;
     case MUL:
         translate(ast->left, context, fp);
         translate(ast->right, context, fp);
-        fprintf(fp, "    ;; mul\n");
+        fprintf(fp, "    ;; MUL\n");
         fprintf(fp, "    pop eax\n");
+        fprintf(fp, "    pop cx \n");
         fprintf(fp, "    pop ebx\n");
+        fprintf(fp, "    pop dx \n");
         fprintf(fp, "    imul eax , ebx\n");
+        fprintf(fp, "    push cx\n");
         fprintf(fp, "    push eax\n");
         break;
     case DIV:
         translate(ast->left, context, fp);
         translate(ast->right, context, fp);
-        fprintf(fp, "    ;; mul\n");
+        fprintf(fp, "    ;; DIV\n");
         fprintf(fp, "    pop eax\n");
+        fprintf(fp, "    pop cx \n");
         fprintf(fp, "    pop ebx\n");
+        fprintf(fp, "    pop dx \n");
         fprintf(fp, "    idiv eax , ebx\n");
+        fprintf(fp, "    push cx\n");
         fprintf(fp, "    push eax\n");
         break;
     case MINUS:
         translate(ast->left, context, fp);
         translate(ast->right, context, fp);
-        fprintf(fp, "    ;; plus\n");
+        fprintf(fp, "    ;; MINUS\n");
         fprintf(fp, "    pop eax\n");
+        fprintf(fp, "    pop cx \n");
         fprintf(fp, "    pop ebx\n");
+        fprintf(fp, "    pop dx \n");
         fprintf(fp, "    sub eax , ebx\n");
+        fprintf(fp, "    push cx\n");
         fprintf(fp, "    push eax\n");
         break;
     case ASSIGN:
     {
         translate(ast->right, context, fp); // convert expression to asm which will store value of evaluated expresion to stack
         fprintf(fp, "    pop eax\n");
+        fprintf(fp, "    pop bx \n");
         // fprintf(fp, "    mov ebx, eax\n");
         // fprintf(fp, "    push ebx\n");
         // fprintf(fp, "    call print_eax\n");
@@ -218,8 +240,8 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
             {
                 int offset = getSymbolOffset(context, entry);
 
-                fprintf(fp, "    mov ebx , [pebp]                    ;; store the address to ebx\n");
-                fprintf(fp, "    mov ebx , [ebx + (%d)]            ;; store the value at location ebx\n", offset);
+                fprintf(fp, "    mov ebx , [pebp]                    \n");
+                fprintf(fp, "    mov ebx , [ebx + (%d)]           \n", offset);
                 fprintf(fp, "    mov [ebx] , eax   ;;%s\n", entry->token.lexeme);
                 fprintf(fp, "    push eax\n");
             }
@@ -228,14 +250,19 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
         SymbolTableEntry *entry = checkSymbolEntry(context, ast->left->token);
         if (entry->scope == 1)
         {
-            fprintf(fp, "    mov [%s] , eax\n", ast->left->token.lexeme);
+            fprintf(fp, "    mov [%s] , bx\n", ast->left->token.lexeme);
+            fprintf(fp, "    mov [%s + 1] , eax\n", ast->left->token.lexeme);
+
+            fprintf(fp, "    push bx\n");
             fprintf(fp, "    push eax\n"); // store the to address of identifier
         }
         else
         {
             int offset = getSymbolOffset(context, entry);
-            fprintf(fp, "    mov ebx , [pebp]                    ;; store the address to ebx\n");
-            fprintf(fp, "    mov [ebx + (%d)] , eax              ;; store the value at location ebx\n", offset, entry->token.lexeme);
+            fprintf(fp, "    mov ecx , [pebp]                   \n");
+            fprintf(fp, "    mov [ecx + (%d)] , bx              \n", offset);
+            fprintf(fp, "    mov [ecx + (%d) + 1] , eax\n", offset);
+            fprintf(fp, "    push bx\n");
             fprintf(fp, "    push eax\n");
         }
     }
@@ -464,13 +491,19 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
     break;
     case LESS_THAN:
     {
-        translate(ast->left, context, fp);  // parse left expression
-        translate(ast->right, context, fp); // parse right expression
-        fprintf(fp, "    pop ebx\n");       // right oprand
-        fprintf(fp, "    pop eax\n");       // left oprand
+        translate(ast->left, context, fp); // parse left expression
+        translate(ast->right, context, fp);
+        fprintf(fp, "    pop ebx\n");
+        fprintf(fp, "    pop dx \n"); // parse right expression
+        fprintf(fp, "    pop eax\n");
+        fprintf(fp, "    pop cx \n");
+
         fprintf(fp, "    cmp eax , ebx\n");
         fprintf(fp, "    setl al\n");
         fprintf(fp, "    movzx eax , al\n");
+        fprintf(fp, "    mov bl , [INT_TYPE]\n");
+        fprintf(fp, "    movzx bx , bl\n");
+        fprintf(fp, "    push   bx\n");
         fprintf(fp, "    push eax\n");
     }
     break;
@@ -478,11 +511,17 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
     {
         translate(ast->left, context, fp);  // parse left expression
         translate(ast->right, context, fp); // parse right expression
-        fprintf(fp, "    pop ebx\n");       // right oprand
-        fprintf(fp, "    pop eax\n");       // left oprand
+        fprintf(fp, "    pop ebx\n");
+        fprintf(fp, "    pop dx \n"); // parse right expression
+        fprintf(fp, "    pop eax\n");
+        fprintf(fp, "    pop cx \n");
+
         fprintf(fp, "    cmp eax , ebx\n");
         fprintf(fp, "    setg al\n");
         fprintf(fp, "    movzx eax , al\n");
+        fprintf(fp, "    mov bl , [INT_TYPE]\n");
+        fprintf(fp, "    movzx bx , bl\n");
+        fprintf(fp, "    push   bx\n");
         fprintf(fp, "    push eax\n");
     }
     break;
@@ -490,11 +529,17 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
     {
         translate(ast->left, context, fp);  // parse left expression
         translate(ast->right, context, fp); // parse right expression
-        fprintf(fp, "    pop ebx\n");       // right oprand
-        fprintf(fp, "    pop eax\n");       // left oprand
+        fprintf(fp, "    pop ebx\n");
+        fprintf(fp, "    pop dx \n"); // parse right expression
+        fprintf(fp, "    pop eax\n");
+        fprintf(fp, "    pop cx \n");
+
         fprintf(fp, "    cmp eax , ebx\n");
         fprintf(fp, "    setle al\n");
         fprintf(fp, "    movzx eax , al\n");
+        fprintf(fp, "    mov bl , [INT_TYPE]\n");
+        fprintf(fp, "    movzx bx , bl\n");
+        fprintf(fp, "    push   bx\n");
         fprintf(fp, "    push eax\n");
     }
     break;
@@ -502,11 +547,17 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
     {
         translate(ast->left, context, fp);  // parse left expression
         translate(ast->right, context, fp); // parse right expression
-        fprintf(fp, "    pop ebx\n");       // right oprand
-        fprintf(fp, "    pop eax\n");       // left oprand
+        fprintf(fp, "    pop ebx\n");
+        fprintf(fp, "    pop dx \n"); // parse right expression
+        fprintf(fp, "    pop eax\n");
+        fprintf(fp, "    pop cx \n");
+
         fprintf(fp, "    cmp eax , ebx\n");
         fprintf(fp, "    setge al\n");
         fprintf(fp, "    movzx eax , al\n");
+        fprintf(fp, "    mov bl , [INT_TYPE]\n");
+        fprintf(fp, "    movzx bx , bl\n");
+        fprintf(fp, "    push   bx\n");
         fprintf(fp, "    push eax\n");
     }
     break;
@@ -514,11 +565,17 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
     {
         translate(ast->left, context, fp);  // parse left expression
         translate(ast->right, context, fp); // parse right expression
-        fprintf(fp, "    pop ebx\n");       // right oprand
-        fprintf(fp, "    pop eax\n");       // left oprand
+        fprintf(fp, "    pop ebx\n");
+        fprintf(fp, "    pop dx \n"); // parse right expression
+        fprintf(fp, "    pop eax\n");
+        fprintf(fp, "    pop cx \n");
+
         fprintf(fp, "    cmp eax , ebx\n");
         fprintf(fp, "    sete al\n");
         fprintf(fp, "    movzx eax , al\n");
+        fprintf(fp, "    mov bl , [INT_TYPE]\n");
+        fprintf(fp, "    movzx bx , bl\n");
+        fprintf(fp, "    push   bx\n");
         fprintf(fp, "    push eax\n");
     }
     break;
@@ -526,11 +583,18 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
     {
         translate(ast->left, context, fp);  // parse left expression
         translate(ast->right, context, fp); // parse right expression
-        fprintf(fp, "    pop eax\n");       // right oprand
-        fprintf(fp, "    pop ebx\n");       // left oprand
+        fprintf(fp, "    pop ebx\n");
+        fprintf(fp, "    pop dx \n"); // parse right expression
+        fprintf(fp, "    pop eax\n");
+        fprintf(fp, "    pop cx \n");
+
         fprintf(fp, "    cmp eax , ebx\n");
         fprintf(fp, "    setne al\n");
         fprintf(fp, "    movzx eax , al\n");
+        fprintf(fp, "    mov bl , [INT_TYPE]\n");
+        fprintf(fp, "    movzx bx , bl\n");
+        fprintf(fp, "    push   bx\n");
+        fprintf(fp, "    push eax\n");
         fprintf(fp, "    push eax\n");
     }
     break;
@@ -539,31 +603,46 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
 
         SymbolTableEntry *entry = checkSymbolEntry(context, ast->token);
         if (entry->scope == 1)
-        { // this is global var
-            fprintf(fp, "    mov eax , [%s]\n", ast->token.lexeme);
+        {                                                          // this is global var
+            fprintf(fp, "    mov bx , [%s]\n", ast->token.lexeme); // move type of in bl
+            fprintf(fp, "    mov eax , [%s + 1]\n", ast->token.lexeme);
+
             // store the value of identifer to eax
         }
         else
         {
             int symbolOffset = getSymbolOffset(context, entry);
             // fprintf(fp, "    mov eax , [ebp + (%d) ]     ;; %s\n", symbolOffset, entry->token.lexeme);
-            fprintf(fp, "    mov eax , [pebp]              ;; load the address stored in pebp to eax\n");
-            fprintf(fp, "    mov eax , [eax + (%d) ]     ;; %s\n", symbolOffset, entry->token.lexeme);
+            fprintf(fp, "    mov ecx , [pebp] \n");
+            fprintf(fp, "    mov bx , [ ecx + (%d) ]\n", symbolOffset);
+            fprintf(fp, "    mov eax , [ecx + (%d) + 1 ] \n", symbolOffset);
         }
+        fprintf(fp, "    push bx\n");
         fprintf(fp, "    push eax\n");
     }
     break;
     case INTEGER_CONSTANT:
+        fprintf(fp, "    mov bl , [INT_TYPE]\n");
+        fprintf(fp, "    movzx bx , bl\n");
+        fprintf(fp, "    push bx\n");
         fprintf(fp, "    mov eax, %s\n", ast->token.lexeme);
         fprintf(fp, "    push eax\n");
+
         break;
     case HEX_CONSTANT:
+        fprintf(fp, "    mov bl , [INT_TYPE]\n");
+        fprintf(fp, "    push bl\n");
         fprintf(fp, "    mov eax, %s\n", ast->token.lexeme);
         fprintf(fp, "    push eax\n");
+
         break;
 
     case FLOAT_CONSTANT:
-        assert(0 && "TODO:- handle FLOAT_CONSTANT not implemented");
+        fprintf(fp, "    mov bl , [FLOAT_TYPE]\n");
+        fprintf(fp, "    push bl\n");
+        fprintf(fp, "    mov eax, %s\n", ast->token.lexeme);
+        fprintf(fp, "    push eax\n");
+
         break;
 
     case VALUE_AT:
@@ -579,8 +658,11 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
         // printf("\n %s",litral_label);
 
         pushLitralTable(context->litralTable, litral_label, ast->token.lexeme);
+        fprintf(fp, "    mov bx , [STRING_TYPE]\n");
+        fprintf(fp, "    push bx\n");
         fprintf(fp, "    lea eax, [%s]              ;; Load the address of litral into eax\n", litral_label);
         fprintf(fp, "    push eax\n");
+
         break;
     case FUNCTION:
         // FUNTION ->LEFT.TOKEN == IDENTIFIER
@@ -592,46 +674,43 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
 
     case FUNCTION_CALL:
     {
+
+        ASTNode *args = ast->right->right;
+        while (args != NULL)
+        {
+            translate(args, context, fp);
+            // fprintf(fp, "    pop eax\n");
+            // fprintf(fp, "    pop bx\n");
+            // fprintf(fp, "    call print_eax\n");
+
+            args = args->next;
+        }
+        args = ast->right->right;
         fprintf(fp, "    mov eax , [pebp]                  ;; store value at pebp to eax\n");
         fprintf(fp, "    call push_stack                   ;; push [pebp] to stack\n");
         fprintf(fp, "    mov eax , [pesp]                  ;; store the value at pesp to eax\n");
         fprintf(fp, "    mov [pebp] , eax                ;; allocate new base pointer\n");
-        ASTNode *args = ast->right->right;
-
-        int offset = 4;
+        int offset = 0;
         while (args != NULL)
         {
-            fprintf(fp, "    sub dword [pesp] , 4                         ;; allocate space for args on stack\n");
+            fprintf(fp, "    sub dword [pesp] , 5                         ;; allocate space for args on stack\n");
             args = args->next;
+            offset = offset + 5;
         }
         args = ast->right->right;
 
         while (args != NULL)
         {
-            fprintf(fp, "    mov eax , [pesp]\n");
-            fprintf(fp, "    call push_base\n");
-            fprintf(fp, "    mov eax , [pebp]                   ;; store the value at pebp to eax\n");
-            fprintf(fp, "    mov [pesp] , eax                ;; restore the stack pointer\n");
-            fprintf(fp, "    call pop_stack                     ;; pop stack top to eax\n");
-            fprintf(fp, "    mov [pebp] , eax                    ; restore the base pointer\n");
-            fprintf(fp, "    call push_base\n");
-
-            translate(args, context, fp);
-            fprintf(fp, "    call pop_base\n");
-            fprintf(fp, "    mov [pebp], eax\n");
-            fprintf(fp, "    mov eax , [pebp]                  ;; store value at pebp to eax\n");
-            fprintf(fp, "    call push_stack                   ;; push [pebp] to stack\n");
-            fprintf(fp, "    mov eax , [pesp]                  ;; store the value at pesp to eax\n");
-            fprintf(fp, "    mov [pebp] , eax                ;; allocate new base pointer\n");
-            fprintf(fp, "    call pop_base\n");
-            fprintf(fp, "    mov [pesp] , eax\n");
             fprintf(fp, "    pop eax\n");
-            fprintf(fp, "    mov ebx , [pebp]                        ;; store the address value to ebx\n");
-            fprintf(fp, "    mov [ebx - %d] , eax                   ;; args no:- %d\n", offset, offset / 4);
+            fprintf(fp, "    pop bx\n");
+            fprintf(fp, "    mov ecx , [pebp]                        ;; store the address value to ebx\n");
+            fprintf(fp, "    mov [ecx - %d] , bx    \n", offset);
+            fprintf(fp, "    mov [ecx - %d + 1] , eax\n", offset);
             // fprintf(fp, "    call print_eax\n");
             // fprintf(fp, "    mov [ebp - %d] , eax                   ;; args no:- %d\n", offset, offset / 4);
             args = args->next;
-            offset = offset + 4;
+
+            offset = offset - 5;
         }
         fprintf(fp, "    call  %s\n", ast->left->token.lexeme);
         fprintf(fp, "    mov eax , [pebp]                   ;; store the value at pebp to eax\n");
@@ -642,6 +721,11 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
         fprintf(fp, "    push eax\n");
     }
     break;
+    case ARG:
+    {
+        translate(ast->left, context, fp);
+        return;
+    }
     case PARAM_START:
     {
 
@@ -770,7 +854,6 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
         printf("\nERROR: %s token handle not implemented", ast->token.lexeme);
         exit(1);
     }
-
     return translate(ast->next, context, fp);
 }
 
@@ -1053,4 +1136,20 @@ void printMemAlloc(FILE *fp)
     fprintf(fp, "     pop ebp            ; Restore ebp\n");
     fprintf(fp, "     pop esi            ; Restore esi\n");
     fprintf(fp, "     ret\n");
+}
+
+void printFreeMem(FILE *fp)
+{
+
+    fprintf(fp, "free:\n");
+    fprintf(fp, "    push esi            ; Save esi on the stack\n");
+    fprintf(fp, "    push ebp            ; Save ebp on the stack\n");
+    fprintf(fp, "    xor eax, eax        ; Clear eax\n");
+    fprintf(fp, "    mov al, 11          ; sys_munmap system call number (11)\n");
+    fprintf(fp, "    ; ecx should contain the address of the memory to be freed\n");
+    fprintf(fp, "    ; edx should contain the size of the memory region\n");
+    fprintf(fp, "    int 0x80            ; Call kernel to perform munmap\n");
+    fprintf(fp, "    pop ebp             ; Restore ebp\n");
+    fprintf(fp, "    pop esi             ; Restore esi\n");
+    fprintf(fp, "    ret\n");
 }

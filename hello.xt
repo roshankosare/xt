@@ -1,88 +1,14 @@
-var a = 0;
-var MSIZE = 0;
-var MMEM = 0;
-var x_t = 3;
-var g = 5 & a;
- // comment
+var x = 10;
+var y = 30;
+var z = 0;
 
-
-function memalloc(size){
-   MSIZE = size;
-   asm([
-      "mov eax , [MSIZE]",
-      "mov ecx , eax",
-      "call malloc",
-       "mov [MMEM] , eax",
-   ]);
-  return MMEM;
+function add(x , y ){
+    var t = x;
+    asm(["pop eax", "pop bx", "call print_eax"]);
+    t  = y;
+    asm(["pop eax", "pop bx", "call print_eax"]);
+    return x + y;
 }
 
-
-function print(x){
-
-   var length = 0;
-   var temp = x;
-   var maxBuffer = 1024;
-   var buffer = memalloc(maxBuffer);
-   
-   var tempBuffer = buffer;
-   var ch = 0;
-   ch = @temp;
-    
-   ch = ch & 0xFF;  // select lower byte only of value 
-    
-   while(ch != 0){
-      ch = @temp;
-      ch = ch & 0xFF;
-      if(ch == 92){ 
-         // 92 is ASCII for  '/' character
-         temp++;
-         ch = @temp;
-         ch = ch & 0xFF;
-         if(ch == 110){
-            // 110 is ASCII for 'n'
-            ch = 10;  // 10 is ASCII for new line
-         }
-         if(ch == 116){
-            // 116 us ASCII for 't'
-            ch = 9; // 9 is ASSCIIf or tab
-         }
-      }
-
-      //if(ch == )
-      @tempBuffer = ch;
-      temp++;
-      tempBuffer++;
-      length++;
-   }
-
-  
-   
-   var strlength = length;
-   var strpointer = buffer;
-   
-  
-   asm([    "pop ecx                           ; load the address of the string",
-            "pop edx                           ; load the length of the string",                   
-            "mov eax, 4                        ; syscall number for sys_write",
-            "mov ebx, 1                        ; file descriptor 1 (stdout)",             
-            "int 0x80                          ; make syscall to write",
-         ]);
-      
- }
-
- 
-print(" hello\t world \n");
-
-
-print(" hello world \n");
-
- 
-
-
-
- 
-
-
-
-
+z = add(x , y );
+asm(["pop eax", "pop bx", "call print_eax"]);
