@@ -1,14 +1,94 @@
-var x = 10;
-var y = 30;
-var z = 0;
-
-function add(x , y ){
-    var t = x;
-    asm(["pop eax", "pop bx", "call print_eax"]);
-    t  = y;
-    asm(["pop eax", "pop bx", "call print_eax"]);
-    return x + y;
+var a = 0;
+var MSIZE = 0;
+var MMEM = 0;
+var STR_LENGTH = 0;
+var STR_POINTER = 0;
+var  k = 505 % 10;
+asm(["pop eax" ,"pop bx"  , "call print_eax"]);
+function memalloc(size){
+   MSIZE = size;
+   asm([
+      "mov eax , [MSIZE]",
+      "mov ecx , eax",
+      "call malloc",
+      "mov bl , [REF_TYPE]",
+      "movzx bx , bl",
+      "mov [MMEM] , bx",
+      "mov [MMEM + 1] , eax",
+   ]);
+  return MMEM;
 }
 
-z = add(x , y );
-asm(["pop eax", "pop bx", "call print_eax"]);
+
+
+
+function print(x){
+
+   var length = 0;
+   var temp = x;
+   var maxBuffer = 1024;
+   var buffer = memalloc(maxBuffer);
+   
+   
+   var tempBuffer = buffer;
+    
+   var ch = 0;
+   ch = @temp;  
+    ch = ch & 0xFF;
+   while(ch != 0){
+    
+      ch = @temp;
+      ch = ch & 0xFF;
+      //asm(["pop eax" ,"pop bx"  , "call print_eax"]);
+      if(ch == 92){ 
+         // 92 is ASCII for  '/' character
+         temp++;
+         ch = @temp;
+         ch = ch & 0xFF;
+         if(ch == 110){
+            // 110 is ASCII for 'n'
+            ch = 10;  // 10 is ASCII for new line
+         }
+         if(ch == 116){
+            // 116 is ASCII for 't'
+            ch = 9; // 9 is ASSCII for tab
+         }
+      }
+
+      //if(ch == )
+      @tempBuffer = ch;
+      temp++;
+      tempBuffer++;
+      length++;
+   }
+
+  
+   
+   STR_LENGTH = length;
+   STR_POINTER = buffer;
+   
+  
+   asm([    "mov ecx , [STR_POINTER + 1 ]   ;; file str pointer",
+            "mov edx , [STR_LENGTH  + 1]    ;; str length",                   
+            "mov eax, 4                ",
+            "mov ebx, 1                        ; file descriptor 1 (stdout)",             
+            "int 0x80                          ; make syscall to write",
+         ]);
+      
+ }
+
+ var msg = " hello\t world \n";
+print(msg);
+
+
+print(" hello world \n");
+
+ 
+
+
+
+ 
+
+
+
+

@@ -9,7 +9,10 @@ function memalloc(size){
       "mov eax , [MSIZE]",
       "mov ecx , eax",
       "call malloc",
-       "mov [MMEM] , eax",
+      "mov bl , [REF_TYPE]",
+      "movzx bx , bl",
+      "mov [MMEM] , bx",
+      "mov [MMEM + 1] , eax",
    ]);
   return MMEM;
 }

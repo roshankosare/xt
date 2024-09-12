@@ -24,6 +24,7 @@ ASTNode *parse_primary(Context *context);
 ASTNode *parse_fun_call(Context *context);
 ASTNode *parse_fun_call_args(Context *context);
 ASTNode *parse_valueAt(Context *context);
+ASTNode *parse_typeof(Context *context);
 // ASTNode *parse_conditional_exp(Context *context);
 
 // STMT := { exp | DEC_STMT  ";" }
@@ -217,17 +218,17 @@ ASTNode *parse_fun_call_args(Context *context)
     {
         return NULL;
     }
-    Token arg = {.lexeme =  "ARG", .value = ARG };
+    Token arg = {.lexeme = "ARG", .value = ARG};
     ASTNode *node = createASTNode(arg);
     node->left = exp(context);
     if (match(context, COMMA))
     {
-        
+
         consume(context);
-        
+
         node->next = createASTNode(arg);
         node->next->left = exp(context);
-        node->next->left ->next = parse_fun_call_args(context);
+        node->next->left->next = parse_fun_call_args(context);
 
         return node;
     }
@@ -367,6 +368,9 @@ ASTNode *parse_primary(Context *context)
 
     case DEC:
         return parse_uni_stmt(context);
+    
+    case TYPEOF:
+        return parse_typeof(context);
 
     case INTEGER_CONSTANT:
         break;
@@ -428,6 +432,25 @@ ASTNode *parse_valueAt(Context *context)
         valueAtNode->left = createASTNode(context->current);
         consume(context); // consume IDENTIFIER
         return valueAtNode;
+    }
+    return NULL;
+}
+
+// TYPEOF := "typeof" "(" "iden"
+ASTNode *parse_typeof(Context *context)
+{
+
+    if (match(context, TYPEOF))
+    {
+
+        ASTNode *node = createASTNode(context->current);
+        consume(context); // consume typeof
+        expect(context, OPEN_PAREN);
+        consume(context);
+        node->left = exp(context);
+        expect(context, CLOSE_PAREN);
+        consume(context);
+        return node;
     }
     return NULL;
 }

@@ -120,6 +120,8 @@ int isExpToken(TokenValue t)
         return 1;
     case BIT_OR:
         return 1;
+    case MODULAS:
+        return 1;
 
     default:
         return 0;

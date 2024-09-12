@@ -1,7 +1,11 @@
 section .data                        ;; Section for initialized data
-    x dd 5 dup(0)
-    y dd 5 dup(0)
-    z dd 5 dup(0)
+    a dd 5 dup(0)
+    MSIZE dd 5 dup(0)
+    MMEM dd 5 dup(0)
+    STR_LENGTH dd 5 dup(0)
+    STR_POINTER dd 5 dup(0)
+    k dd 5 dup(0)
+    msg dd 5 dup(0)
     call_stack_top dd 0
     fcall_stack_top dd 0
     base_stack_top dd 0
@@ -10,10 +14,10 @@ section .data                        ;; Section for initialized data
     buffer db '0000000000', 0       ; Buffer to hold the converted number (10 digits max)
     len equ 10                      ; Length of the buffer
     space db  " "                       ; Space character to print
-    condition dd 0
+    condition dd 5 dup(0)
     BASE_ESP dd 0
     BASE_RETURN dd 0
-    RETURN_VALUE dd 0
+    RETURN_VALUE dd 5 dup(0)
     RETURN_ADDRESS dd 0
     POPED_ADDRESS dd 0
     NUM_REF_ALLO dd 0
@@ -39,23 +43,12 @@ _start:
     mov bl , [INT_TYPE]
     movzx bx , bl
     push bx
-    mov eax, 10
+    mov eax, 0
     push eax
     pop eax
     pop bx 
-    mov [x] , bx
-    mov [x + 1] , eax
-    push bx
-    push eax
-    mov bl , [INT_TYPE]
-    movzx bx , bl
-    push bx
-    mov eax, 30
-    push eax
-    pop eax
-    pop bx 
-    mov [y] , bx
-    mov [y + 1] , eax
+    mov [a] , bx
+    mov [a + 1] , eax
     push bx
     push eax
     mov bl , [INT_TYPE]
@@ -65,16 +58,84 @@ _start:
     push eax
     pop eax
     pop bx 
-    mov [z] , bx
-    mov [z + 1] , eax
+    mov [MSIZE] , bx
+    mov [MSIZE + 1] , eax
     push bx
     push eax
-    mov bx , [x]
-    mov eax , [x + 1]
+    mov bl , [INT_TYPE]
+    movzx bx , bl
+    push bx
+    mov eax, 0
+    push eax
+    pop eax
+    pop bx 
+    mov [MMEM] , bx
+    mov [MMEM + 1] , eax
     push bx
     push eax
-    mov bx , [y]
-    mov eax , [y + 1]
+    mov bl , [INT_TYPE]
+    movzx bx , bl
+    push bx
+    mov eax, 0
+    push eax
+    pop eax
+    pop bx 
+    mov [STR_LENGTH] , bx
+    mov [STR_LENGTH + 1] , eax
+    push bx
+    push eax
+    mov bl , [INT_TYPE]
+    movzx bx , bl
+    push bx
+    mov eax, 0
+    push eax
+    pop eax
+    pop bx 
+    mov [STR_POINTER] , bx
+    mov [STR_POINTER + 1] , eax
+    push bx
+    push eax
+    mov bl , [INT_TYPE]
+    movzx bx , bl
+    push bx
+    mov eax, 505
+    push eax
+    mov bl , [INT_TYPE]
+    movzx bx , bl
+    push bx
+    mov eax, 10
+    push eax
+    pop ebx
+    pop cx 
+    pop eax
+    pop cx 
+    xor edx ,edx
+    div ebx
+    push cx
+    push edx
+    pop eax
+    pop bx 
+    mov [k] , bx
+    mov [k + 1] , eax
+    push bx
+    push eax
+    pop eax
+    pop bx
+    call print_eax
+    mov bl , [STRING_TYPE]
+    movzx bx , bl
+    push bx
+    lea eax, [label_1804289383]              ;; Load the address of litral into eax
+    push eax
+    pop eax
+    pop bx 
+    mov [msg] , bx
+    mov [msg + 1] , eax
+    push bx
+    push eax
+    mov bl , [msg]
+    movzx bx , bl 
+    mov eax , [msg + 1]
     push bx
     push eax
     mov eax , [pebp]                  ;; store value at pebp to eax
@@ -82,33 +143,44 @@ _start:
     mov eax , [pesp]                  ;; store the value at pesp to eax
     mov [pebp] , eax                ;; allocate new base pointer
     sub dword [pesp] , 5                         ;; allocate space for args on stack
-    sub dword [pesp] , 5                         ;; allocate space for args on stack
-    pop eax
-    pop bx
-    mov ecx , [pebp]                        ;; store the address value to ebx
-    mov [ecx - 10] , bx    
-    mov [ecx - 10 + 1] , eax
     pop eax
     pop bx
     mov ecx , [pebp]                        ;; store the address value to ebx
     mov [ecx - 5] , bx    
     mov [ecx - 5 + 1] , eax
-    call  add
+    call  print
     mov eax , [pebp]                   ;; store the value at pebp to eax
     mov [pesp] , eax                ;; restore the stack pointer
     call pop_stack                     ;; pop stack top to eax
     mov [pebp] , eax                    ; restore the base pointer
-    mov eax , [RETURN_VALUE]
-    push eax
-    pop eax
-    pop bx 
-    mov [z] , bx
-    mov [z + 1] , eax
+    mov bx , [RETURN_VALUE]
+    mov eax , [RETURN_VALUE  + 1]
     push bx
     push eax
+    mov bl , [STRING_TYPE]
+    movzx bx , bl
+    push bx
+    lea eax, [label_846930886]              ;; Load the address of litral into eax
+    push eax
+    mov eax , [pebp]                  ;; store value at pebp to eax
+    call push_stack                   ;; push [pebp] to stack
+    mov eax , [pesp]                  ;; store the value at pesp to eax
+    mov [pebp] , eax                ;; allocate new base pointer
+    sub dword [pesp] , 5                         ;; allocate space for args on stack
     pop eax
     pop bx
-    call print_eax
+    mov ecx , [pebp]                        ;; store the address value to ebx
+    mov [ecx - 5] , bx    
+    mov [ecx - 5 + 1] , eax
+    call  print
+    mov eax , [pebp]                   ;; store the value at pebp to eax
+    mov [pesp] , eax                ;; restore the stack pointer
+    call pop_stack                     ;; pop stack top to eax
+    mov [pebp] , eax                    ; restore the base pointer
+    mov bx , [RETURN_VALUE]
+    mov eax , [RETURN_VALUE  + 1]
+    push bx
+    push eax
 ; Exit the program
     mov eax, 1                       ;; syscall number for sys_exit
     xor ebx, ebx                     ;; exit code 0
@@ -217,7 +289,7 @@ malloc:
      pop ebp            ; Restore ebp
      pop esi            ; Restore esi
      ret
-add:
+memalloc:
     pop eax                        ;; pop the return address to eax
     call push_call                 ;; store the return address to ra location
     call push_fcall
@@ -229,22 +301,6 @@ add:
     call push_stack                   ;; push [pebp] to stack
     mov eax , [pesp]                  ;; store the value at pesp to eax
     mov [pebp] , eax                ;; allocate new base pointer
-    sub dword [pesp] , 5
-    mov ecx , [pebp] 
-    mov bx , [ ecx + (9) ]
-    mov eax , [ecx + (9) + 1 ] 
-    push bx
-    push eax
-    pop eax
-    pop bx 
-    mov ecx , [pebp]                   
-    mov [ecx + (-5)] , bx              
-    mov [ecx + (-5) + 1] , eax
-    push bx
-    push eax
-    pop eax
-    pop bx
-    call print_eax
     mov ecx , [pebp] 
     mov bx , [ ecx + (4) ]
     mov eax , [ecx + (4) + 1 ] 
@@ -252,35 +308,28 @@ add:
     push eax
     pop eax
     pop bx 
-    mov ecx , [pebp]                   
-    mov [ecx + (-5)] , bx              
-    mov [ecx + (-5) + 1] , eax
+    mov [MSIZE] , bx
+    mov [MSIZE + 1] , eax
+    push bx
+    push eax
+    mov eax , [MSIZE]
+    mov ecx , eax
+    call malloc
+    mov bl , [REF_TYPE]
+    movzx bx , bl
+    mov [MMEM] , bx
+    mov [MMEM + 1] , eax
+    mov  byte [RETURN_VALUE] , 0
+    mov  dword [RETURN_VALUE + 1] , 0
+    mov bl , [MMEM]
+    movzx bx , bl 
+    mov eax , [MMEM + 1]
     push bx
     push eax
     pop eax
     pop bx
-    call print_eax
-    mov  dword [RETURN_VALUE] , 0
-    mov ecx , [pebp] 
-    mov bx , [ ecx + (9) ]
-    mov eax , [ecx + (9) + 1 ] 
-    push bx
-    push eax
-    mov ecx , [pebp] 
-    mov bx , [ ecx + (4) ]
-    mov eax , [ecx + (4) + 1 ] 
-    push bx
-    push eax
-    ;; plus
-    pop eax
-    pop cx 
-    pop ebx
-    pop dx 
-    add eax , ebx
-    push cx
-    push eax
-    pop eax
-    mov [RETURN_VALUE] , eax
+    mov [RETURN_VALUE] , bx
+    mov [RETURN_VALUE + 1] , eax
     call pop_base
     mov [pesp] , eax                ;; restore the base pointer
     call pop_base
@@ -304,8 +353,566 @@ add:
     call pop_fcall
     call pop_call                  ;; store the return address to eax
     jmp eax                        ;; jmp to return address
+print:
+    pop eax                        ;; pop the return address to eax
+    call push_call                 ;; store the return address to ra location
+    call push_fcall
+    mov eax , [pebp]
+    call push_base
+    mov eax , [pesp]
+    call push_base
+    mov eax , [pebp]                  ;; store value at pebp to eax
+    call push_stack                   ;; push [pebp] to stack
+    mov eax , [pesp]                  ;; store the value at pesp to eax
+    mov [pebp] , eax                ;; allocate new base pointer
+    sub dword [pesp] , 5
+    sub dword [pesp] , 5
+    sub dword [pesp] , 5
+    sub dword [pesp] , 5
+    sub dword [pesp] , 5
+    sub dword [pesp] , 5
+    mov bl , [INT_TYPE]
+    movzx bx , bl
+    push bx
+    mov eax, 0
+    push eax
+    pop eax
+    pop bx 
+    mov ecx , [pebp]                   
+    mov [ecx + (-5)] , bx              
+    mov [ecx + (-5) + 1] , eax
+    push bx
+    push eax
+    mov ecx , [pebp] 
+    mov bx , [ ecx + (4) ]
+    mov eax , [ecx + (4) + 1 ] 
+    push bx
+    push eax
+    pop eax
+    pop bx 
+    mov ecx , [pebp]                   
+    mov [ecx + (-10)] , bx              
+    mov [ecx + (-10) + 1] , eax
+    push bx
+    push eax
+    mov bl , [INT_TYPE]
+    movzx bx , bl
+    push bx
+    mov eax, 1024
+    push eax
+    pop eax
+    pop bx 
+    mov ecx , [pebp]                   
+    mov [ecx + (-15)] , bx              
+    mov [ecx + (-15) + 1] , eax
+    push bx
+    push eax
+    mov ecx , [pebp] 
+    mov bx , [ ecx + (-15) ]
+    mov eax , [ecx + (-15) + 1 ] 
+    push bx
+    push eax
+    mov eax , [pebp]                  ;; store value at pebp to eax
+    call push_stack                   ;; push [pebp] to stack
+    mov eax , [pesp]                  ;; store the value at pesp to eax
+    mov [pebp] , eax                ;; allocate new base pointer
+    sub dword [pesp] , 5                         ;; allocate space for args on stack
+    pop eax
+    pop bx
+    mov ecx , [pebp]                        ;; store the address value to ebx
+    mov [ecx - 5] , bx    
+    mov [ecx - 5 + 1] , eax
+    call  memalloc
+    mov eax , [pebp]                   ;; store the value at pebp to eax
+    mov [pesp] , eax                ;; restore the stack pointer
+    call pop_stack                     ;; pop stack top to eax
+    mov [pebp] , eax                    ; restore the base pointer
+    mov bx , [RETURN_VALUE]
+    mov eax , [RETURN_VALUE  + 1]
+    push bx
+    push eax
+    pop eax
+    pop bx 
+    mov ecx , [pebp]                   
+    mov [ecx + (-20)] , bx              
+    mov [ecx + (-20) + 1] , eax
+    push bx
+    push eax
+    mov ecx , [pebp] 
+    mov bx , [ ecx + (-20) ]
+    mov eax , [ecx + (-20) + 1 ] 
+    push bx
+    push eax
+    pop eax
+    pop bx 
+    mov ecx , [pebp]                   
+    mov [ecx + (-25)] , bx              
+    mov [ecx + (-25) + 1] , eax
+    push bx
+    push eax
+    mov bl , [INT_TYPE]
+    movzx bx , bl
+    push bx
+    mov eax, 0
+    push eax
+    pop eax
+    pop bx 
+    mov ecx , [pebp]                   
+    mov [ecx + (-30)] , bx              
+    mov [ecx + (-30) + 1] , eax
+    push bx
+    push eax
+    mov ecx , [pebp] 
+    mov bx , [ ecx + (-10) ]
+    mov eax , [ecx + (-10) + 1 ] 
+    push bx
+    push eax
+    pop eax
+    pop bx
+    mov eax , [eax]             ;; mov value to eax from address stored at eax
+    push bx
+    push eax
+    pop eax
+    pop bx 
+    mov ecx , [pebp]                   
+    mov [ecx + (-30)] , bx              
+    mov [ecx + (-30) + 1] , eax
+    push bx
+    push eax
+    mov ecx , [pebp] 
+    mov bx , [ ecx + (-30) ]
+    mov eax , [ecx + (-30) + 1 ] 
+    push bx
+    push eax
+    mov bl , [INT_TYPE]
+    movzx bx , bl
+    push bx
+    mov eax, 0xFF
+    push eax
+    pop eax
+    pop cx 
+    pop ebx
+    pop dx 
+    and eax ,ebx
+    mov bl , [INT_TYPE]
+    movzx bx , bl
+    push bx
+    push eax
+    pop eax
+    pop bx 
+    mov ecx , [pebp]                   
+    mov [ecx + (-30)] , bx              
+    mov [ecx + (-30) + 1] , eax
+    push bx
+    push eax
+    mov ecx , [pebp] 
+    mov bx , [ ecx + (-30) ]
+    mov eax , [ecx + (-30) + 1 ] 
+    push bx
+    push eax
+    mov bl , [INT_TYPE]
+    movzx bx , bl
+    push bx
+    mov eax, 0
+    push eax
+    pop ebx
+    pop dx 
+    pop eax
+    pop cx 
+    cmp eax , ebx
+    setne al
+    movzx eax , al
+    mov bl , [INT_TYPE]
+    movzx bx , bl
+    push   bx
+    push eax
+    push eax
+    pop eax
+    pop bx
+    mov [condition] , bx
+    mov [condition + 1] , eax
+    lea eax , [.label_1714636915]
+    push eax
+    mov eax , [condition + 1]
+    test eax , eax
+    jnz label_1681692777
+    pop eax
+    lea eax , [.label_1714636915]         ;; save the false label to eax
+    jmp eax
+.label_1714636915:                        ;; defination of false label 
+    mov ecx , [pebp] 
+    mov bx , [ ecx + (-5) ]
+    mov eax , [ecx + (-5) + 1 ] 
+    push bx
+    push eax
+    pop eax
+    pop bx 
+    mov [STR_LENGTH] , bx
+    mov [STR_LENGTH + 1] , eax
+    push bx
+    push eax
+    mov ecx , [pebp] 
+    mov bx , [ ecx + (-20) ]
+    mov eax , [ecx + (-20) + 1 ] 
+    push bx
+    push eax
+    pop eax
+    pop bx 
+    mov [STR_POINTER] , bx
+    mov [STR_POINTER + 1] , eax
+    push bx
+    push eax
+    mov ecx , [STR_POINTER + 1 ]   ;; file str pointer
+    mov edx , [STR_LENGTH  + 1]    ;; str length
+    mov eax, 4                
+    mov ebx, 1                        ; file descriptor 1 (stdout)
+    int 0x80                          ; make syscall to write
+    mov eax , [pebp]                   ;; store the value at pebp to eax
+    mov [pesp] , eax                ;; restore the stack pointer
+    call pop_stack                     ;; pop stack top to eax
+    mov [pebp] , eax                    ; restore the base pointer
+    call pop_base
+    call pop_base
+    call pop_fcall
+    call pop_call                  ;; store the return address to eax
+    jmp eax                        ;; jmp to return address
+label_1681692777:
+    pop eax                        ;; pop the return address to eax
+    call push_call                 ;; store the return address to ra location
+    call push_fcall
+    lea eax , [label_1681692777]
+    call push_call
+    call push_fcall
+    mov eax , [pebp]
+    call push_base
+    mov eax , [pesp]
+    call push_base
+    mov eax , [pebp]                  ;; store value at pebp to eax
+    call push_stack                   ;; push [pebp] to stack
+    mov eax , [pesp]                  ;; store the value at pesp to eax
+    mov [pebp] , eax                ;; allocate new base pointer
+    mov ecx , [pebp] 
+    mov bx , [ ecx + (24) ]
+    mov eax , [ecx + (24) + 1 ] 
+    push bx
+    push eax
+    pop eax
+    pop bx
+    mov eax , [eax]             ;; mov value to eax from address stored at eax
+    push bx
+    push eax
+    pop eax
+    pop bx 
+    mov ecx , [pebp]                   
+    mov [ecx + (4)] , bx              
+    mov [ecx + (4) + 1] , eax
+    push bx
+    push eax
+    mov ecx , [pebp] 
+    mov bx , [ ecx + (4) ]
+    mov eax , [ecx + (4) + 1 ] 
+    push bx
+    push eax
+    mov bl , [INT_TYPE]
+    movzx bx , bl
+    push bx
+    mov eax, 0xFF
+    push eax
+    pop eax
+    pop cx 
+    pop ebx
+    pop dx 
+    and eax ,ebx
+    mov bl , [INT_TYPE]
+    movzx bx , bl
+    push bx
+    push eax
+    pop eax
+    pop bx 
+    mov ecx , [pebp]                   
+    mov [ecx + (4)] , bx              
+    mov [ecx + (4) + 1] , eax
+    push bx
+    push eax
+    mov ecx , [pebp] 
+    mov bx , [ ecx + (4) ]
+    mov eax , [ecx + (4) + 1 ] 
+    push bx
+    push eax
+    mov bl , [INT_TYPE]
+    movzx bx , bl
+    push bx
+    mov eax, 92
+    push eax
+    pop ebx
+    pop dx 
+    pop eax
+    pop cx 
+    cmp eax , ebx
+    sete al
+    movzx eax , al
+    mov bl , [INT_TYPE]
+    movzx bx , bl
+    push   bx
+    push eax
+    pop eax
+    test eax , eax
+    lea eax , [.label_424238335]
+    push eax
+    jnz label_1957747793                 ;; jump if expression  is not  zero
+    pop eax
+    lea eax , [.label_424238335]         ;; save the false label to eax
+    jmp eax
+.label_424238335:                        ;; defination of false label 
+    mov ecx , [pebp] 
+    mov bx , [ ecx + (4) ]
+    mov eax , [ecx + (4) + 1 ] 
+    push bx
+    push eax
+    pop eax
+    pop bx 
+    mov ebx , [pebp]                    
+    mov ebx , [ebx + (9) + 1]           
+    mov [ebx] , eax   ;;tempBuffer
+    push eax
+    mov ecx , [pebp] 
+    mov bx , [ ecx + (24) ]
+    mov eax , [ecx + (24) + 1 ] 
+    push bx
+    push eax
+    mov eax , [pebp]           ;; move address stored in pebp to eax
+    inc dword [eax + (24) + 1]     ;; temp
+    mov ecx , [pebp] 
+    mov bx , [ ecx + (9) ]
+    mov eax , [ecx + (9) + 1 ] 
+    push bx
+    push eax
+    mov eax , [pebp]           ;; move address stored in pebp to eax
+    inc dword [eax + (9) + 1]     ;; tempBuffer
+    mov ecx , [pebp] 
+    mov bx , [ ecx + (29) ]
+    mov eax , [ecx + (29) + 1 ] 
+    push bx
+    push eax
+    mov eax , [pebp]           ;; move address stored in pebp to eax
+    inc dword [eax + (29) + 1]     ;; length
+    mov eax , [pebp]                   ;; store the value at pebp to eax
+    mov [pesp] , eax                ;; restore the stack pointer
+    call pop_stack                     ;; pop stack top to eax
+    mov [pebp] , eax                    ; restore the base pointer
+    mov ecx , [pebp] 
+    mov bx , [ ecx + (-30) ]
+    mov eax , [ecx + (-30) + 1 ] 
+    push bx
+    push eax
+    mov bl , [INT_TYPE]
+    movzx bx , bl
+    push bx
+    mov eax, 0
+    push eax
+    pop ebx
+    pop dx 
+    pop eax
+    pop cx 
+    cmp eax , ebx
+    setne al
+    movzx eax , al
+    mov bl , [INT_TYPE]
+    movzx bx , bl
+    push   bx
+    push eax
+    push eax
+    pop eax
+    mov [condition] ,  eax
+    call pop_base
+    call pop_base
+    call pop_call                  ;; store the return address to eax
+    call pop_call
+    push eax
+    mov eax , [condition]
+    test eax , eax
+    jnz label_1681692777
+    call pop_fcall
+    call pop_fcall
+    pop eax
+    jmp eax                        ;; jmp to return address
+label_1957747793:
+    pop eax                        ;; pop the return address to eax
+    call push_call                 ;; store the return address to ra location
+    mov eax , [pebp]                  ;; store value at pebp to eax
+    call push_stack                   ;; push [pebp] to stack
+    mov eax , [pesp]                  ;; store the value at pesp to eax
+    mov [pebp] , eax                ;; allocate new base pointer
+    mov ecx , [pebp] 
+    mov bx , [ ecx + (28) ]
+    mov eax , [ecx + (28) + 1 ] 
+    push bx
+    push eax
+    mov eax , [pebp]           ;; move address stored in pebp to eax
+    inc dword [eax + (28) + 1]     ;; temp
+    mov ecx , [pebp] 
+    mov bx , [ ecx + (28) ]
+    mov eax , [ecx + (28) + 1 ] 
+    push bx
+    push eax
+    pop eax
+    pop bx
+    mov eax , [eax]             ;; mov value to eax from address stored at eax
+    push bx
+    push eax
+    pop eax
+    pop bx 
+    mov ecx , [pebp]                   
+    mov [ecx + (8)] , bx              
+    mov [ecx + (8) + 1] , eax
+    push bx
+    push eax
+    mov ecx , [pebp] 
+    mov bx , [ ecx + (8) ]
+    mov eax , [ecx + (8) + 1 ] 
+    push bx
+    push eax
+    mov bl , [INT_TYPE]
+    movzx bx , bl
+    push bx
+    mov eax, 0xFF
+    push eax
+    pop eax
+    pop cx 
+    pop ebx
+    pop dx 
+    and eax ,ebx
+    mov bl , [INT_TYPE]
+    movzx bx , bl
+    push bx
+    push eax
+    pop eax
+    pop bx 
+    mov ecx , [pebp]                   
+    mov [ecx + (8)] , bx              
+    mov [ecx + (8) + 1] , eax
+    push bx
+    push eax
+    mov ecx , [pebp] 
+    mov bx , [ ecx + (8) ]
+    mov eax , [ecx + (8) + 1 ] 
+    push bx
+    push eax
+    mov bl , [INT_TYPE]
+    movzx bx , bl
+    push bx
+    mov eax, 110
+    push eax
+    pop ebx
+    pop dx 
+    pop eax
+    pop cx 
+    cmp eax , ebx
+    sete al
+    movzx eax , al
+    mov bl , [INT_TYPE]
+    movzx bx , bl
+    push   bx
+    push eax
+    pop eax
+    test eax , eax
+    lea eax , [.label_1649760492]
+    push eax
+    jnz label_719885386                 ;; jump if expression  is not  zero
+    pop eax
+    lea eax , [.label_1649760492]         ;; save the false label to eax
+    jmp eax
+.label_1649760492:                        ;; defination of false label 
+    mov ecx , [pebp] 
+    mov bx , [ ecx + (8) ]
+    mov eax , [ecx + (8) + 1 ] 
+    push bx
+    push eax
+    mov bl , [INT_TYPE]
+    movzx bx , bl
+    push bx
+    mov eax, 116
+    push eax
+    pop ebx
+    pop dx 
+    pop eax
+    pop cx 
+    cmp eax , ebx
+    sete al
+    movzx eax , al
+    mov bl , [INT_TYPE]
+    movzx bx , bl
+    push   bx
+    push eax
+    pop eax
+    test eax , eax
+    lea eax , [.label_1189641421]
+    push eax
+    jnz label_596516649                 ;; jump if expression  is not  zero
+    pop eax
+    lea eax , [.label_1189641421]         ;; save the false label to eax
+    jmp eax
+.label_1189641421:                        ;; defination of false label 
+    mov eax , [pebp]                   ;; store the value at pebp to eax
+    mov [pesp] , eax                ;; restore the stack pointer
+    call pop_stack                     ;; pop stack top to eax
+    mov [pebp] , eax                    ; restore the base pointer
+    call pop_call                  ;; store the return address to eax
+    jmp eax                        ;; jmp to return address
+label_719885386:
+    pop eax                        ;; pop the return address to eax
+    call push_call                 ;; store the return address to ra location
+    mov eax , [pebp]                  ;; store value at pebp to eax
+    call push_stack                   ;; push [pebp] to stack
+    mov eax , [pesp]                  ;; store the value at pesp to eax
+    mov [pebp] , eax                ;; allocate new base pointer
+    mov bl , [INT_TYPE]
+    movzx bx , bl
+    push bx
+    mov eax, 10
+    push eax
+    pop eax
+    pop bx 
+    mov ecx , [pebp]                   
+    mov [ecx + (12)] , bx              
+    mov [ecx + (12) + 1] , eax
+    push bx
+    push eax
+    mov eax , [pebp]                   ;; store the value at pebp to eax
+    mov [pesp] , eax                ;; restore the stack pointer
+    call pop_stack                     ;; pop stack top to eax
+    mov [pebp] , eax                    ; restore the base pointer
+    call pop_call                  ;; store the return address to eax
+    jmp eax                        ;; jmp to return address
+label_596516649:
+    pop eax                        ;; pop the return address to eax
+    call push_call                 ;; store the return address to ra location
+    mov eax , [pebp]                  ;; store value at pebp to eax
+    call push_stack                   ;; push [pebp] to stack
+    mov eax , [pesp]                  ;; store the value at pesp to eax
+    mov [pebp] , eax                ;; allocate new base pointer
+    mov bl , [INT_TYPE]
+    movzx bx , bl
+    push bx
+    mov eax, 9
+    push eax
+    pop eax
+    pop bx 
+    mov ecx , [pebp]                   
+    mov [ecx + (12)] , bx              
+    mov [ecx + (12) + 1] , eax
+    push bx
+    push eax
+    mov eax , [pebp]                   ;; store the value at pebp to eax
+    mov [pesp] , eax                ;; restore the stack pointer
+    call pop_stack                     ;; pop stack top to eax
+    mov [pebp] , eax                    ; restore the base pointer
+    call pop_call                  ;; store the return address to eax
+    jmp eax                        ;; jmp to return address
 section .rodata
     INT_TYPE: db 1
     FLOAT_TYPE: db 2
     STRING_TYPE: db 3
     REF_TYPE: db 4
+    label_846930886: db " hello world \n", 0
+    label_1804289383: db " hello\t world \n", 0

@@ -4,7 +4,7 @@
 #include <ctype.h>
 #include "../../include/tokens/tokenizer.h"
 
-#define MAX_TOKEN_LENGTH 100
+#define MAX_TOKEN_LENGTH 500
 
 #define INITIAL_CAPACITY 200
 
@@ -16,9 +16,9 @@ typedef struct
 } TokenPattern;
 
 TokenPattern token_patterns[] = {
-    {{0}, "KEYWORD", "\\b(var|if|else|while|return|function|asm|char|int|float|string|continue|break)\\b"}, // KEYWORDS
-    {{0}, "IDENTIFIER", "[a-zA-Z_][a-zA-Z0-9_]*"},                                                          // IDENTIFIER
-    {{0}, "SINGLE_LINE_COMMENT", "\\/\\/[^\\n]*"},                                                          // Single-line comments
+    {{0}, "KEYWORD", "\\b(var|if|else|while|return|function|asm|char|int|float|string|continue|break|typeof)\\b"}, // KEYWORDS
+    {{0}, "IDENTIFIER", "[a-zA-Z_][a-zA-Z0-9_]*"},                                                                 // IDENTIFIER
+    {{0}, "SINGLE_LINE_COMMENT", "\\/\\/[^\\n]*"},                                                                 // Single-line comments
     // {{0}, "MULTI_LINE_COMMENT", "/\\*([^*]|\\*+[^/*])*\\*+/"}  ,                  // Multi-line comments                                           // NUMBER
     {{0}, "INVALID_IDENTIFIER", "[0-9]+\\.[a-zA-Z]+"},
     {{0}, "HEX", "0[x][0-9a-fA-F]+"},
@@ -27,7 +27,7 @@ TokenPattern token_patterns[] = {
     {{0}, "INTEGER", "[+-]?[0-9]+"},
 
     {{0}, "CONDITIONAL_OPERATOR", "==|!=|<=|>=|<|>"},
-    {{0}, "OPERATOR", "[&|!@+*/=-]"},                      // OPERATOR                                                       // CONDITIONAL OPERATORS
+    {{0}, "OPERATOR", "[%&|!@+*/=-]"},                      // OPERATOR                                                       // CONDITIONAL OPERATORS
     {{0}, "PUNCTUATION", "\\(|\\)|\\{|\\}|\\[|\\]|:|;|,"}, // PUNCTUATION
     {{0}, "STRING_CONSTANT", "\"[^\"]*\"|'[^']*'"},        // STRING CONSTANT
 
@@ -439,6 +439,10 @@ char *getTokenStringValue(int token)
         return "CONTINUE";
     case BREAK:
         return "BREAK";
+    case TYPEOF:
+        return "TYPEOF";
+    case MODULAS :
+        return "MODULAS";
 
     default:
         return "UNKNOWN";
@@ -609,6 +613,14 @@ void fillTokenValue(Token *token)
         token->value = BREAK;
         break;
 
+    case INT_TOKEN_TYPEOF:
+        token->value = TYPEOF;
+        break;
+    
+    case INT_TOKEN_MODULAS:
+        token->value = MODULAS;
+        break;
+
     default:
         token->value = UNKNOWN;
     }
@@ -634,12 +646,14 @@ int getTokenIntCodeValue(char *token)
     if(strcmp("string",token)== 0)      return INT_TOKEN_STRING;
     if(strcmp("continue",token) == 0)   return INT_TOKEN_CONTINUE;
     if(strcmp("break",token) == 0)      return INT_TOKEN_BREAK;
+    if(strcmp("typeof",token) == 0)     return INT_TOKEN_TYPEOF;
     
     if (strcmp(token, "+") == 0)        return INT_TOKEN_PLUS;
     if (strcmp(token, "-") == 0)        return INT_TOKEN_MINUS;
     if (strcmp(token, "*") == 0)        return INT_TOKEN_MUL;
     if (strcmp(token, "/") == 0)        return INT_TOKEN_DIV;
-    if (strcmp(token,"@") == 0)          return INT_TOKEN_VALUE_AT;
+    if(strcmp(token , "%") == 0)        return INT_TOKEN_MODULAS;
+    if (strcmp(token,"@") == 0)         return INT_TOKEN_VALUE_AT;
     if (strcmp(token, "=") == 0)        return INT_TOKEN_ASSIGN;
     if (strcmp(token, "==") == 0)       return INT_TOKEN_EQUALS;
     if (strcmp(token, "(") == 0)        return INT_TOKEN_OPEN_PAREN;

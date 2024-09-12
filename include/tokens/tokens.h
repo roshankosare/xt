@@ -57,6 +57,8 @@
 #define INT_TOKEN_CONTINUE              52
 #define INT_TOKEN_BREAK                 53
 #define INT_TOKEN_ARG                   54
+#define INT_TOKEN_TYPEOF                55
+#define INT_TOKEN_MODULAS               56
 #define INVALID_TOKEN                   -1
 
 
@@ -126,6 +128,8 @@ typedef enum
     CONTINUE,
     BREAK,
     ARG,
+    TYPEOF,
+    MODULAS,
     TEOF
     
 } TokenValue;
