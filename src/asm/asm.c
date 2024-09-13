@@ -432,6 +432,10 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
             fprintf(fp, "    mov [RETURN_VALUE + 1] , eax\n");
         }
         char *label_loop = label_generate();
+        fprintf(fp, "    call pop_base\n"); // stack pointer
+        fprintf(fp, "    mov [pesp] , eax\n");
+        fprintf(fp, "    call pop_base\n"); // base pointer
+        fprintf(fp, "    mov [pebp] , eax \n");
         fprintf(fp, "    call pop_fcall\n");
         fprintf(fp, "    mov [RETURN_ADDRESS], eax\n");
         fprintf(fp, ".%s:                                 ;; function to clean up call stack \n", label_loop);

@@ -1,33 +1,160 @@
+var a = 0;
+var MSIZE = 0;
+var MMEM = 0;
+var STR_LENGTH = 0;
+var STR_POINTER = 0;
+var  k = 505 % 10;
+var TYPE_INT = 1;
+var TYPE_FLOAT = 2;
+var TYPE_STRING  = 3;
+var TYPE_REF = 4;
 
+function memalloc(size){
 
-function add ( x , y){
    var length = 10;
-   while(length > 0){
-      if(length  ==  5){
-         length--;
-         break;
-      }
+   MSIZE = size;
+   asm([
+      "mov eax , [MSIZE]",
+      "mov ecx , eax",
+      "call malloc",
+      "mov bl , [REF_TYPE]",
+      "movzx bx , bl",
+      "mov [MMEM] , bx",
+      "mov [MMEM + 1] , eax",
+   ]);
+  return MMEM;
+}
+
+function print_int(x){
+   var temp = x;
+   var buffer_size = 12;
+   var buffer = memalloc(buffer_size);
+  
+   var temp_buffer = buffer;
+   
+   if( x  == 0){
+      @temp_buffer = 48;
+      temp_buffer++;
+      @temp_buffer = 0;
+      return buffer;
+   }
+   var ch = 0;
+   var length = 0;
+   while(temp > 0 ){
+      length++;
+      ch = 0;
+      ch = temp % 10;
+      ch = ch + 48;
+      @temp_buffer = ch;
+      temp_buffer++;
+      temp = temp / 10;
+   } 
+   var string_number = memalloc(buffer_size);
+   buffer = string_number;
+   while( length >= 0){
+      ch = @temp_buffer;
+      ch = ch & 0xFF;
+      @string_number = ch;
+      string_number++;
+      temp_buffer--;
       length--;
-      asm(["pop eax" ,"pop bx"  , "call print_eax"]);
+   }
+   @string_number = 0;
+   return buffer;  
+}
+
+function print(x){
+   
+   var t = typeof(x);
+   
+   if( typeof(x) == 1 ){
+
+      var buffer = print_int(x);
+     
+      STR_LENGTH = 10;
+      STR_POINTER = buffer;
       
-   }
-length = 50;
-return length;
-}
-
-function fun(x){
-
-   var j = 6;
-   while( x > 3){
-      x--;
+      asm([    "mov ecx , [STR_POINTER + 1 ]   ;; file str pointer",
+            "mov edx , [STR_LENGTH  + 1]    ;; str length",                   
+            "mov eax, 4                ",
+            "mov ebx, 1                        ; file descriptor 1 (stdout)",             
+            "int 0x80                          ; make syscall to write",
+         ]);
+      return;
    }
 
- return 99;
-}
+   var length = 0;
+   var temp = x;
+   var maxBuffer = 1024;
+   var buffer = memalloc(maxBuffer); 
+   var tempBuffer = buffer;
+   
+   var ch = 0;
+   ch = @temp;  
+   
+    ch = ch & 0xFF;
+    var z = 10;
+   while(ch != 0){
+    
+      ch = @temp;
+      ch = ch & 0xFF;
+      //asm(["pop eax" ,"pop bx"  , "call print_eax"]);
+      if(ch == 92){ 
+         // 92 is ASCII for  '/' character
+         temp++;
+         ch = @temp;
+         ch = ch & 0xFF;
+         if(ch == 110){
+            // 110 is ASCII for 'n'
+            ch = 10;  // 10 is ASCII for new line
+         }
+         if(ch == 116){
+            // 116 is ASCII for 't'
+            ch = 9; // 9 is ASSCII for tab
+         }
+      }
 
-var x = add( 50 , 60);
-asm(["pop eax" ,"pop bx"  , "call print_eax"]);
+      //if(ch == )
+      @tempBuffer = ch;
+      temp++;
+      tempBuffer++;
+      length++;
+   }
 
-x = fun(x);
-asm(["pop eax" ,"pop bx"  , "call print_eax"]);
+  
+   
+   STR_LENGTH = length;
+   STR_POINTER = buffer;
+   
+  
+   asm([    "mov ecx , [STR_POINTER + 1 ]   ;; file str pointer",
+            "mov edx , [STR_LENGTH  + 1]    ;; str length",                   
+            "mov eax, 4                ",
+            "mov ebx, 1                        ; file descriptor 1 (stdout)",             
+            "int 0x80                          ; make syscall to write",
+         ]);
+      
+ }
+
+
+
+ var msg = " hello\t world \n";
+print(msg);
+var i = 12345;
+print(i);
+print("\n");
+print(0);
+
+
+
+
+
+ 
+
+
+
+ 
+
+
+
 
