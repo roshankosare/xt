@@ -139,15 +139,14 @@ function print(x){
 function print_series(x){
    var i = x;
 
-
+   var k = 0;
    while( i > 0){
-      if ( i < 30){
-   break;
-}
-   if(i  == 40){
+   
+   if( i % 2 == 0){
       i--;
       continue;
    }
+   
    print(i);
    print("\n");
    i--;
@@ -165,7 +164,6 @@ print(msg);
 var i = 12345;
 print(i);
 print("\n");
-print(0);
 
 i = 50;
 print_series(i);

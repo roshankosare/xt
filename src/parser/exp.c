@@ -343,7 +343,7 @@ ASTNode *parse_multi(Context *context)
 {
     ASTNode *primaryLeft = parse_primary(context);
     ASTNode *node = primaryLeft;
-    while (match(context, MUL) || match(context, DIV))
+    while (match(context, MUL) || match(context, DIV) || match(context,MODULAS))
     {
         Token opToken = context->current;
         consume(context);
