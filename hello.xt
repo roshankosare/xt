@@ -136,6 +136,28 @@ function print(x){
       
  }
 
+function print_series(x){
+   var i = x;
+
+
+   while( i > 0){
+      if ( i < 30){
+   break;
+}
+   if(i  == 40){
+      i--;
+      continue;
+   }
+   print(i);
+   print("\n");
+   i--;
+   if(i < 10){
+      return;
+   }
+   
+}
+print("nice");
+}
 
 
  var msg = " hello\t world \n";
@@ -144,6 +166,10 @@ var i = 12345;
 print(i);
 print("\n");
 print(0);
+
+i = 50;
+print_series(i);
+
 
 
 

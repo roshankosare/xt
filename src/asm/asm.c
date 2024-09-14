@@ -4,6 +4,7 @@
 #include "../../include/symboltable/symboltable.h"
 #include "../../include/litrals/litrals.h"
 #include "../../include/asm/asmcontext.h"
+#include "../../include/asm/stacks.h"
 #include <assert.h>
 #include <string.h>
 
@@ -11,11 +12,6 @@ void translateGlobalVar(ASTNode *ast, FILE *fp);
 void generateLabels(Context *context, FILE *fp);
 void tranlateLocalVar(ASTNode *ast, FILE *fp);
 void createLitralConstansts(Context *Context, FILE *fp);
-void call_stack_operations(FILE *fp);
-void param_stack_operations(FILE *fp);
-void function_base_stack_operations(FILE *fp);
-void function_call_stack_operations(FILE *fp);
-void loop_call_stack_operations(FILE *fp);
 void print_eax(FILE *fp);
 void printDelay(FILE *fp);
 void printMemAlloc(FILE *fp);
@@ -24,12 +20,7 @@ void createASMFile(ASTNode *ast, Context *context, FILE *fp)
 {
     fprintf(fp, "section .data                        ;; Section for initialized data\n");
     translateGlobalVar(ast, fp);
-    fprintf(fp, "    call_stack_top dd 0\n");
-    fprintf(fp, "    fcall_stack_top dd 0\n");
-    fprintf(fp, "    base_stack_top dd 0\n");
-    fprintf(fp, "    lcall_stack_top dd 0\n");
-    fprintf(fp, "    pesp dd 0\n");
-    fprintf(fp, "    pebp dd 0\n");
+
     fprintf(fp, "    buffer db '0000000000', 0       ; Buffer to hold the converted number (10 digits max)\n");
     fprintf(fp, "    len equ 10                      ; Length of the buffer\n");
     fprintf(fp, "    space db  \" \"                       ; Space character to print\n");
@@ -47,11 +38,6 @@ void createASMFile(ASTNode *ast, Context *context, FILE *fp)
     // fprintf(fp, "        next dd 0\n");
 
     fprintf(fp, "section .bss\n");
-    fprintf(fp, "    call_stack resb 1024               ;; Reserve 1024 bytes (4 KB) for the call stack\n");
-    fprintf(fp, "    param_stack resb 1024              ;; Reserve 1024 bytes (4 KB) for the param stack\n");
-    fprintf(fp, "    fcall_stack resb 1024               ;; Reserve 1024 bytes (4 KB) for the call stack\n");
-    fprintf(fp, "    base_stack resb 1024              ;; Reserve 1024 bytes (4 KB) for the param stack\n");
-    fprintf(fp, "    lcall_stack resb 1024           ;; Reserve 1024 bytes (4 KB) for the param stack\n");
     fprintf(fp, "\n");
 
     fprintf(fp, "section .text                        ;; Section for code\n");
@@ -70,6 +56,9 @@ void createASMFile(ASTNode *ast, Context *context, FILE *fp)
     fprintf(fp, "    mov eax , lcall_stack + 1024\n");
     fprintf(fp, "    mov [lcall_stack_top] , eax\n");
 
+    fprintf(fp, "    mov eax , loop_base_stack + 1024\n");
+    fprintf(fp, "    mov [loop_base_stack_top] , eax\n");
+
     fprintf(fp, "    mov eax , param_stack + 1024\n");
     fprintf(fp, "    mov [pesp] , eax\n");
 
@@ -81,11 +70,7 @@ void createASMFile(ASTNode *ast, Context *context, FILE *fp)
     fprintf(fp, "    xor ebx, ebx                     ;; exit code 0\n");
     fprintf(fp, "    int 0x80                         ;; make syscall\n");
 
-    call_stack_operations(fp);
-    function_base_stack_operations(fp);
-    function_call_stack_operations(fp);
-    loop_call_stack_operations(fp);
-    param_stack_operations(fp);
+    print_stakcs_operations(fp);
     print_eax(fp);
     printDelay(fp);
     printMemAlloc(fp);
@@ -481,24 +466,26 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
 
     case CONTINUE:
     {
-        fprintf(fp, "    call pop_base\n");
+        fprintf(fp, "    call pop_lbase\n");
         fprintf(fp, "    mov [pesp] , eax\n");
-        fprintf(fp, "    call pop_base\n");
+        fprintf(fp, "    call pop_lbase\n");
         fprintf(fp, "    mov [pebp] , eax\n");
 
         // fprintf(fp, "    lea eax , [%s]\n", );
-        fprintf(fp, "    call pop_lcall\n");
+        fprintf(fp, "    call pop_lcall\n"); // pop while loop address
+        fprintf(fp, "    push eax\n");
+        fprintf(fp, "    call pop_lcall\n"); // address of instruction after while loop
         fprintf(fp, "    mov [RETURN_ADDRESS] , eax\n");
         fprintf(fp, ".loop:                                 ;; function to clean up call stack \n");
         fprintf(fp, "    call pop_call\n");
         fprintf(fp, "    mov [POPED_ADDRESS] , eax\n");
-
         fprintf(fp, "    mov eax ,[POPED_ADDRESS]\n");
         fprintf(fp, "    cmp eax, [RETURN_ADDRESS]\n");
         fprintf(fp, "    jne .loop\n");
-        fprintf(fp, "    call pop_lcall\n");
-        fprintf(fp, "    call pop_call\n");
-        fprintf(fp, "    push eax\n");
+        fprintf(fp, "    pop eax\n");                    // loop addresss
+        fprintf(fp, "    mov ebx , [RETURN_ADDRESS]\n"); // return address
+        fprintf(fp, "    mov [RETURN_ADDRESS] , eax\n");
+        fprintf(fp, "    push ebx\n");
         fprintf(fp, "    mov eax , [RETURN_ADDRESS]\n");
         fprintf(fp, "    jmp eax\n");
     }
@@ -507,13 +494,15 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
     case BREAK:
     {
 
-        fprintf(fp, "    call pop_base\n"); // pop base pesp stack pointer
-        fprintf(fp, "    mov [pesp] , eax                ;; restore the base pointer\n");
-        fprintf(fp, "    call pop_base\n"); // pop base pesp stack pointer
-        fprintf(fp, "    mov [pebp] , eax                ;; restore the base pointer\n");
-        fprintf(fp, "    call pop_lcall\n");
-        fprintf(fp, "    call pop_lcall\n");
-        fprintf(fp, "    mov [RETURN_ADDRESS], eax\n");
+        fprintf(fp, "    call pop_lbase\n");
+        fprintf(fp, "    mov [pesp] , eax\n");
+        fprintf(fp, "    call pop_lbase\n");
+        fprintf(fp, "    mov [pebp] , eax\n");
+
+        // fprintf(fp, "    lea eax , [%s]\n", );
+        fprintf(fp, "    call pop_lcall\n"); // pop while loop address
+        fprintf(fp, "    call pop_lcall\n"); // address of instruction after while loop
+        fprintf(fp, "    mov [RETURN_ADDRESS] , eax\n");
         fprintf(fp, ".loop:                                 ;; function to clean up call stack \n");
         fprintf(fp, "    call pop_call\n");
         fprintf(fp, "    mov [POPED_ADDRESS] , eax\n");
@@ -947,9 +936,9 @@ void generateLabels(Context *context, FILE *fp)
             fprintf(fp, "    lea eax , [%s]\n", current->label);
             fprintf(fp, "    call push_lcall\n");
             fprintf(fp, "    mov eax , [pebp]\n");
-            fprintf(fp, "    call push_base\n");
+            fprintf(fp, "    call push_lbase\n");
             fprintf(fp, "    mov eax , [pesp]\n");
-            fprintf(fp, "    call push_base\n");
+            fprintf(fp, "    call push_lbase\n");
             translate(current->ast->right, context, fp);
             translate(current->ast->left, context, fp);
             fprintf(fp, "    pop eax\n");
@@ -959,9 +948,9 @@ void generateLabels(Context *context, FILE *fp)
             // fprintf(fp, "    mov ecx , 100000000\n");
             // fprintf(fp, "    call delay\n");
             // fprintf(fp, "    call delay\n");
-            fprintf(fp, "    call pop_base\n"); // stack pointer
+            fprintf(fp, "    call pop_lbase\n"); // stack pointer
             fprintf(fp, "    mov [pesp] , eax\n");
-            fprintf(fp, "    call pop_base\n"); // base pointer
+            fprintf(fp, "    call pop_lbase\n"); // base pointer
             fprintf(fp, "    mov [pebp] , eax \n");
             fprintf(fp, "    call pop_lcall\n");
             fprintf(fp, "    call pop_lcall\n");
@@ -1044,116 +1033,6 @@ void generateLabels(Context *context, FILE *fp)
         // step 2 :  pop  from astStack
         current = popFromASTQueueFront(context->astQueue);
     }
-}
-
-void call_stack_operations(FILE *fp)
-{
-
-    // push stack method
-    fprintf(fp, ";; this method is used for pushing the return address to stack store in eax register\n");
-    fprintf(fp, "push_call:\n");
-    fprintf(fp, "   sub dword [call_stack_top] , 4              ;; decrement stack by 4\n");
-    fprintf(fp, "   mov ebx , [call_stack_top]                  ;; load value of call_stack_top to ebx\n");
-    fprintf(fp, "   mov dword [ebx] , eax                       ;; store the value of eax to location stored in ebx\n ");
-    fprintf(fp, "   ret\n");
-
-    // pop stack method
-    fprintf(fp, ";; this method is used for poping the return address from stack and  store  it in eax register\n");
-    fprintf(fp, "pop_call:\n");
-    fprintf(fp, "   mov eax , [call_stack_top]                  ;; load value of call_stack_top to eax\n");
-    fprintf(fp, "   mov eax , [eax]                             ;; load value from addressed stored in eax to eax\n ");
-    fprintf(fp, "   add dword [call_stack_top] , 4          ;; increment stack by 4\n");
-    fprintf(fp, "   ret\n");
-
-    return;
-}
-
-void function_base_stack_operations(FILE *fp)
-{
-
-    // push stack method
-    fprintf(fp, ";; this method is used for pushing the callers base address to stack store in eax register\n");
-    fprintf(fp, "push_base:\n");
-    fprintf(fp, "   sub dword [base_stack_top] , 4              ;; decrement stack by 4\n");
-    fprintf(fp, "   mov ebx , [base_stack_top]                  ;; load value of call_stack_top to ebx\n");
-    fprintf(fp, "   mov dword [ebx] , eax                       ;; store the value of eax to location stored in ebx\n ");
-    fprintf(fp, "   ret\n");
-
-    // pop stack method
-    fprintf(fp, ";; this method is used for poping  callers base address from stack and  store  it in eax register\n");
-    fprintf(fp, "pop_base:\n");
-    fprintf(fp, "   mov eax , [base_stack_top]                  ;; load value of call_stack_top to eax\n");
-    fprintf(fp, "   mov eax , [eax]                             ;; load value from addressed stored in eax to eax\n ");
-    fprintf(fp, "   add dword [base_stack_top] , 4          ;; increment stack by 4\n");
-    fprintf(fp, "   ret\n");
-
-    return;
-}
-
-void function_call_stack_operations(FILE *fp)
-{
-
-    // push stack method
-    fprintf(fp, ";; this method is used for pushing the callers return address to stack store in eax register\n");
-    fprintf(fp, "push_fcall:\n");
-    fprintf(fp, "   sub dword [fcall_stack_top] , 4              ;; decrement stack by 4\n");
-    fprintf(fp, "   mov ebx , [fcall_stack_top]                  ;; load value of call_stack_top to ebx\n");
-    fprintf(fp, "   mov dword [ebx] , eax                       ;; store the value of eax to location stored in ebx\n ");
-    fprintf(fp, "   ret\n");
-
-    // pop stack method
-    fprintf(fp, ";; this method is used for poping the callers return address from stack and  store  it in eax register\n");
-    fprintf(fp, "pop_fcall:\n");
-    fprintf(fp, "   mov eax , [fcall_stack_top]                  ;; load value of call_stack_top to eax\n");
-    fprintf(fp, "   mov eax , [eax]                             ;; load value from addressed stored in eax to eax\n ");
-    fprintf(fp, "   add dword [fcall_stack_top] , 4          ;; increment stack by 4\n");
-    fprintf(fp, "   ret\n");
-
-    return;
-}
-
-void loop_call_stack_operations(FILE *fp)
-{
-
-    // push stack method
-    fprintf(fp, ";; this method is used for pushing the loop return address to stack store in eax register\n");
-    fprintf(fp, "push_lcall:\n");
-    fprintf(fp, "   sub dword [lcall_stack_top] , 4              ;; decrement stack by 4\n");
-    fprintf(fp, "   mov ebx , [lcall_stack_top]                  ;; load value of call_stack_top to ebx\n");
-    fprintf(fp, "   mov dword [ebx] , eax                       ;; store the value of eax to location stored in ebx\n ");
-    fprintf(fp, "   ret\n");
-
-    // pop stack method
-    fprintf(fp, ";; this method is used for poping the callers return address from stack and  store  it in eax register\n");
-    fprintf(fp, "pop_lcall:\n");
-    fprintf(fp, "   mov eax , [lcall_stack_top]                  ;; load value of call_stack_top to eax\n");
-    fprintf(fp, "   mov eax , [eax]                             ;; load value from addressed stored in eax to eax\n ");
-    fprintf(fp, "   add dword [lcall_stack_top] , 4          ;; increment stack by 4\n");
-    fprintf(fp, "   ret\n");
-
-    return;
-}
-
-void param_stack_operations(FILE *fp)
-{
-
-    // push stack method
-    fprintf(fp, ";; this method is used for pushing the return address to stack store in eax register\n");
-    fprintf(fp, "push_stack:\n");
-    fprintf(fp, "   sub dword [pesp] , 4                         ;; decrement stack by 4\n");
-    fprintf(fp, "   mov ebx , [pesp]                             ;; load value of stack_top to ebx\n");
-    fprintf(fp, "   mov dword [ebx] , eax                       ;; store the value of eax to location stored in ebx\n ");
-    fprintf(fp, "   ret\n");
-
-    // pop stack method
-    fprintf(fp, ";; this method is used for poping the return address from stack and  store  it in eax register\n");
-    fprintf(fp, "pop_stack:\n");
-    fprintf(fp, "   mov eax , [pesp]                             ;; load value of call_stack_top to eax\n");
-    fprintf(fp, "   mov eax , [eax]                             ;; load value from addressed stored in eax to eax\n ");
-    fprintf(fp, "   add dword [pesp] , 4          ;; increment stack by 4\n");
-    fprintf(fp, "   ret\n");
-
-    return;
 }
 
 void print_eax(FILE *fp)

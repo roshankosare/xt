@@ -4,9 +4,13 @@ section .data
 
     message2 db "Goodbye, World!", 0xA  ; Second string to print with a newline
     len2 equ $ - message2             ; Length of the second string
+section .bss
 
 section .text
     global _start
+
+
+
 
 _start:
     ; Call print with the first message
