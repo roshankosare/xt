@@ -29,15 +29,15 @@ function print_int(x){
    var temp = x;
    var buffer_size = 12;
    var buffer = memalloc(buffer_size);
-  
    var temp_buffer = buffer;
-   
+   x;
    if( x  == 0){
       @temp_buffer = 48;
       temp_buffer++;
       @temp_buffer = 0;
       return buffer;
    }
+    
    var ch = 0;
    var length = 0;
    while(temp > 0 ){
@@ -48,6 +48,7 @@ function print_int(x){
       @temp_buffer = ch;
       temp_buffer++;
       temp = temp / 10;
+     
    } 
    var string_number = memalloc(buffer_size);
    buffer = string_number;
@@ -60,6 +61,7 @@ function print_int(x){
       length--;
    }
    @string_number = 0;
+  
    return buffer;  
 }
 
@@ -68,7 +70,6 @@ function print(x){
    var t = typeof(x);
    
    if( typeof(x) == 1 ){
-
       var buffer = print_int(x);
      
       STR_LENGTH = 10;
@@ -161,8 +162,11 @@ print("nice");
 
  var msg = " hello\t world \n";
 print(msg);
+
 var i = 12345;
+
 print(i);
+
 print("\n");
 
 i = 50;

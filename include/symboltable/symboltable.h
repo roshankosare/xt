@@ -21,6 +21,7 @@ typedef struct SymbolTableEntry
     struct SymbolTableEntry *next;
     Type type; // Pointer to the next entry (for handling collisions in the hash table)
     int symbolOffset;
+    int scopeOffset;
 } SymbolTableEntry;
 
 // Symbol table structure
@@ -46,7 +47,7 @@ SymbolTable *initSymbolTable();
 void pushSymbolTable(SymbolTableStack *stack, SymbolTable *SymbolTable);
 SymbolTable *popSymbolTable(SymbolTableStack *stack);
 SymbolTable *getTopSymbolTable(SymbolTableStack *stack);
-SymbolTableEntry *createEntry(Token t, int scope,int offset);
+SymbolTableEntry *createEntry(Token t, int scope,int offset , int scopeOffset);
 unsigned int hash(char *name);
 void insertSymbol(SymbolTableStack *stack, Token t);
 SymbolTableEntry *lookupSymbol(SymbolTableStack *stack, Token t);

@@ -60,7 +60,7 @@ SymbolTable *getTopSymbolTable(SymbolTableStack *stack)
 }
 
 // Function to create a new symbol table entry
-SymbolTableEntry *createEntry(Token t, int scope, int offset)
+SymbolTableEntry *createEntry(Token t, int scope, int offset,int scopeOffset)
 {
     SymbolTableEntry *newEntry = (SymbolTableEntry *)malloc(sizeof(SymbolTableEntry));
     newEntry->token = t;
@@ -95,7 +95,15 @@ void insertSymbol(SymbolTableStack *stack, Token t)
     // TODO handle to calculate offset based on data type of symbol int = 4byte char = 2yte float= 4byte
     int offset = stack->top->offset;
     offset = offset + 5;
-    SymbolTableEntry *newEntry = createEntry(t, stack->scope, offset);
+
+    int scopeOffset = 0;
+    SymbolTable *tempStack = stack->top->next;
+    while(tempStack != NULL){
+        scopeOffset = tempStack->offset + scopeOffset + 4;
+        tempStack = tempStack->next;
+    }
+
+    SymbolTableEntry *newEntry = createEntry(t, stack->scope, offset ,scopeOffset);
     stack->top->offset = offset;
     newEntry->next = stack->top->table[index];
     stack->top->table[index] = newEntry;
@@ -139,7 +147,8 @@ void insertSymbolInSymbolTable(SymbolTable *symbolTable, Token t)
     unsigned int index = hash(t.lexeme);
     int offset  = symbolTable->offset + 5;
     symbolTable->offset = offset;
-    SymbolTableEntry *newEntry = createEntry(t, 2, offset);
+    int scopeOffset = 0;
+    SymbolTableEntry *newEntry = createEntry(t, 2, offset,scopeOffset);
     newEntry->isDefined = 1;
     newEntry->next = symbolTable->table[index];
     symbolTable->table[index] = newEntry;

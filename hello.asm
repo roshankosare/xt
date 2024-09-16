@@ -1,4 +1,10 @@
 section .data
+    space db  " "                       ; Space character to print
+
+    len equ 10                      ; Length of the buffer
+
+    buffer db '0000000000', 0       ; Buffer to hold the converted number (10 digits max)
+
     lcall_stack_top dd 0
 
     fcall_stack_top dd 0
@@ -12,29 +18,35 @@ section .data
     pesp dd 0
 
     call_stack_top dd 0
-                        ;; Section for initialized data
-    a dd 5 dup(0)
-    MSIZE dd 5 dup(0)
-    MMEM dd 5 dup(0)
-    STR_LENGTH dd 5 dup(0)
-    STR_POINTER dd 5 dup(0)
-    k dd 5 dup(0)
-    TYPE_INT dd 5 dup(0)
-    TYPE_FLOAT dd 5 dup(0)
-    TYPE_STRING dd 5 dup(0)
-    TYPE_REF dd 5 dup(0)
-    msg dd 5 dup(0)
+
     i dd 5 dup(0)
-    buffer db '0000000000', 0       ; Buffer to hold the converted number (10 digits max)
-    len equ 10                      ; Length of the buffer
-    space db  " "                       ; Space character to print
+
+    msg dd 5 dup(0)
+
+    TYPE_REF dd 5 dup(0)
+
+    TYPE_STRING dd 5 dup(0)
+
+    TYPE_FLOAT dd 5 dup(0)
+
+    TYPE_INT dd 5 dup(0)
+
+    k dd 5 dup(0)
+
+    STR_POINTER dd 5 dup(0)
+
+    STR_LENGTH dd 5 dup(0)
+
+    MMEM dd 5 dup(0)
+
+    MSIZE dd 5 dup(0)
+
+    a dd 5 dup(0)
+                        ;; Section for initialized data
     condition dd 5 dup(0)
-    BASE_ESP dd 0
-    BASE_RETURN dd 0
     RETURN_VALUE dd 5 dup(0)
     RETURN_ADDRESS dd 0
     POPED_ADDRESS dd 0
-    NUM_REF_ALLO dd 0
 section .bss
     lcall_stack resb 1024           ;; Reserve 1024 bytes (4 KB) for the param stack
 
@@ -450,6 +462,17 @@ malloc:
      pop ebp            ; Restore ebp
      pop esi            ; Restore esi
      ret
+free:
+    push esi            ; Save esi on the stack
+    push ebp            ; Save ebp on the stack
+    xor eax, eax        ; Clear eax
+    mov al, 11          ; sys_munmap system call number (11)
+    ; ecx should contain the address of the memory to be freed
+    ; edx should contain the size of the memory region
+    int 0x80            ; Call kernel to perform munmap
+    pop ebp             ; Restore ebp
+    pop esi             ; Restore esi
+    ret
 memalloc:
     pop eax                        ;; pop the return address to eax
     call push_call                 ;; store the return address to ra location
@@ -617,6 +640,12 @@ print_int:
     mov ecx , [pebp]                   
     mov [ecx + (-20)] , bx              
     mov [ecx + (-20) + 1] , eax
+    push bx
+    push eax
+    mov ecx , [pebp] 
+    mov bl , [ ecx + (4) ]
+    movzx bx , bl 
+    mov eax , [ecx + (4) + 1 ] 
     push bx
     push eax
     mov ecx , [pebp] 
