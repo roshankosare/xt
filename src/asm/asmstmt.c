@@ -62,7 +62,7 @@ void print_var(ASTNode *ast, Context *context, FILE *fp)
         }
         else
         {
-            // fprintf(fp, "    sub dword [pesp] , 5\n");
+            fprintf(fp, "    sub dword [pesp] , 5\n");
         }
         translate(ast->right, context, fp);
         return;
@@ -76,7 +76,7 @@ void print_var(ASTNode *ast, Context *context, FILE *fp)
     }
     else
     {
-        // fprintf(fp, "    sub dword [pesp] , 5\n");
+        fprintf(fp, "    sub dword [pesp] , 5\n");
     }
     return;
 }
@@ -225,7 +225,7 @@ void print_body_start(ASTNode *ast, Context *context, FILE *fp)
     fprintf(fp, "    mov [pebp] , eax                ;; allocate new base pointer\n");
     // fprintf(fp, "    push ebp                ; Save base pointer\n");
     // fprintf(fp, "    mov ebp, esp            ; Establish new base pointer\n");
-    tranlateLocalVar(ast->right, fp);
+    // tranlateLocalVar(ast->right, fp);
     SymbolTable *symboltable = getSymboTableFromQueue(context);
     pushSymbolTable(context->symbolTableStack, symboltable);
     // pushSymbolTable(context->symbolTableTempStack, symboltable);

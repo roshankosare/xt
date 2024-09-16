@@ -566,12 +566,6 @@ print_int:
     mov eax , [pesp]                  ;; store the value at pesp to eax
     mov [pebp] , eax                ;; allocate new base pointer
     sub dword [pesp] , 5
-    sub dword [pesp] , 5
-    sub dword [pesp] , 5
-    sub dword [pesp] , 5
-    sub dword [pesp] , 5
-    sub dword [pesp] , 5
-    sub dword [pesp] , 5
     mov ecx , [pebp] 
     mov bl , [ ecx + (4) ]
     movzx bx , bl 
@@ -585,6 +579,7 @@ print_int:
     mov [ecx + (-5) + 1] , eax
     push bx
     push eax
+    sub dword [pesp] , 5
     mov bl , [INT_TYPE]
     movzx bx , bl
     push bx
@@ -597,6 +592,7 @@ print_int:
     mov [ecx + (-10) + 1] , eax
     push bx
     push eax
+    sub dword [pesp] , 5
     mov ecx , [pebp] 
     mov bl , [ ecx + (-10) ]
     movzx bx , bl 
@@ -629,6 +625,7 @@ print_int:
     mov [ecx + (-15) + 1] , eax
     push bx
     push eax
+    sub dword [pesp] , 5
     mov ecx , [pebp] 
     mov bl , [ ecx + (-15) ]
     movzx bx , bl 
@@ -679,6 +676,7 @@ print_int:
     lea eax , [.label_1957747793]         ;; save the false label to eax
     jmp eax
 .label_1957747793:                        ;; defination of false label 
+    sub dword [pesp] , 5
     mov bl , [INT_TYPE]
     movzx bx , bl
     push bx
@@ -691,6 +689,7 @@ print_int:
     mov [ecx + (-25) + 1] , eax
     push bx
     push eax
+    sub dword [pesp] , 5
     mov bl , [INT_TYPE]
     movzx bx , bl
     push bx
@@ -738,6 +737,7 @@ print_int:
     lea eax , [.label_719885386]         ;; save the false label to eax
     jmp eax
 .label_719885386:                        ;; defination of false label 
+    sub dword [pesp] , 5
     mov ecx , [pebp] 
     mov bl , [ ecx + (-10) ]
     movzx bx , bl 
@@ -881,17 +881,17 @@ label_1714636915:
     pop eax
     pop bx 
     mov ebx , [pebp]                    
-    mov ebx , [ebx + (19) + 1]           
+    mov ebx , [ebx + (4) + 1]           
     mov [ebx] , eax   ;;temp_buffer
     push eax
     mov ecx , [pebp] 
-    mov bl , [ ecx + (19) ]
+    mov bl , [ ecx + (4) ]
     movzx bx , bl 
-    mov eax , [ecx + (19) + 1 ] 
+    mov eax , [ecx + (4) + 1 ] 
     push bx
     push eax
     mov eax , [pebp]           ;; move address stored in pebp to eax
-    inc dword [eax + (19) + 1]     ;; temp_buffer
+    inc dword [eax + (4) + 1]     ;; temp_buffer
     mov bl , [INT_TYPE]
     movzx bx , bl
     push bx
@@ -900,15 +900,15 @@ label_1714636915:
     pop eax
     pop bx 
     mov ebx , [pebp]                    
-    mov ebx , [ebx + (19) + 1]           
+    mov ebx , [ebx + (4) + 1]           
     mov [ebx] , eax   ;;temp_buffer
     push eax
     mov  byte [RETURN_VALUE] , 0
     mov  dword [RETURN_VALUE + 1] , 0
     mov ecx , [pebp] 
-    mov bl , [ ecx + (24) ]
+    mov bl , [ ecx + (9) ]
     movzx bx , bl 
-    mov eax , [ecx + (24) + 1 ] 
+    mov eax , [ecx + (9) + 1 ] 
     push bx
     push eax
     pop eax
@@ -950,13 +950,13 @@ label_424238335:
     mov eax , [pesp]                  ;; store the value at pesp to eax
     mov [pebp] , eax                ;; allocate new base pointer
     mov ecx , [pebp] 
-    mov bl , [ ecx + (9) ]
+    mov bl , [ ecx + (4) ]
     movzx bx , bl 
-    mov eax , [ecx + (9) + 1 ] 
+    mov eax , [ecx + (4) + 1 ] 
     push bx
     push eax
     mov eax , [pebp]           ;; move address stored in pebp to eax
-    inc dword [eax + (9) + 1]     ;; length
+    inc dword [eax + (4) + 1]     ;; length
     mov bl , [INT_TYPE]
     movzx bx , bl
     push bx
@@ -965,14 +965,14 @@ label_424238335:
     pop eax
     pop bx 
     mov ecx , [pebp]                   
-    mov [ecx + (14)] , bx              
-    mov [ecx + (14) + 1] , eax
+    mov [ecx + (9)] , bx              
+    mov [ecx + (9) + 1] , eax
     push bx
     push eax
     mov ecx , [pebp] 
-    mov bl , [ ecx + (34) ]
+    mov bl , [ ecx + (29) ]
     movzx bx , bl 
-    mov eax , [ecx + (34) + 1 ] 
+    mov eax , [ecx + (29) + 1 ] 
     push bx
     push eax
     mov bl , [INT_TYPE]
@@ -991,14 +991,14 @@ label_424238335:
     pop eax
     pop bx 
     mov ecx , [pebp]                   
-    mov [ecx + (14)] , bx              
-    mov [ecx + (14) + 1] , eax
+    mov [ecx + (9)] , bx              
+    mov [ecx + (9) + 1] , eax
     push bx
     push eax
     mov ecx , [pebp] 
-    mov bl , [ ecx + (14) ]
+    mov bl , [ ecx + (9) ]
     movzx bx , bl 
-    mov eax , [ecx + (14) + 1 ] 
+    mov eax , [ecx + (9) + 1 ] 
     push bx
     push eax
     mov bl , [INT_TYPE]
@@ -1017,9 +1017,21 @@ label_424238335:
     pop eax
     pop bx 
     mov ecx , [pebp]                   
-    mov [ecx + (14)] , bx              
-    mov [ecx + (14) + 1] , eax
+    mov [ecx + (9)] , bx              
+    mov [ecx + (9) + 1] , eax
     push bx
+    push eax
+    mov ecx , [pebp] 
+    mov bl , [ ecx + (9) ]
+    movzx bx , bl 
+    mov eax , [ecx + (9) + 1 ] 
+    push bx
+    push eax
+    pop eax
+    pop bx 
+    mov ebx , [pebp]                    
+    mov ebx , [ebx + (14) + 1]           
+    mov [ebx] , eax   ;;temp_buffer
     push eax
     mov ecx , [pebp] 
     mov bl , [ ecx + (14) ]
@@ -1027,24 +1039,12 @@ label_424238335:
     mov eax , [ecx + (14) + 1 ] 
     push bx
     push eax
-    pop eax
-    pop bx 
-    mov ebx , [pebp]                    
-    mov ebx , [ebx + (19) + 1]           
-    mov [ebx] , eax   ;;temp_buffer
-    push eax
-    mov ecx , [pebp] 
-    mov bl , [ ecx + (19) ]
-    movzx bx , bl 
-    mov eax , [ecx + (19) + 1 ] 
-    push bx
-    push eax
     mov eax , [pebp]           ;; move address stored in pebp to eax
-    inc dword [eax + (19) + 1]     ;; temp_buffer
+    inc dword [eax + (14) + 1]     ;; temp_buffer
     mov ecx , [pebp] 
-    mov bl , [ ecx + (34) ]
+    mov bl , [ ecx + (29) ]
     movzx bx , bl 
-    mov eax , [ecx + (34) + 1 ] 
+    mov eax , [ecx + (29) + 1 ] 
     push bx
     push eax
     mov bl , [INT_TYPE]
@@ -1064,8 +1064,8 @@ label_424238335:
     pop eax
     pop bx 
     mov ecx , [pebp]                   
-    mov [ecx + (34)] , bx              
-    mov [ecx + (34) + 1] , eax
+    mov [ecx + (29)] , bx              
+    mov [ecx + (29) + 1] , eax
     push bx
     push eax
     mov eax , [pebp]                   ;; store the value at pebp to eax
@@ -1262,13 +1262,6 @@ print:
     mov eax , [pesp]                  ;; store the value at pesp to eax
     mov [pebp] , eax                ;; allocate new base pointer
     sub dword [pesp] , 5
-    sub dword [pesp] , 5
-    sub dword [pesp] , 5
-    sub dword [pesp] , 5
-    sub dword [pesp] , 5
-    sub dword [pesp] , 5
-    sub dword [pesp] , 5
-    sub dword [pesp] , 5
     mov ecx , [pebp] 
     mov bl , [ ecx + (4) ]
     movzx bx , bl 
@@ -1325,6 +1318,7 @@ print:
     lea eax , [.label_783368690]         ;; save the false label to eax
     jmp eax
 .label_783368690:                        ;; defination of false label 
+    sub dword [pesp] , 5
     mov bl , [INT_TYPE]
     movzx bx , bl
     push bx
@@ -1337,6 +1331,7 @@ print:
     mov [ecx + (-10) + 1] , eax
     push bx
     push eax
+    sub dword [pesp] , 5
     mov ecx , [pebp] 
     mov bl , [ ecx + (4) ]
     movzx bx , bl 
@@ -1350,6 +1345,7 @@ print:
     mov [ecx + (-15) + 1] , eax
     push bx
     push eax
+    sub dword [pesp] , 5
     mov bl , [INT_TYPE]
     movzx bx , bl
     push bx
@@ -1362,6 +1358,7 @@ print:
     mov [ecx + (-20) + 1] , eax
     push bx
     push eax
+    sub dword [pesp] , 5
     mov ecx , [pebp] 
     mov bl , [ ecx + (-20) ]
     movzx bx , bl 
@@ -1394,6 +1391,7 @@ print:
     mov [ecx + (-25) + 1] , eax
     push bx
     push eax
+    sub dword [pesp] , 5
     mov ecx , [pebp] 
     mov bl , [ ecx + (-25) ]
     movzx bx , bl 
@@ -1407,6 +1405,7 @@ print:
     mov [ecx + (-30) + 1] , eax
     push bx
     push eax
+    sub dword [pesp] , 5
     mov bl , [INT_TYPE]
     movzx bx , bl
     push bx
@@ -1464,6 +1463,7 @@ print:
     mov [ecx + (-35) + 1] , eax
     push bx
     push eax
+    sub dword [pesp] , 5
     mov bl , [INT_TYPE]
     movzx bx , bl
     push bx
@@ -1561,9 +1561,9 @@ label_1350490027:
     mov [pebp] , eax                ;; allocate new base pointer
     sub dword [pesp] , 5
     mov ecx , [pebp] 
-    mov bl , [ ecx + (48) ]
+    mov bl , [ ecx + (13) ]
     movzx bx , bl 
-    mov eax , [ecx + (48) + 1 ] 
+    mov eax , [ecx + (13) + 1 ] 
     push bx
     push eax
     mov eax , [pebp]                  ;; store value at pebp to eax
@@ -2003,7 +2003,6 @@ print_series:
     mov eax , [pesp]                  ;; store the value at pesp to eax
     mov [pebp] , eax                ;; allocate new base pointer
     sub dword [pesp] , 5
-    sub dword [pesp] , 5
     mov ecx , [pebp] 
     mov bl , [ ecx + (4) ]
     movzx bx , bl 
@@ -2017,6 +2016,7 @@ print_series:
     mov [ecx + (-5) + 1] , eax
     push bx
     push eax
+    sub dword [pesp] , 5
     mov bl , [INT_TYPE]
     movzx bx , bl
     push bx

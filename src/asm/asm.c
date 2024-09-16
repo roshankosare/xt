@@ -13,7 +13,6 @@
 #include <string.h>
 
 void generateLabels(Context *context, FILE *fp);
-void tranlateLocalVar(ASTNode *ast, FILE *fp);
 void createLitralConstansts(Context *Context, FILE *fp);
 
 void createASMFile(ASTNode *ast, Context *context, FILE *fp)
@@ -76,33 +75,6 @@ void createASMFile(ASTNode *ast, Context *context, FILE *fp)
     createLitralConstansts(context, fp);
 }
 
-void tranlateLocalVar(ASTNode *ast, FILE *fp)
-{
-    if (ast == NULL)
-    {
-        return;
-    }
-    if (ast->token.value == UNKNOWN)
-    {
-        tranlateLocalVar(ast->right, fp);
-    }
-    if (ast->token.value == VAR)
-    {
-
-        if (ast->right->token.value == ASSIGN)
-        {
-            fprintf(fp, "    sub dword [pesp] , 5\n");
-            // fprintf(fp, "    sub esp , 4\n");
-        }
-        else
-        {
-            fprintf(fp, "    sub dword [pesp] , 5\n");
-            // fprintf(fp, "    sub esp , 4\n");
-        }
-        // for int
-    }
-    tranlateLocalVar(ast->next, fp);
-}
 
 void createLitralConstansts(Context *context, FILE *fp)
 {
