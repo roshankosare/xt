@@ -9,6 +9,4 @@ Token *lexer(FILE *fp, int *tokenCount);
 void printTokens(Token *tokens, int tokenCount);
 
 
-
 #endif
-/* LEXER_H */

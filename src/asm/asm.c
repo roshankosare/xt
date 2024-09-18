@@ -2,7 +2,6 @@
 #include "../../include/parser/helper.h"
 #include "../../include/symboltable/functiontable.h"
 #include "../../include/symboltable/symboltable.h"
-#include "../../include/litrals/litrals.h"
 #include "../../include/asm/asmcontext.h"
 #include "../../include/asm/stacks.h"
 #include "../../include/asm/system.h"
@@ -12,81 +11,6 @@
 #include <assert.h>
 #include <string.h>
 
-void generateLabels(Context *context, FILE *fp);
-void createLitralConstansts(Context *Context, FILE *fp);
-
-void createASMFile(ASTNode *ast, Context *context, FILE *fp)
-{
-    fprintf(fp, "section .data                        ;; Section for initialized data\n");
-    fprintf(fp, "    condition dd 5 dup(0)\n");
-    fprintf(fp, "    RETURN_VALUE dd 5 dup(0)\n");
-    fprintf(fp, "    RETURN_ADDRESS dd 0\n");
-    fprintf(fp, "    POPED_ADDRESS dd 0\n");
-    // fprintf(fp, "    NUM_REF_ALLO dd 0\n");
-    // fprintf(fp, "    REF_LIST_TO:\n");
-    // fprintf(fp, "        size db 0\n");
-    // fprintf(fp, "        alloc_num db 0\n");
-    // fprintf(fp, "        address_value dd 0\n");
-    // fprintf(fp, "        next dd 0\n");
-
-    fprintf(fp, "section .bss\n");
-    fprintf(fp, "\n");
-
-    fprintf(fp, "section .text                        ;; Section for code\n");
-    fprintf(fp, "    global _start                    ;; Make the _start symbol available to the linker\n");
-    fprintf(fp, "\n");
-    fprintf(fp, "_start: \n");
-    fprintf(fp, "    mov eax , call_stack + 1024\n");
-    fprintf(fp, "    mov [call_stack_top] , eax                 ;; init call stack \n");
-
-    fprintf(fp, "    mov eax , fcall_stack + 1024\n");
-    fprintf(fp, "    mov [fcall_stack_top] , eax                 ;; init call stack \n");
-
-    fprintf(fp, "    mov eax , base_stack + 1024\n");
-    fprintf(fp, "    mov [base_stack_top] , eax                 ;; init call stack \n");
-
-    fprintf(fp, "    mov eax , lcall_stack + 1024\n");
-    fprintf(fp, "    mov [lcall_stack_top] , eax\n");
-
-    fprintf(fp, "    mov eax , loop_base_stack + 1024\n");
-    fprintf(fp, "    mov [loop_base_stack_top] , eax\n");
-
-    fprintf(fp, "    mov eax , param_stack + 1024\n");
-    fprintf(fp, "    mov [pesp] , eax\n");
-
-    fprintf(fp, "    mov [pebp] , eax\n");
-    translate(ast, context, fp); // translate code;
-    fprintf(fp, "; Exit the program\n");
-
-    fprintf(fp, "    mov eax, 1                       ;; syscall number for sys_exit\n");
-    fprintf(fp, "    xor ebx, ebx                     ;; exit code 0\n");
-    fprintf(fp, "    int 0x80                         ;; make syscall\n");
-
-    print_stakcs_operations(fp);
-    print_system_functions(fp);
-
-    generateLabels(context, fp);
-
-    fprintf(fp, "section .rodata\n");
-    fprintf(fp, "    INT_TYPE: db 1\n");
-    fprintf(fp, "    FLOAT_TYPE: db 2\n");
-    fprintf(fp, "    STRING_TYPE: db 3\n");
-    fprintf(fp, "    REF_TYPE: db 4\n");
-    createLitralConstansts(context, fp);
-}
-
-
-void createLitralConstansts(Context *context, FILE *fp)
-{
-
-    Litral *entry;
-    entry = popLitlralTable(context->litralTable);
-    while (entry != NULL)
-    {
-        fprintf(fp, "    %s: db %s, 0\n", entry->label, entry->value);
-        entry = popLitlralTable(context->litralTable);
-    }
-}
 
 void translate(ASTNode *ast, Context *context, FILE *fp)
 {
@@ -152,7 +76,7 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
         break;
 
     case IF:
-        translate(ast->left, context, fp);
+        // translate(ast->left, context, fp);
         print_if(ast, context, fp);
         // prase  condition first
         break;
@@ -242,7 +166,7 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
         break;
 
     case FUNCTION:
-        print_funtion(ast, context, fp);
+        print_function(ast, context, fp);
         break;
 
     case FUNCTION_CALL:
@@ -254,12 +178,6 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
         return;
 
     case PARAM_START:
-    {
-
-        SymbolTable *symboltable = getSymboTableFromQueue(context);
-        pushSymbolTable(context->symbolTableStack, symboltable);
-        // pushSymbolTable(context->symbolTableTempStack, symboltable);
-    }
 
     break;
 
@@ -325,120 +243,3 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
     return translate(ast->next, context, fp);
 }
 
-void generateLabels(Context *context, FILE *fp)
-{
-    ASTQNode *current = popFromASTQueueFront(context->astQueue);
-    int num_elements = 0;
-    while (current != NULL)
-    {
-
-        num_elements = context->astQueue->num_elements;
-        fprintf(fp, "%s:\n", current->label);
-
-        if (current->ast->token.value == WHILE)
-        {
-            fprintf(fp, "    pop eax                        ;; pop the return address to eax\n");
-            fprintf(fp, "    call push_call                 ;; store the return address to ra location\n");
-            fprintf(fp, "    call push_lcall\n");
-
-            fprintf(fp, "    lea eax , [%s]\n", current->label);
-            fprintf(fp, "    call push_lcall\n");
-            fprintf(fp, "    mov eax , [pebp]\n");
-            fprintf(fp, "    call push_lbase\n");
-            fprintf(fp, "    mov eax , [pesp]\n");
-            fprintf(fp, "    call push_lbase\n");
-            translate(current->ast->right, context, fp);
-            translate(current->ast->left, context, fp);
-            fprintf(fp, "    pop eax\n");
-            fprintf(fp, "    pop bx\n");
-            fprintf(fp, "    mov [condition] , bl\n");
-            fprintf(fp, "    mov [condition + 1] ,  eax\n");
-            // fprintf(fp, "    mov ecx , 100000000\n");
-            // fprintf(fp, "    call delay\n");
-            // fprintf(fp, "    call delay\n");
-            fprintf(fp, "    call pop_lbase\n"); // stack pointer
-            fprintf(fp, "    mov [pesp] , eax\n");
-            fprintf(fp, "    call pop_lbase\n"); // base pointer
-            fprintf(fp, "    mov [pebp] , eax \n");
-            fprintf(fp, "    call pop_lcall\n");
-            fprintf(fp, "    call pop_lcall\n");
-            fprintf(fp, "    call pop_call                  ;; store the return address to eax\n");
-            fprintf(fp, "    push eax\n");
-            fprintf(fp, "    mov eax , [condition + 1]\n");
-            fprintf(fp, "    test eax , eax\n");
-            fprintf(fp, "    jnz %s\n", current->label);
-            fprintf(fp, "    pop eax\n");
-            fprintf(fp, "    jmp eax                        ;; jmp to return address\n");
-        }
-        else if (current->ast->token.value == FUNCTION)
-        {
-            fprintf(fp, "    pop eax                        ;; pop the return address to eax\n");
-            fprintf(fp, "    call push_call                 ;; store the return address to ra location\n");
-            fprintf(fp, "    call push_fcall\n");
-            fprintf(fp, "    mov eax , [pebp]\n");
-            fprintf(fp, "    call push_base\n");   // push base pebp base pointer
-            fprintf(fp, "    mov eax , [pesp]\n"); // push base pesp stack pointer
-            fprintf(fp, "    call push_base\n");
-            // here we have to push callers return addresF
-            // and push push callers base address
-            translate(current->ast->right, context, fp);
-            fprintf(fp, "    call pop_base\n"); // stack pointer
-            fprintf(fp, "    mov [pesp] , eax\n");
-            fprintf(fp, "    call pop_base\n"); // base pointer
-            fprintf(fp, "    mov [pebp] , eax \n");
-
-            fprintf(fp, "    call pop_call                  ;; store the return address to eax\n");
-            fprintf(fp, "    call pop_fcall\n");
-            fprintf(fp, "    jmp eax                        ;; jmp to return address\n");
-        }
-        else
-        {
-            fprintf(fp, "    pop eax                        ;; pop the return address to eax\n");
-            fprintf(fp, "    call push_call                 ;; store the return address to ra location\n");
-            translate(current->ast, context, fp);
-            fprintf(fp, "    call pop_call                  ;; store the return address to eax\n");
-            fprintf(fp, "    jmp eax                        ;; jmp to return address\n");
-        }
-
-        // step 1 : popfromASTQueueRear  and push into astStack till num_elements == context->astQueue->num_elemnts
-        // step 2 :  pop  from astStack
-        // step 3: current = pop(astStack);
-        // step 3: translate
-        // if new elements is added pushElemts in queue repeat step 1;
-        if (num_elements < context->astQueue->num_elements)
-        {
-
-            SymbolTable *st = getTopSymbolTable(context->symbolTableTempStack);
-            if (st == NULL)
-            {
-                printf("\nERROR :symbol table temp stack is empty");
-            }
-            pushSymbolTable(context->symbolTableStack, st);
-            while (num_elements < context->astQueue->num_elements)
-            {
-                // step 1 : popfromASTQueueRear  and push into astStack till num_elements == context->astQueue->num_elemnts
-                current = popFromASTQueueRear(context->astQueue);
-                pushASTStack(context->astStack, current);
-            }
-        }
-        current = popASTStack(context->astStack);
-        if (current != NULL)
-        {
-            continue;
-        }
-
-        while (getTopSymbolTable(context->symbolTableTempStack) != NULL || getTopSymbolTable(context->symbolTableStack)->next != NULL)
-        {
-
-            if (getTopSymbolTable(context->symbolTableStack)->next != NULL)
-            {
-                popSymbolTable(context->symbolTableStack);
-            }
-
-            popSymbolTable(context->symbolTableTempStack);
-        }
-
-        // step 2 :  pop  from astStack
-        current = popFromASTQueueFront(context->astQueue);
-    }
-}

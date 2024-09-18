@@ -184,7 +184,6 @@ ASTNode *parse_fun_call(Context *context)
         consume(context);
         if (match(context, OPEN_PAREN))
         {
-            printf("\nthis runs");
             Token funtion_call_token = {.lexeme = "Funtion_call", .value = FUNCTION_CALL};
             ASTNode *funtion_call_node = createASTNode(funtion_call_token);
             checkFuntionEntry(context, funtion_name);

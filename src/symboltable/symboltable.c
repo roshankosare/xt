@@ -40,7 +40,7 @@ void pushSymbolTable(SymbolTableStack *stack, SymbolTable *symbolTable)
         return;
     }
 
-    symbolTable->tempScopeOffset = stack->top->offset;
+    symbolTable->scopeOffset = stack->top->offset;
     stack->top = symbolTable;
 }
 
@@ -51,7 +51,7 @@ SymbolTable *popSymbolTable(SymbolTableStack *stack)
     {
 
         SymbolTable *top = stack->top;
-        top->scopeOffset = top->tempScopeOffset;
+
         stack->top = stack->top->next;
         
         stack->scope--;

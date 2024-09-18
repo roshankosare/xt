@@ -4,27 +4,30 @@
 #include "../../include/parser/exp.h"
 #include "../../include/symboltable/symboltable.h"
 #include "../../include/symboltable/functiontable.h"
+#include "../../include/asm/asm.h"
+
 // SELC_STMT :=  IF_STMT
 //  IF_STMT := "if" "(" exp | CONDITIONAL_STMT ")" BLOCK_STMT | EXP
 
-ASTNode *parseASTString(Context *context);
+ASTNode *parseASTString(Context *context, FILE *fp);
 
-ASTNode *stmt(Context *context)
+ASTNode *stmt(Context *context, FILE *fp)
 {
     ASTNode *node;
     if (match(context, IF))
     {
-        node = selc_stmt(context);
+        node = selc_stmt(context, fp);
         return node;
     }
     if (match(context, WHILE))
     {
-        node = iter_stmt(context);
+        node = iter_stmt(context, fp);
         return node;
     }
     if (match(context, CONTINUE))
     {
-        if(context->loopStack == -1){
+        if (context->loopStack == -1)
+        {
             printf("\nERROR: unexpected 'continue' without loop\n");
             exit(0);
         }
@@ -32,11 +35,13 @@ ASTNode *stmt(Context *context)
         consume(context); // consume "xontinue"
         expect(context, SEMI_COLAN);
         consume(context); // consume ";"
+        translate(node, context, fp);
         return node;
     }
     if (match(context, BREAK))
     {
-        if(context->loopStack == -1){
+        if (context->loopStack == -1)
+        {
             printf("\nERROR: unexpected 'break' without loop or switch\n");
             exit(0);
         }
@@ -44,38 +49,50 @@ ASTNode *stmt(Context *context)
         consume(context); // consume "xontinue"
         expect(context, SEMI_COLAN);
         consume(context); // consume ";"
+        translate(node, context, fp);
         return node;
     }
     if (match(context, RETURN))
     {
-        node = jump_stmt(context);
+        node = jump_stmt(context, fp);
+        translate(node,context,fp);
         return node;
     }
     if (match(context, VAR))
     {
-        node = dec_stmt(context);
+        node = dec_stmt(context, fp);
+        translate(node, context, fp);
         return node;
     }
     if (match(context, IDENTIFIER) || match(context, OPEN_PAREN))
     {
         node = exp_stmt(context);
+        translate(node, context, fp);
         return node;
     }
-    if (match(context, INC) || match(context, DEC) || match(context, VALUE_AT) || match(context, BIT_NOT) || match(context,TYPEOF))
+    if (match(context, INC) || match(context, DEC) || match(context, VALUE_AT) || match(context, BIT_NOT) || match(context, TYPEOF))
     {
         node = exp_stmt(context);
+        translate(node, context, fp);
         return node;
     }
     if (match(context, STRING_CONSTANT) || match(context, INTEGER_CONSTANT) || match(context, FLOAT_CONSTANT) || match(context, HEX_CONSTANT))
     {
         node = exp_stmt(context);
+        translate(node, context, fp);
         return node;
     }
 
     if (match(context, ASM))
     {
-        node = parseAsm(context);
+        node = parseAsm(context, fp);
+        translate(node, context, fp);
         return node;
+    }
+
+    if (match(context, TEOF))
+    {
+        return NULL;
     }
 
     printf("\nERROR : unexpected token %s at line %d and col %d \n",
@@ -86,7 +103,7 @@ ASTNode *stmt(Context *context)
 }
 
 // DEC_STMT := { "var" "IDENTFIER" ";"} | { "var" "IDENTFIER" "=" exp
-ASTNode *dec_stmt(Context *context)
+ASTNode *dec_stmt(Context *context, FILE *fp)
 {
     // DEC_STMT := { "var" "IDENTFIER" ";"}
     ASTNode *varnode = createASTNode(context->current);
@@ -115,7 +132,7 @@ ASTNode *dec_stmt(Context *context)
     varnode->right = assignNode;
     return varnode;
 }
-ASTNode *selc_stmt(Context *context)
+ASTNode *selc_stmt(Context *context, FILE *fp)
 {
     if (match(context, IF))
     {
@@ -123,21 +140,17 @@ ASTNode *selc_stmt(Context *context)
         consume(context);
         expect(context, OPEN_PAREN);
         consume(context);
-        ifNode->left = exp(context);
+        ASTNode *exp_node = exp(context);
+        translate(exp_node, context, fp);
         expect(context, CLOSE_PAREN);
         consume(context);
-        if (match(context, OPEN_CURLY_PAREN))
-        {
-            ifNode->right = parse_block(context);
-            return ifNode;
-        }
-        ifNode->right = stmt(context);
-        return ifNode;
+        translate(ifNode, context, fp);
+        return NULL;
     }
     return NULL;
 }
 
-ASTNode *iter_stmt(Context *context)
+ASTNode *iter_stmt(Context *context, FILE *fp)
 {
     if (match(context, WHILE))
     {
@@ -146,23 +159,20 @@ ASTNode *iter_stmt(Context *context)
         consume(context);
         expect(context, OPEN_PAREN);
         consume(context);
-        whileNode->left = exp(context);
+        ASTNode *exp_condition = exp(context);
+        whileNode->left = exp_condition;
+        translate(exp_condition, context, fp);
         expect(context, CLOSE_PAREN);
         consume(context);
-        if (match(context, OPEN_CURLY_PAREN))
-        {
-            whileNode->right = parse_block(context);
-            context->loopStack -= 1;
-            return whileNode;
-        }
+
+        translate(whileNode, context, fp);
         context->loopStack -= 1;
-        whileNode->right = stmt(context);
         return whileNode;
     }
     return NULL;
 }
 
-ASTNode *jump_stmt(Context *context)
+ASTNode *jump_stmt(Context *context, FILE *fp)
 {
     if (match(context, RETURN))
     {
@@ -176,51 +186,47 @@ ASTNode *jump_stmt(Context *context)
         returnNode->left = exp(context);
         expect(context, SEMI_COLAN);
         consume(context);
+
         return returnNode;
     }
     return NULL;
 }
 
 // BLOCK := "{" EXP  "}"
-ASTNode *parse_block(Context *context)
+ASTNode *parse_block(Context *context, FILE *fp)
 {
 
     expect(context, OPEN_CURLY_PAREN);
     consume(context);
     SymbolTable *symbolTable = initSymbolTable();
     pushSymbolTable(context->symbolTableStack, symbolTable);
-    insertSymbolTableToQueue(context, symbolTable);
     Token body_start = {.lexeme = "Body_start", .value = BODYSTART};
     ASTNode *bodyStartNode = createASTNode(body_start);
-    ASTNode *start = bodyStartNode;
-    ASTNode *body;
+
+    // translate body start   for maneging base pointer and stack pointer
+    translate(bodyStartNode, context, fp);
+    ASTNode *node;
     int first = 1;
     while (context->current.value != CLOSE_CURLY_PAREN && context->current.value != TEOF)
     {
-
-        if (first)
-        {
-            body = stmt(context);
-            bodyStartNode->right = body;
-            first = 0;
-            continue;
-        }
-        body->next = stmt(context);
-        body = body->next;
+        node = stmt(context, fp);
     }
     expect(context, CLOSE_CURLY_PAREN);
+    consume(context);
     Token body_end_token = {.lexeme = "Body_end", .value = BODYEND};
     ASTNode *body_end = createASTNode(body_end_token);
-    bodyStartNode->next = body_end;
-    consume(context);
+
+    // translate body end   for maneging base pointer and stack pointer
+    translate(body_end, context, fp);
+
     popSymbolTable(context->symbolTableStack);
 
-    return start;
+    return NULL;
 }
 
 // ASM := "asm" "(" "[" STRING_ASM "]" ")" ";"
 // this function will push assembly instuction directly in asm file to make sys calls
-ASTNode *parseAsm(Context *context)
+ASTNode *parseAsm(Context *context, FILE *fp)
 {
     if (match(context, ASM))
     {
@@ -231,7 +237,7 @@ ASTNode *parseAsm(Context *context)
         consume(context); // consume "("
         expect(context, OPEN_SQ_PARAN);
         consume(context); // consume "["
-        asmNode->right = parseASTString(context);
+        asmNode->right = parseASTString(context, fp);
         expect(context, CLOSE_SQ_PARAN);
         consume(context); // consume "]"
         expect(context, CLOSE_PAREN);
@@ -242,7 +248,7 @@ ASTNode *parseAsm(Context *context)
     }
     return NULL;
 }
-ASTNode *parseASTString(Context *context)
+ASTNode *parseASTString(Context *context, FILE *fp)
 {
     if (match(context, CLOSE_SQ_PARAN))
     {
@@ -257,6 +263,6 @@ ASTNode *parseASTString(Context *context)
     }
     expect(context, COMMA);
     consume(context); // consume ","
-    node->next = parseASTString(context);
+    node->next = parseASTString(context, fp);
     return node;
 }

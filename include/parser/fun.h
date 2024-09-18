@@ -3,6 +3,6 @@
 #include "../parser/ast.h"
 #include "../context/context.h"
 
-ASTNode *parse_fun(Context *context);
+ASTNode *parse_fun(Context *context , FILE *fp);
 
 #endif

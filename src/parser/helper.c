@@ -248,34 +248,6 @@ void insertParamSymbol(Context *context, Token function_name, Token identifier)
     exit(1);
 }
 
-void insertSymbolTableToQueue(Context *context, SymbolTable *symbolTable)
-{
-
-    SymbolTable *current = context->symbolTableQueue;
-    if (current == NULL)
-    {
-        context->symbolTableQueue = symbolTable;
-        return;
-    }
-    while (current->nextLink != NULL)
-    {
-        current = current->nextLink;
-    }
-    current->nextLink = symbolTable;
-    return;
-}
-
-SymbolTable *getSymboTableFromQueue(Context *context)
-{
-    if (context->symbolTableQueue == NULL)
-    {
-        printf("\nERROR : symbol table queue is empty\n");
-        exit(1);
-    }
-    SymbolTable *symbolTable = context->symbolTableQueue;
-    context->symbolTableQueue = symbolTable->nextLink;
-    return symbolTable;
-}
 
 int getSymbolOffset(Context *context, SymbolTableEntry *entry)
 {

@@ -5,7 +5,7 @@
 #include "../context/context.h"
 #include "../tokens/tokens.h"
 
-ASTNode *program(Context *context);
-ASTNode *fun(Context *context);
+void program(Context *context ,FILE *fp);
+ASTNode *fun(Context *context,FILE *fp);
 
 #endif

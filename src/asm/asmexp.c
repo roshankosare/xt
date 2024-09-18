@@ -1,5 +1,6 @@
 #include "../../include/asm/asmexp.h"
 #include "../../include/parser/helper.h"
+#include "../../include/asm/helper.h"
 
 void print_identifier(ASTNode *ast, Context *context, FILE *fp)
 {
@@ -28,14 +29,11 @@ void print_identifier(ASTNode *ast, Context *context, FILE *fp)
 void print_string_constant(ASTNode *ast, Context *context, FILE *fp)
 {
     char *litral_label = label_generate();
-    // printf("\n %s",ast->token.lexeme);
-    // printf("\n %s",litral_label);
-
-    pushLitralTable(context->litralTable, litral_label, ast->token.lexeme);
+    char *label = malloc(100 * sizeof(char));
+    snprintf(label, 100, "    %s: db %s, 0\n", litral_label,ast->token.lexeme);
+    print_rodata_section(fp, label);
     int string_length = strlen(ast->token.lexeme);
-    // fprintf(fp, "    mov ecx , %d\n", string_length);
-    // fprintf(fp, "    call malloc\n");
-
+   
     fprintf(fp, "    mov bl , [STRING_TYPE]\n");
     fprintf(fp, "    movzx bx , bl\n");
     fprintf(fp, "    push bx\n");

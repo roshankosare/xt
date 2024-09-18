@@ -7,7 +7,7 @@
 #include "../tokens/tokens.h"
 
 
-ASTNode *parseProgram(Context *context,Token *tokens, int *index, int token_count);
+void parseProgram(Context *context,Token *tokens , FILE *op);
 void printAST(ASTNode *node, int depth);
 
 

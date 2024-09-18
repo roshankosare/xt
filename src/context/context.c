@@ -8,10 +8,6 @@ Context *initContext(Token *tokens)
 {
     Context *context = (Context *)malloc(sizeof(Context));
     context->symbolTableStack = (SymbolTableStack *)malloc(sizeof(SymbolTableStack));
-    context->symbolTableTempStack = (SymbolTableStack *)malloc(sizeof(SymbolTableStack));
-    context->astQueue = initASTQueue();
-    context->astStack = initASTStack();
-    context->litralTable = initLitralTable();
     context->tokens = tokens;
     context->index = 0;
     context->current = tokens[0];
@@ -19,10 +15,7 @@ Context *initContext(Token *tokens)
     context->loopStack = -1;
     context->asmContext = initASMContext();
 
-
     initSymbolTableStack(context->symbolTableStack);
-    initSymbolTableStack(context->symbolTableTempStack);
     context->functionTable = initFuntionTable();
-    context->symbolTableQueue = NULL;
     return context;
 };

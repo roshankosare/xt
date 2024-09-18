@@ -9,7 +9,7 @@ void print_if(ASTNode *ast, Context *context, FILE *fp);
 void print_while(ASTNode *ast, Context *context, FILE *fp);
 
 void print_var(ASTNode *ast, Context *context, FILE *fp);
-void print_funtion(ASTNode *ast, Context *context, FILE *fp);
+void print_function(ASTNode *ast, Context *context, FILE *fp);
 void print_assign(ASTNode *ast, Context *context, FILE *fp);
 void print_return(ASTNode *ast, Context *context, FILE *fp);
 void print_continue(ASTNode *ast, Context *context, FILE *fp);
