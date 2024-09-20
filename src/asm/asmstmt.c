@@ -7,77 +7,71 @@
 
 void print_if(ASTNode *ast, Context *context, FILE *fp)
 {
-    char *label_false = label_generate();
-    fprintf(fp, "    pop eax\n");        // get value of expression from stack
-    fprintf(fp, "    test eax , eax\n"); // check if value is non zero
-    fprintf(fp, "    jz .%s                 ;; jump if expression  is not  zero\n", label_false);
-    if (match(context, OPEN_CURLY_PAREN))
+    if (ast->left->token.value == YES)
     {
-        parse_block(context, fp);
+        fprintf(fp, "    pop eax\n");        // get value of expression from stack
+        fprintf(fp, "    test eax , eax\n"); // check if value is non zero
+        fprintf(fp, "    jz .%s                 ;; jump if expression  is not  zero\n", ast->left->token.lexeme);
+        return;
     }
-    else
+    if (ast->left->token.value == NO)
     {
-        stmt(context, fp);
+        fprintf(fp, ".%s:                        ;; defination of false label \n", ast->left->token.lexeme);
     }
-
-    fprintf(fp, ".%s:                        ;; defination of false label \n", label_false);
-    return;
 }
 void print_while(ASTNode *ast, Context *context, FILE *fp)
 {
-    char *label_true = label_generate(); // generate label for  this if block
-    char *label_false = label_generate();
-
-    fprintf(fp, "    pop eax\n");
-    fprintf(fp, "    pop bx\n");
-    fprintf(fp, "    mov [condition] , bx\n");
-    fprintf(fp, "    mov [condition + 1] , eax\n");
-
-    fprintf(fp, "    lea eax , [.%s]\n", label_false);
-    fprintf(fp, "    push eax\n");
-    // fprintf(fp, "    call print_eax\n");
-    fprintf(fp, "    mov eax , [condition + 1]\n");
-    fprintf(fp, "    test eax , eax\n");
-    fprintf(fp, "    jz .%s\n", label_false);
-    fprintf(fp, ".%s:\n", label_true);
-    fprintf(fp, "    pop eax                        ;; pop the return address to eax\n");
-    fprintf(fp, "    call push_call                 ;; store the return address to ra location\n");
-    fprintf(fp, "    call push_lcall\n");
-
-    fprintf(fp, "    lea eax , [.%s]\n", label_true);
-    fprintf(fp, "    call push_lcall\n");
-    fprintf(fp, "    mov eax , [pebp]\n");
-    fprintf(fp, "    call push_lbase\n");
-    fprintf(fp, "    mov eax , [pesp]\n");
-    fprintf(fp, "    call push_lbase\n");
-    if (match(context, OPEN_CURLY_PAREN))
+    if (ast->left->token.value == YES)
     {
-        parse_block(context, fp);
-    }
-    else
-    {
-        stmt(context, fp);
+        fprintf(fp, "    pop eax\n");
+        fprintf(fp, "    pop bx\n");
+        fprintf(fp, "    mov [condition] , bx\n");
+        fprintf(fp, "    mov [condition + 1] , eax\n");
+
+        fprintf(fp, "    lea eax , [.%s]\n", ast->left->next->token.lexeme);
+        fprintf(fp, "    push eax\n");
+        // fprintf(fp, "    call print_eax\n");
+        fprintf(fp, "    mov eax , [condition + 1]\n");
+        fprintf(fp, "    test eax , eax\n");
+        fprintf(fp, "    jz .%s\n", ast->left->next->token.lexeme);
+        fprintf(fp, ".%s:\n", ast->left->token.lexeme);
+        fprintf(fp, "    pop eax                        ;; pop the return address to eax\n");
+        fprintf(fp, "    call push_call                 ;; store the return address to ra location\n");
+        fprintf(fp, "    call push_lcall\n");
+
+        fprintf(fp, "    lea eax , [.%s]\n", ast->left->token.lexeme);
+        fprintf(fp, "    call push_lcall\n");
+        fprintf(fp, "    mov eax , [pebp]\n");
+        fprintf(fp, "    call push_lbase\n");
+        fprintf(fp, "    mov eax , [pesp]\n");
+        fprintf(fp, "    call push_lbase\n");
+        return;
     }
 
-    translate(ast->left, context, fp);
-    fprintf(fp, "    pop eax\n");
-    fprintf(fp, "    pop bx\n");
-    fprintf(fp, "    mov [condition] , bx\n");
-    fprintf(fp, "    mov [condition + 1] , eax\n");
-    // fprintf(fp, "    call print_eax\n");
-    fprintf(fp, "    call pop_lbase\n"); // stack pointer
-    fprintf(fp, "    mov [pesp] , eax\n");
-    fprintf(fp, "    call pop_lbase\n"); // base pointer
-    fprintf(fp, "    mov [pebp] , eax \n");
-    fprintf(fp, "    call pop_lcall\n");
-    fprintf(fp, "    call pop_lcall\n");
-    fprintf(fp, "    call pop_call                  ;; store the return address to eax\n");
-    fprintf(fp, "    push eax\n");
+   
+    if (ast->left->token.value == NO)
+    {
+        fprintf(fp, "    pop eax\n");
+        fprintf(fp, "    pop bx\n");
+        fprintf(fp, "    mov [condition] , bx\n");
+        fprintf(fp, "    mov [condition + 1] , eax\n");
+        // fprintf(fp, "    call print_eax\n");
+        fprintf(fp, "    call pop_lbase\n"); // stack pointer
+        fprintf(fp, "    mov [pesp] , eax\n");
+        fprintf(fp, "    call pop_lbase\n"); // base pointer
+        fprintf(fp, "    mov [pebp] , eax \n");
+        fprintf(fp, "    call pop_lcall\n");
+        fprintf(fp, "    call pop_lcall\n");
+        fprintf(fp, "    call pop_call                  ;; store the return address to eax\n");
+        fprintf(fp, "    push eax\n");
 
-    fprintf(fp, "    mov eax , [condition + 1]\n");
-    fprintf(fp, "    test eax , eax\n");
-    fprintf(fp, "    jnz .%s\n", label_true);
-    fprintf(fp, ".%s:                        ;; defination of false label \n", label_false);
+        fprintf(fp, "    mov eax , [condition + 1]\n");
+        fprintf(fp, "    test eax , eax\n");
+        fprintf(fp, "    jnz .%s\n", ast->left->next->token.lexeme);
+        fprintf(fp, ".%s:                        ;; defination of false label \n", ast->left->token.lexeme);
+    }
+    
+
     // fprintf(fp, "    mov dword eax , 10\n");
     // fprintf(fp, "    call print_eax\n");
 }
@@ -215,7 +209,6 @@ void print_function(ASTNode *ast, Context *context, FILE *fp)
     free(buffer);
 
     // Restore the original file pointer position
-   
 }
 
 void print_assign(ASTNode *ast, Context *context, FILE *fp)

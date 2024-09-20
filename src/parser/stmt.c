@@ -5,24 +5,27 @@
 #include "../../include/symboltable/symboltable.h"
 #include "../../include/symboltable/functiontable.h"
 #include "../../include/asm/asm.h"
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 
 // SELC_STMT :=  IF_STMT
 //  IF_STMT := "if" "(" exp | CONDITIONAL_STMT ")" BLOCK_STMT | EXP
 
 ASTNode *parseASTString(Context *context, FILE *fp);
 
-ASTNode *stmt(Context *context, FILE *fp)
+void stmt(Context *context, FILE *fp)
 {
     ASTNode *node;
     if (match(context, IF))
     {
-        node = selc_stmt(context, fp);
-        return node;
+        selc_stmt(context, fp);
+        return;
     }
     if (match(context, WHILE))
     {
-        node = iter_stmt(context, fp);
-        return node;
+        iter_stmt(context, fp);
+        return;
     }
     if (match(context, CONTINUE))
     {
@@ -36,7 +39,8 @@ ASTNode *stmt(Context *context, FILE *fp)
         expect(context, SEMI_COLAN);
         consume(context); // consume ";"
         translate(node, context, fp);
-        return node;
+        freeASTNode(node);
+        return;
     }
     if (match(context, BREAK))
     {
@@ -50,44 +54,45 @@ ASTNode *stmt(Context *context, FILE *fp)
         expect(context, SEMI_COLAN);
         consume(context); // consume ";"
         translate(node, context, fp);
-        return node;
+        freeASTNode(node);
+        return;
     }
     if (match(context, RETURN))
     {
-        node = jump_stmt(context, fp);
-        translate(node,context,fp);
-        return node;
+        jump_stmt(context, fp);
+        return;
     }
     if (match(context, VAR))
     {
-        node = dec_stmt(context, fp);
-        translate(node, context, fp);
-        return node;
+        dec_stmt(context, fp);
+        return;
     }
     if (match(context, IDENTIFIER) || match(context, OPEN_PAREN))
     {
         node = exp_stmt(context);
         translate(node, context, fp);
-        return node;
+        freeASTNode(node);
+        return;
     }
     if (match(context, INC) || match(context, DEC) || match(context, VALUE_AT) || match(context, BIT_NOT) || match(context, TYPEOF))
     {
         node = exp_stmt(context);
         translate(node, context, fp);
-        return node;
+        freeASTNode(node);
+        return;
     }
     if (match(context, STRING_CONSTANT) || match(context, INTEGER_CONSTANT) || match(context, FLOAT_CONSTANT) || match(context, HEX_CONSTANT))
     {
         node = exp_stmt(context);
         translate(node, context, fp);
-        return node;
+        freeASTNode(node);
+        return;
     }
 
     if (match(context, ASM))
     {
-        node = parseAsm(context, fp);
-        translate(node, context, fp);
-        return node;
+        parseAsm(context, fp);
+        return;
     }
 
     if (match(context, TEOF))
@@ -103,7 +108,7 @@ ASTNode *stmt(Context *context, FILE *fp)
 }
 
 // DEC_STMT := { "var" "IDENTFIER" ";"} | { "var" "IDENTFIER" "=" exp
-ASTNode *dec_stmt(Context *context, FILE *fp)
+void dec_stmt(Context *context, FILE *fp)
 {
     // DEC_STMT := { "var" "IDENTFIER" ";"}
     ASTNode *varnode = createASTNode(context->current);
@@ -118,7 +123,9 @@ ASTNode *dec_stmt(Context *context, FILE *fp)
     {
         entry->isDefined = 1;
         consume(context); // consume ";"
-        return varnode;
+        translate(varnode, context, fp);
+        freeASTNode(varnode);
+        return;
     }
     // DEC_STMT := { "var" "IDENTFIER" "=" exp }
     expect(context, ASSIGN);
@@ -130,49 +137,107 @@ ASTNode *dec_stmt(Context *context, FILE *fp)
     consume(context);
     entry->isDefined = 1;
     varnode->right = assignNode;
-    return varnode;
+
+    translate(varnode, context, fp);
+    freeASTNode(varnode);
+    return;
 }
-ASTNode *selc_stmt(Context *context, FILE *fp)
+void selc_stmt(Context *context, FILE *fp)
 {
     if (match(context, IF))
     {
         ASTNode *ifNode = createASTNode(context->current);
+        char *labelFalse = label_generate();
+        Token ifConToken = {.lexeme = "", .value = YES};
+        strcpy(ifConToken.lexeme, labelFalse);
+        ifNode->left = createASTNode(ifConToken);
+
         consume(context);
         expect(context, OPEN_PAREN);
         consume(context);
         ASTNode *exp_node = exp(context);
         translate(exp_node, context, fp);
+
+        freeASTNode(exp_node);
+
         expect(context, CLOSE_PAREN);
         consume(context);
         translate(ifNode, context, fp);
-        return NULL;
+        if (match(context, OPEN_CURLY_PAREN))
+        {
+            parse_block(context, fp);
+        }
+        else
+        {
+            stmt(context, fp);
+        }
+
+        ifConToken.value = NO;
+        ifNode->left = createASTNode(ifConToken);
+        translate(ifNode, context, fp);
+
+        freeASTNode(ifNode);
+        return;
     }
-    return NULL;
+    return;
 }
 
-ASTNode *iter_stmt(Context *context, FILE *fp)
+void iter_stmt(Context *context, FILE *fp)
 {
     if (match(context, WHILE))
     {
         context->loopStack += 1;
         ASTNode *whileNode = createASTNode(context->current);
+        char *labelTrue = label_generate();
+        char *labelFalse = label_generate();
+
+        Token labelTrueToken = {.value = YES};
+        strcpy(labelTrueToken.lexeme, labelTrue);
+        ASTNode *labelTrueNode = createASTNode(labelTrueToken);
+
+        Token labelFalseToken = {.value = NO};
+        strcpy(labelFalseToken.lexeme, labelFalse);
+        ASTNode *labelFalseNode = createASTNode(labelFalseToken);
+
         consume(context);
         expect(context, OPEN_PAREN);
         consume(context);
         ASTNode *exp_condition = exp(context);
-        whileNode->left = exp_condition;
-        translate(exp_condition, context, fp);
         expect(context, CLOSE_PAREN);
         consume(context);
+        translate(exp_condition, context, fp);
 
+        labelTrueNode->next = labelFalseNode;
+        whileNode->left = labelTrueNode;
+        translate(whileNode, context, fp);
+        if (match(context, OPEN_CURLY_PAREN))
+        {
+            parse_block(context, fp);
+        }
+        else
+        {
+            stmt(context, fp);
+        }
+        translate(exp_condition, context, fp);
+
+        labelTrueNode->next = NULL;
+        labelFalseNode->next = labelTrueNode;
+        whileNode->left = labelFalseNode;
         translate(whileNode, context, fp);
         context->loopStack -= 1;
-        return whileNode;
+
+        labelFalseNode->next = NULL;
+        whileNode->left = NULL;
+        freeASTNode(whileNode);
+        freeASTNode(exp_condition);
+        freeASTNode(labelFalseNode);
+        freeASTNode(labelTrueNode);
+        return;
     }
-    return NULL;
+    return;
 }
 
-ASTNode *jump_stmt(Context *context, FILE *fp)
+void jump_stmt(Context *context, FILE *fp)
 {
     if (match(context, RETURN))
     {
@@ -181,19 +246,22 @@ ASTNode *jump_stmt(Context *context, FILE *fp)
         if (match(context, SEMI_COLAN))
         {
             consume(context); // consume ";"
-            return returnNode;
+            translate(returnNode, context, fp);
+            freeASTNode(returnNode);
+            return;
         }
         returnNode->left = exp(context);
         expect(context, SEMI_COLAN);
         consume(context);
-
-        return returnNode;
+        translate(returnNode, context, fp);
+        freeASTNode(returnNode);
+        return;
     }
-    return NULL;
+    return;
 }
 
 // BLOCK := "{" EXP  "}"
-ASTNode *parse_block(Context *context, FILE *fp)
+void parse_block(Context *context, FILE *fp)
 {
 
     expect(context, OPEN_CURLY_PAREN);
@@ -205,11 +273,12 @@ ASTNode *parse_block(Context *context, FILE *fp)
 
     // translate body start   for maneging base pointer and stack pointer
     translate(bodyStartNode, context, fp);
-    ASTNode *node;
-    int first = 1;
+
+    freeASTNode(bodyStartNode);
+
     while (context->current.value != CLOSE_CURLY_PAREN && context->current.value != TEOF)
     {
-        node = stmt(context, fp);
+        stmt(context, fp);
     }
     expect(context, CLOSE_CURLY_PAREN);
     consume(context);
@@ -218,15 +287,16 @@ ASTNode *parse_block(Context *context, FILE *fp)
 
     // translate body end   for maneging base pointer and stack pointer
     translate(body_end, context, fp);
+    freeASTNode(body_end);
 
     popSymbolTable(context->symbolTableStack);
 
-    return NULL;
+    return;
 }
 
 // ASM := "asm" "(" "[" STRING_ASM "]" ")" ";"
 // this function will push assembly instuction directly in asm file to make sys calls
-ASTNode *parseAsm(Context *context, FILE *fp)
+void parseAsm(Context *context, FILE *fp)
 {
     if (match(context, ASM))
     {
@@ -244,9 +314,11 @@ ASTNode *parseAsm(Context *context, FILE *fp)
         consume(context); // consume ")"
         expect(context, SEMI_COLAN);
         consume(context); // consume ";"
-        return asmNode;
+        translate(asmNode, context, fp);
+        freeASTNode(asmNode);
+        return;
     }
-    return NULL;
+    return;
 }
 ASTNode *parseASTString(Context *context, FILE *fp)
 {

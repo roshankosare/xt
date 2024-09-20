@@ -11,3 +11,16 @@ ASTNode *createASTNode(Token token)
     node->left = node->right = node->next = NULL;
     return node;
 }
+
+void freeASTNode(ASTNode *root)
+{
+    if (root == NULL)
+    {
+        return;
+    }
+    freeASTNode(root->left);
+    freeASTNode(root->right);
+    freeASTNode(root->next);
+    free(root);
+    return;
+}

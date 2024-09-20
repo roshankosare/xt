@@ -16,6 +16,6 @@ typedef struct ASTNode
 
 
 ASTNode *createASTNode(Token token);
-
+void freeASTNode(ASTNode *root);
 
 #endif

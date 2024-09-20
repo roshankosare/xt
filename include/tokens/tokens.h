@@ -130,6 +130,8 @@ typedef enum
     ARG,
     TYPEOF,
     MODULAS,
+    YES,
+    NO,
     TEOF
     
 } TokenValue;

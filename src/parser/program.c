@@ -7,29 +7,25 @@
 // PROGRAM = IDENT_STMT | STMT
 // IDENT_STMT = exp | FUN_SMT
 //
- void program(Context *context,FILE *fp)
+void program(Context *context, FILE *fp)
 {
 
     if (context->current.value == FUNCTION)
     {
-        
+
         ASTNode *funtionNode;
-        funtionNode = fun(context,fp);
+        funtionNode = fun(context, fp);
         return funtionNode;
     }
 
-    Token token = {.lexeme = "Statement", .value = UNKNOWN};
-    ASTNode *stmtNode = createASTNode(token);
-    stmtNode->right = stmt(context,fp);
-    return stmtNode;
+    stmt(context, fp);
 }
 
 // STMT = SELC_STMT | JUMP_STMT | ITER_STMT | DEC_STMT
 
-
-ASTNode *fun(Context *context,FILE *fp)
+ASTNode *fun(Context *context, FILE *fp)
 {
     ASTNode *node;
-    node = parse_fun(context , fp);
+    node = parse_fun(context, fp);
     return node;
 }

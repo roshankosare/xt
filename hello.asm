@@ -137,28 +137,6 @@ print_series:
     movzx bx , bl
     push   bx
     push eax
-    mov ecx , [pebp] 
-    mov bl , [ ecx + (-5) ]
-    movzx bx , bl 
-    mov eax , [ecx + (-5) + 1 ] 
-    push bx
-    push eax
-    mov bl , [INT_TYPE]
-    movzx bx , bl
-    push bx
-    mov eax, 0
-    push eax
-    pop ebx
-    pop dx 
-    pop eax
-    pop cx 
-    cmp eax , ebx
-    setg al
-    movzx eax , al
-    mov bl , [INT_TYPE]
-    movzx bx , bl
-    push   bx
-    push eax
     pop eax
     pop bx
     mov [condition] , bx
@@ -748,29 +726,6 @@ print:
     mov [ecx + (-40)] , bx              
     mov [ecx + (-40) + 1] , eax
     push bx
-    push eax
-    mov ecx , [pebp] 
-    mov bl , [ ecx + (-35) ]
-    movzx bx , bl 
-    mov eax , [ecx + (-35) + 1 ] 
-    push bx
-    push eax
-    mov bl , [INT_TYPE]
-    movzx bx , bl
-    push bx
-    mov eax, 0
-    push eax
-    pop ebx
-    pop dx 
-    pop eax
-    pop cx 
-    cmp eax , ebx
-    setne al
-    movzx eax , al
-    mov bl , [INT_TYPE]
-    movzx bx , bl
-    push   bx
-    push eax
     push eax
     mov ecx , [pebp] 
     mov bl , [ ecx + (-35) ]
@@ -1392,28 +1347,6 @@ print_int:
     movzx bx , bl
     push   bx
     push eax
-    mov ecx , [pebp] 
-    mov bl , [ ecx + (-5) ]
-    movzx bx , bl 
-    mov eax , [ecx + (-5) + 1 ] 
-    push bx
-    push eax
-    mov bl , [INT_TYPE]
-    movzx bx , bl
-    push bx
-    mov eax, 0
-    push eax
-    pop ebx
-    pop dx 
-    pop eax
-    pop cx 
-    cmp eax , ebx
-    setg al
-    movzx eax , al
-    mov bl , [INT_TYPE]
-    movzx bx , bl
-    push   bx
-    push eax
     pop eax
     pop bx
     mov [condition] , bx
@@ -1643,28 +1576,6 @@ print_int:
     mov [ecx + (-15)] , bx              
     mov [ecx + (-15) + 1] , eax
     push bx
-    push eax
-    mov ecx , [pebp] 
-    mov bl , [ ecx + (-30) ]
-    movzx bx , bl 
-    mov eax , [ecx + (-30) + 1 ] 
-    push bx
-    push eax
-    mov bl , [INT_TYPE]
-    movzx bx , bl
-    push bx
-    mov eax, 0
-    push eax
-    pop ebx
-    pop dx 
-    pop eax
-    pop cx 
-    cmp eax , ebx
-    setge al
-    movzx eax , al
-    mov bl , [INT_TYPE]
-    movzx bx , bl
-    push   bx
     push eax
     mov ecx , [pebp] 
     mov bl , [ ecx + (-30) ]

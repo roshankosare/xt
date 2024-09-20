@@ -3,13 +3,13 @@
 #include "../parser/ast.h"
 #include "../context/context.h"
 
-ASTNode *stmt(Context *context, FILE *fp);
-ASTNode *dec_stmt(Context *context, FILE *fp);
-ASTNode *selc_stmt(Context *context, FILE *fp);
-ASTNode *iter_stmt(Context *context, FILE *fp);
-ASTNode *dec_stmt(Context *context, FILE *fp);
-ASTNode *jump_stmt(Context *context, FILE *fp);
-ASTNode *parse_block(Context *context, FILE *fp);
-ASTNode *parseAsm(Context *context, FILE *fp);
+void stmt(Context *context, FILE *fp);
+void dec_stmt(Context *context, FILE *fp);
+void selc_stmt(Context *context, FILE *fp);
+void iter_stmt(Context *context, FILE *fp);
+void dec_stmt(Context *context, FILE *fp);
+void jump_stmt(Context *context, FILE *fp);
+void parse_block(Context *context, FILE *fp);
+void parseAsm(Context *context, FILE *fp);
 
 #endif

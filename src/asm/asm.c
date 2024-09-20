@@ -11,7 +11,6 @@
 #include <assert.h>
 #include <string.h>
 
-
 void translate(ASTNode *ast, Context *context, FILE *fp)
 {
     if (ast == NULL)
@@ -91,7 +90,6 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
         break;
 
     case WHILE:
-        translate(ast->left, context, fp);
         print_while(ast, context, fp);
         // assert(0 && "TODO: WHILE is not implemented");
         break;
@@ -179,7 +177,7 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
 
     case PARAM_START:
 
-    break;
+        break;
 
     case PARAM_END:
         // SymbolTableEntry *entry = popSymbolTable(context->symbolTableStack);
@@ -242,4 +240,3 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
     }
     return translate(ast->next, context, fp);
 }
-
