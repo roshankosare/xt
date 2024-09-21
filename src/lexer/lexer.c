@@ -5,14 +5,19 @@
 #include <ctype.h>
 #include "../../include/tokens/tokens.h"
 #include "../../include/tokens/tokenizer.h"
+#include "../../include/lexer/lexer.h"
 
-Token *lexer(FILE *fp, int *tokenCount)
+Token *lexer(Context *context, FILE *fp, int *tokenCount)
 {
+   
+    fillEntrys(context->tokenTable);
     Token *tokens = tokenizeFile(fp, tokenCount);
     for (int i = 0; i < *tokenCount; i++)
     {
-        fillTokenValue(&tokens[i]);
+        int TOKEN_INT_CODE = getTokenIntCodeValue(context->tokenTable,tokens[i].lexeme);
+        tokens[i].value = (TokenValue)TOKEN_INT_CODE;
     }
+   
     return tokens;
 }
 void printTokens(Token *tokens, int tokenCount)

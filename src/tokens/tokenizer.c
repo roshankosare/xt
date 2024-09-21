@@ -2,7 +2,9 @@
 #include <regex.h>
 #include <string.h>
 #include <ctype.h>
+#include <stdlib.h>
 #include "../../include/tokens/tokenizer.h"
+#include "../../include/tokens/tokens.h"
 
 #define MAX_TOKEN_LENGTH 500
 
@@ -27,7 +29,7 @@ TokenPattern token_patterns[] = {
     {{0}, "INTEGER", "[+-]?[0-9]+"},
 
     {{0}, "CONDITIONAL_OPERATOR", "==|!=|<=|>=|<|>"},
-    {{0}, "OPERATOR", "[%&|!@+*/=-]"},                      // OPERATOR                                                       // CONDITIONAL OPERATORS
+    {{0}, "OPERATOR", "[%&|!@+*/=-]"},                     // OPERATOR                                                       // CONDITIONAL OPERATORS
     {{0}, "PUNCTUATION", "\\(|\\)|\\{|\\}|\\[|\\]|:|;|,"}, // PUNCTUATION
     {{0}, "STRING_CONSTANT", "\"[^\"]*\"|'[^']*'"},        // STRING CONSTANT
 
@@ -441,7 +443,7 @@ char *getTokenStringValue(int token)
         return "BREAK";
     case TYPEOF:
         return "TYPEOF";
-    case MODULAS :
+    case MODULAS:
         return "MODULAS";
 
     default:
@@ -449,242 +451,21 @@ char *getTokenStringValue(int token)
     }
 }
 
-void fillTokenValue(Token *token)
-{
 
-    switch (getTokenIntCodeValue(token->lexeme))
+
+int getTokenIntCodeValue(TokenTable *table, char *token)
+{
+    TokenEntry *entry = lookUpTokenEntry(table, token);
+    if (entry)
     {
-    case INT_TOKEN_IF:
-        token->value = IF;
-        break;
-    case INT_TOKEN_ELSE:
-        token->value = ELSE;
-        break;
-    case INT_TOKEN_RETURN:
-        token->value = RETURN;
-        break;
-    case INT_TOKEN_WHILE:
-        token->value = WHILE;
-        break;
-    case INT_TOKEN_PLUS:
-        token->value = PLUS;
-        break;
-    case INT_TOKEN_MINUS:
-        token->value = MINUS;
-        break;
-    case INT_TOKEN_MUL:
-        token->value = MUL;
-        break;
-    case INT_TOKEN_DIV:
-        token->value = DIV;
-        break;
-    case INT_TOKEN_ASSIGN:
-        token->value = ASSIGN;
-        break;
-    case INT_TOKEN_EQUALS:
-        token->value = EQUALTO;
-        break;
-    case INT_TOKEN_OPEN_PAREN:
-        token->value = OPEN_PAREN;
-        break;
-    case INT_TOKEN_CLOSE_PAREN:
-        token->value = CLOSE_PAREN;
-        break;
-    case INT_TOKEN_OPEN_CURLY_PAREN:
-        token->value = OPEN_CURLY_PAREN;
-        break;
-    case INT_TOKEN_CLOSE_CURLY_PAREN:
-        token->value = CLOSE_CURLY_PAREN;
-        break;
-    case INT_TOKEN_DOUBLE_QT:
-        token->value = DOUBLE_QT;
-        break;
-    case INT_TOKEN_SINGLE_QT:
-        token->value = SINGLE_QT;
-        break;
-    case INT_TOKEN_COLAN:
-        token->value = COLAN;
-        break;
-    case INT_TOKEN_SEMI_COLAN:
-        token->value = SEMI_COLAN;
-        break;
-    case INT_TOKEN_LESS_THAN:
-        token->value = LESS_THAN;
-        break;
-    case INT_TOKEN_GRATER_THAN:
-        token->value = GRATER_THAN;
-        break;
-    case INT_TOKEN_LESS_THAN_EQTO:
-        token->value = LESS_THAN_EQTO;
-        break;
-    case INT_TOKEN_GRATER_THAN_EQTO:
-        token->value = GRATER_THAN_EQTO;
-        break;
-    case INT_TOKEN_COMMA:
-        token->value = COMMA;
-        break;
-    case INT_TOKEN_KEYWORD:
-        token->value = KEYWORD;
-        break;
-    case INT_TOKEN_IDENTIFIER:
-        token->value = IDENTIFIER;
-        break;
-    case INT_TOKEN_INTEGER_CONSTANT:
-        token->value = INTEGER_CONSTANT;
-        break;
-    case INT_TOKEN_FLOAT_CONSTANT:
-        token->value = FLOAT_CONSTANT;
-        break;
-    case INT_TOKEN_STRING_CONSTANT:
-        token->value = STRING_CONSTANT;
-        break;
-    case INT_TOKEN_UNKNOWN:
-        token->value = UNKNOWN;
-        break;
-    case INT_TOKEN_VAR:
-        token->value = VAR;
-        break;
-    case INT_TOKEN_BLOCK_VAR:
-        token->value = BLOCK_VAR;
-        break;
-    case INT_TOKEN_INC:
-        token->value = INC;
-        break;
-    case INT_TOKEN_DEC:
-        token->value = DEC;
-        break;
-    case INT_TOKEN_FUNCTION:
-        token->value = FUNCTION;
-        break;
-    case INT_TOKEN_LOGICAL_AND:
-        token->value = LOGICAL_AND;
-        break;
-    case INT_TOKEN_LOGICAL_OR:
-        token->value = LOGICAL_OR;
-        break;
-    case INT_TOKEN_LOGICAL_NOT:
-        token->value = LOGICAL_NOT;
-        break;
-    case INT_TOKEN_NOT_EQLTO:
-        token->value = NOT_EQLTO;
-        break;
-    case INT_TOKEN_OPEN_SQ_PARAN:
-        token->value = OPEN_SQ_PARAN;
-        break;
-    case INT_TOKEN_CLOSE_SQ_PARAN:
-        token->value = CLOSE_SQ_PARAN;
-        break;
-    case INT_TOKEN_ASM:
-        token->value = ASM;
-        break;
-    case INT_TOKEN_CHAR:
-        token->value = CHAR_T;
-        break;
-    case INT_TOKEN_INT:
-        token->value = INT_T;
-        break;
-    case INT_TOKEN_FLOAT:
-        token->value = FLOAT_T;
-        break;
-    case INT_TOKEN_STRING:
-        token->value = STRING_T;
-        break;
-    case INT_TOKEN_VALUE_AT:
-        token->value = VALUE_AT;
-        break;
-    case INT_TOKEN_BIT_AND:
-        token->value = BIT_AND;
-        break;
-    case INT_TOKEN_BIT_OR:
-        token->value = BIT_OR;
-        break;
-    case INT_TOKEN_BIT_NOT:
-        token->value = BIT_NOT;
-        break;
-
-    case INT_TOKEN_HEX_CONSTANT:
-        token->value = HEX_CONSTANT;
-        break;
-    case INT_TOKEN_CONTINUE:
-        token->value = CONTINUE;
-        break;
-
-    case INT_TOKEN_BREAK:
-        token->value = BREAK;
-        break;
-
-    case INT_TOKEN_TYPEOF:
-        token->value = TYPEOF;
-        break;
-    
-    case INT_TOKEN_MODULAS:
-        token->value = MODULAS;
-        break;
-
-    default:
-        token->value = UNKNOWN;
+        return entry->value;
     }
-}
-
-int getTokenIntCodeValue(char *token)
-{
-    // clang-format off
-
-    if(strcmp(token,"function") == 0)   return INT_TOKEN_FUNCTION;
-    if(strcmp(token,"var") == 0)        return INT_TOKEN_VAR; 
-    if (strcmp(token, "if") == 0)       return INT_TOKEN_IF;
-    if (strcmp(token, "else") == 0)     return INT_TOKEN_ELSE;
-    if (strcmp(token, "return") == 0)   return INT_TOKEN_RETURN;
-    if (strcmp(token, "while") == 0)    return INT_TOKEN_WHILE;
-    if(strcmp("and",token)== 0)         return INT_TOKEN_LOGICAL_AND;
-    if(strcmp("or",token)== 0)          return INT_TOKEN_LOGICAL_OR;
-    if(strcmp("not",token)==0 )         return INT_TOKEN_LOGICAL_NOT;
-    if(strcmp("asm",token) == 0)        return INT_TOKEN_ASM;
-    if(strcmp("int",token)== 0)         return INT_TOKEN_INT;
-    if(strcmp("char",token) == 0)       return INT_TOKEN_CHAR;
-    if(strcmp("float",token) == 0)      return INT_TOKEN_FLOAT;
-    if(strcmp("string",token)== 0)      return INT_TOKEN_STRING;
-    if(strcmp("continue",token) == 0)   return INT_TOKEN_CONTINUE;
-    if(strcmp("break",token) == 0)      return INT_TOKEN_BREAK;
-    if(strcmp("typeof",token) == 0)     return INT_TOKEN_TYPEOF;
+    if(isHexNumber(token))               return HEX_CONSTANT; 
+    if (isIdentifierToken(token))        return IDENTIFIER;
+    if (isIntegerConstant(token))        return INTEGER_CONSTANT;  
+    if (isFloatConstant(token))          return FLOAT_CONSTANT; 
+    if (isStringConstant(token))         return STRING_CONSTANT;
     
-    if (strcmp(token, "+") == 0)        return INT_TOKEN_PLUS;
-    if (strcmp(token, "-") == 0)        return INT_TOKEN_MINUS;
-    if (strcmp(token, "*") == 0)        return INT_TOKEN_MUL;
-    if (strcmp(token, "/") == 0)        return INT_TOKEN_DIV;
-    if(strcmp(token , "%") == 0)        return INT_TOKEN_MODULAS;
-    if (strcmp(token,"@") == 0)         return INT_TOKEN_VALUE_AT;
-    if (strcmp(token, "=") == 0)        return INT_TOKEN_ASSIGN;
-    if (strcmp(token, "==") == 0)       return INT_TOKEN_EQUALS;
-    if (strcmp(token, "(") == 0)        return INT_TOKEN_OPEN_PAREN;
-    if (strcmp(token, ")") == 0)        return INT_TOKEN_CLOSE_PAREN;
-    if (strcmp(token, "{") == 0)        return INT_TOKEN_OPEN_CURLY_PAREN;
-    if (strcmp(token, "}") == 0)        return INT_TOKEN_CLOSE_CURLY_PAREN;
-    if(strcmp(token,"[") == 0)          return INT_TOKEN_OPEN_SQ_PARAN;
-    if(strcmp(token,"]") == 0)          return INT_TOKEN_CLOSE_SQ_PARAN;
-    if (strcmp(token, "\"") == 0)       return INT_TOKEN_DOUBLE_QT;
-    if (strcmp(token, "\'") == 0)       return INT_TOKEN_SINGLE_QT;
-    if (strcmp(token, ":") == 0)        return INT_TOKEN_COLAN;
-    if (strcmp(token, ";") == 0)        return INT_TOKEN_SEMI_COLAN;
-    if (strcmp(token, "<") == 0)        return INT_TOKEN_LESS_THAN;
-    if (strcmp(token, ">") == 0)        return INT_TOKEN_GRATER_THAN;
-    if (strcmp(token, "<=") == 0)       return INT_TOKEN_LESS_THAN_EQTO;
-    if (strcmp(token, ">=") == 0)       return INT_TOKEN_GRATER_THAN_EQTO;
-    if (strcmp(token,"!=") == 0)        return INT_TOKEN_NOT_EQLTO;
-    if (strcmp(token, ",") == 0)        return INT_TOKEN_COMMA;
-    if (strcmp(token,"++") == 0)         return INT_TOKEN_INC;
-    if (strcmp(token,"--")== 0)          return INT_TOKEN_DEC;
-    if(strcmp(token,"&") == 0)           return INT_TOKEN_BIT_AND;
-    if(strcmp(token,"|") == 0)           return INT_TOKEN_BIT_OR;
-    if(strcmp(token,"!") == 0)           return INT_TOKEN_BIT_NOT;  
-    if(isHexNumber(token))               return INT_TOKEN_HEX_CONSTANT; 
-    if (isIdentifierToken(token))        return INT_TOKEN_IDENTIFIER;
-    if (isIntegerConstant(token))        return INT_TOKEN_INTEGER_CONSTANT;  
-    if (isFloatConstant(token))          return INT_TOKEN_FLOAT_CONSTANT; 
-    if (isStringConstant(token))         return INT_TOKEN_STRING_CONSTANT;
-    
-    
-    
-    return INT_TOKEN_UNKNOWN;
-    // clang-format onSS
+    return UNKNOWN;
+    // clang-format on
 }

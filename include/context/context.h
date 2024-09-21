@@ -12,6 +12,7 @@ typedef struct Context
     SymbolTableStack *symbolTableStack;
     FunctionTable *functionTable;
     ASMContext *asmContext;
+    TokenTable *tokenTable;
     Token *tokens;
     Token current;
     Token lookahed;
@@ -20,6 +21,6 @@ typedef struct Context
 
 } Context;
 
-Context *initContext(Token *tokens);
+Context *initContext();
 
 #endif

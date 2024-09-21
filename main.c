@@ -8,7 +8,7 @@
 #include "include/asm/asm.h"
 #include "include/context/context.h"
 
-// #define FLAG 0
+#define FLAG 0
 
 #define MAX_LINE_LENGTH 1024
 void usage(char *programName)
@@ -65,7 +65,10 @@ int main(int argc, char *argv[])
         printf("\nERROR: %s file not found\n", inputfile);
         exit(1);
     }
-    Token *tokens = lexer(fp, &tokenCount);
+
+    Context *context = initContext();
+
+    Token *tokens = lexer(context, fp, &tokenCount);
     fclose(fp);
     // Token *tokens = tokenize(fp, &tokenCount);
     // for (int i = 0; i < tokenCount; i++)
@@ -78,9 +81,11 @@ int main(int argc, char *argv[])
     // }
 
     int index = 0;
-    printTokens(tokens, tokenCount);
-
-    Context *context = initContext(tokens);
+    context->tokens = tokens;
+    context->lookahed = tokens[1];
+    context->current = tokens[0];
+    // printTokens(tokens, tokenCount);
+#ifdef FLAG
     SymbolTable *symbolTable = initSymbolTable();
     pushSymbolTable(context->symbolTableStack, symbolTable);
 
@@ -93,25 +98,8 @@ int main(int argc, char *argv[])
     parseProgram(context, tokens, op);
     fclose(op);
 
-    printf("\nLexical anaysis completed without any error\n");
 
-#ifdef FLAG
-    printAST(start, 0);
-    FILE *op;
 
-    char *asmFile = malloc(50 * sizeof(char));
-    snprintf(asmFile, 50, "%s.asm", outputfile);
-
-    op = fopen(asmFile, "w+");
-    if (fp == NULL)
-    {
-        printf("\nERROR: %s file cannot be creted\n", inputfile);
-        exit(1);
-    }
-    printf("\n Parsing is completed successfully..\n");
-    createASMFile(start, context, op);
-    fclose(op);
-#endif
     char *asmCommand = malloc(50 * sizeof(char));
     char *linkCommand = malloc(50 * sizeof(char));
     // Execute the command using system()
@@ -133,8 +121,6 @@ int main(int argc, char *argv[])
         fprintf(stderr, "Linking failed with error code %d\n", linkResult);
         return 1;
     }
-
-
-
+#endif
     return 0;
 }

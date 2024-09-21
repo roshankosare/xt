@@ -5,6 +5,7 @@
         "fun.h": "c",
         "lexer.h": "c",
         "symboltable.h": "c",
-        "context.h": "c"
+        "context.h": "c",
+        "tokens.h": "c"
     }
 }

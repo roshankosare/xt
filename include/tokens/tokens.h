@@ -62,7 +62,7 @@
 #define INVALID_TOKEN                   -1
 
 
-
+#define TOKEN_TABLE_SIZE 50
 typedef enum
 {
     OPEN_PAREN,
@@ -150,6 +150,31 @@ typedef struct
     Position pos;
 
 } Token;
+
+typedef struct {
+    char token[100];  // Token string (like "if", "else", "+", etc.)
+    TokenValue value;   // Corresponding TokenValue
+} TokenMap;
+
+typedef struct TokenEntry {
+   char token[100]; 
+    TokenValue value;
+    struct TokenEntry *next;
+}TokenEntry;
+
+typedef struct TokenTable{
+    TokenEntry *tokens[TOKEN_TABLE_SIZE];
+} TokenTable;
+
+TokenTable *initTokenTable();
+TokenEntry *initTokenEntry(const char *token ,TokenValue value);
+
+void insertTokenEntryToTokenTable(TokenTable *table,TokenEntry *entry);
+TokenEntry *lookUpTokenEntry(TokenTable *table ,char *entry);
+
+void fillEntrys(TokenTable *table);
+
+
 
 
 #endif
