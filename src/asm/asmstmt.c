@@ -2,6 +2,7 @@
 #include "../../include/parser/helper.h"
 #include "../../include/parser/stmt.h"
 #include "../../include/asm/asm.h"
+#include "../../include/tokens/tokenizer.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -16,9 +17,23 @@ void print_if(ASTNode *ast, Context *context, FILE *fp)
     }
     if (ast->left->token.value == NO)
     {
-        fprintf(fp, ".%s:                        ;; defination of false label \n", ast->left->token.lexeme);
+        fprintf(fp, "     jmp .%s                        ;; defination of false label \n", ast->left->token.lexeme);
     }
 }
+
+void print_else(ASTNode *ast, Context *context, FILE *fp)
+{
+    if (ast->left->token.value == YES)
+    {
+        fprintf(fp, ".%s:\n", ast->left->token.lexeme);
+    }
+
+    if (ast->left->token.value == NO)
+    {
+        fprintf(fp, ".%s:\n", ast->left->token.lexeme);
+    }
+}
+
 void print_while(ASTNode *ast, Context *context, FILE *fp)
 {
     if (ast->left->token.value == YES)
@@ -48,7 +63,6 @@ void print_while(ASTNode *ast, Context *context, FILE *fp)
         return;
     }
 
-   
     if (ast->left->token.value == NO)
     {
         fprintf(fp, "    pop eax\n");
@@ -70,7 +84,6 @@ void print_while(ASTNode *ast, Context *context, FILE *fp)
         fprintf(fp, "    jnz .%s\n", ast->left->next->token.lexeme);
         fprintf(fp, ".%s:                        ;; defination of false label \n", ast->left->token.lexeme);
     }
-    
 
     // fprintf(fp, "    mov dword eax , 10\n");
     // fprintf(fp, "    call print_eax\n");

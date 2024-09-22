@@ -455,10 +455,13 @@ char *getTokenStringValue(int token)
 
 int getTokenIntCodeValue(TokenTable *table, char *token)
 {
+    int value = 0;
     TokenEntry *entry = lookUpTokenEntry(table, token);
     if (entry)
     {
-        return entry->value;
+        value = entry->value;
+        free(entry);
+        return value;
     }
     if(isHexNumber(token))               return HEX_CONSTANT; 
     if (isIdentifierToken(token))        return IDENTIFIER;

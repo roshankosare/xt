@@ -144,15 +144,23 @@ void dec_stmt(Context *context, FILE *fp)
 }
 void selc_stmt(Context *context, FILE *fp)
 {
+    if (match(context, ELSE))
+    {
+        printf("\nERROR : unexpected `else` without `if`\n at line %d and col %d",
+               context->current.pos.line, context->current.pos.col);
+        exit(1);
+    }
     if (match(context, IF))
     {
         ASTNode *ifNode = createASTNode(context->current);
+        char *labelElse = label_generate();
         char *labelFalse = label_generate();
         Token ifConToken = {.lexeme = "", .value = YES};
-        strcpy(ifConToken.lexeme, labelFalse);
+        strcpy(ifConToken.lexeme, labelElse);
         ifNode->left = createASTNode(ifConToken);
 
         consume(context);
+        
         expect(context, OPEN_PAREN);
         consume(context);
         ASTNode *exp_node = exp(context);
@@ -173,12 +181,62 @@ void selc_stmt(Context *context, FILE *fp)
         }
 
         ifConToken.value = NO;
+        strcpy(ifConToken.lexeme, labelFalse);
         ifNode->left = createASTNode(ifConToken);
         translate(ifNode, context, fp);
 
         freeASTNode(ifNode);
+
+        if (match(context, ELSE))
+        {
+            Token elseConToken = {.lexeme = "", .value = YES};
+            strcpy(elseConToken.lexeme, labelElse);
+            ASTNode *elseConNode = createASTNode(elseConToken);
+            ASTNode *elseNode = createASTNode(context->current);
+            elseNode->left = elseConNode;
+            translate(elseNode, context, fp);
+            consume(context);
+            if (match(context, OPEN_CURLY_PAREN))
+            {
+                parse_block(context, fp);
+            }
+            else
+            {
+                stmt(context, fp);
+            }
+
+            elseConToken.value = NO;
+            strcpy(elseConToken.lexeme, labelFalse);
+            elseNode->left = NULL;
+            freeASTNode(elseConNode);
+            elseConNode = createASTNode(elseConToken);
+
+            elseNode->left = elseConNode;
+
+            translate(elseNode, context, fp);
+            return;
+        }
+
+        Token elseNodeToken = {.lexeme = "else", .value = ELSE};
+        Token elseConToken = {.lexeme = "", .value = YES};
+        strcpy(elseConToken.lexeme, labelElse);
+        ASTNode *elseConNode = createASTNode(elseConToken);
+        ASTNode *elseNode = createASTNode(elseNodeToken);
+        elseNode->left = elseConNode;
+        translate(elseNode, context, fp);
+
+        elseConToken.value = NO;
+        strcpy(elseConToken.lexeme, labelFalse);
+        elseNode->left = NULL;
+        freeASTNode(elseConNode);
+        elseConNode = createASTNode(elseConToken);
+
+        elseNode->left = elseConNode;
+
+        translate(elseNode, context, fp);
         return;
     }
+
     return;
 }
 

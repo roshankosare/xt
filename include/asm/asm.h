@@ -6,7 +6,6 @@
 #include "../parser/ast.h"
 #include "../context/context.h"
 
-void createASMFile(ASTNode *ast,Context *context,FILE *fp);
 void translate(ASTNode *ast,Context *context,FILE *fp);
 
 #endif

@@ -46,9 +46,10 @@ TokenEntry *lookUpTokenEntry(TokenTable *table, char *token)
     entry = table->tokens[index];
     while (entry != NULL)
     {
-
+        // printf("\ncurrent token: %s  looking for: %s",entry->token,token);
         if (strcmp(token, entry->token) == 0)
         {
+            
             e = initTokenEntry(entry->token, entry->value);
             e->next = NULL;
             return e;
@@ -153,6 +154,7 @@ void fillEntrys(TokenTable *table)
     insertTokenEntryToTokenTable(table, entry);
     entry = initTokenEntry("|", BIT_OR);
     insertTokenEntryToTokenTable(table, entry);
+    
     entry = NULL;
     return;
 }

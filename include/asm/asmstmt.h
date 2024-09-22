@@ -6,6 +6,7 @@
 #include "../parser/ast.h"
 
 void print_if(ASTNode *ast, Context *context, FILE *fp);
+void print_else(ASTNode *ast,Context *context,FILE *fp);
 void print_while(ASTNode *ast, Context *context, FILE *fp);
 
 void print_var(ASTNode *ast, Context *context, FILE *fp);

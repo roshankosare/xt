@@ -81,7 +81,8 @@ void translate(ASTNode *ast, Context *context, FILE *fp)
         break;
 
     case ELSE:
-        assert(0 && "TODO: ELSE is not implemented");
+        print_else(ast,context,fp);
+        break;
     case FOR:
         assert(0 && "TODO: FOR is not implemented");
 
