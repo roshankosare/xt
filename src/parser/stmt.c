@@ -4,6 +4,7 @@
 #include "../../include/parser/exp.h"
 #include "../../include/symboltable/symboltable.h"
 #include "../../include/symboltable/functiontable.h"
+#include "../../include/lexer/lexer.h"
 #include "../../include/asm/asm.h"
 #include <stdio.h>
 #include <string.h>
@@ -34,7 +35,7 @@ void stmt(Context *context, FILE *fp)
             printf("\nERROR: unexpected 'continue' without loop\n");
             exit(0);
         }
-        node = createASTNode(context->current);
+        node = createASTNode(getCurrentToken(context));
         consume(context); // consume "xontinue"
         expect(context, SEMI_COLAN);
         consume(context); // consume ";"
@@ -49,7 +50,7 @@ void stmt(Context *context, FILE *fp)
             printf("\nERROR: unexpected 'break' without loop or switch\n");
             exit(0);
         }
-        node = createASTNode(context->current);
+        node = createASTNode(getCurrentToken(context));
         consume(context); // consume "xontinue"
         expect(context, SEMI_COLAN);
         consume(context); // consume ";"
@@ -111,10 +112,10 @@ void stmt(Context *context, FILE *fp)
 void dec_stmt(Context *context, FILE *fp)
 {
     // DEC_STMT := { "var" "IDENTFIER" ";"}
-    ASTNode *varnode = createASTNode(context->current);
+    ASTNode *varnode = createASTNode(getCurrentToken(context));
     consume(context); // consume "var"
     expect(context, IDENTIFIER);
-    Token identifier_token = context->current;
+    Token identifier_token = getCurrentToken(context);
     SymbolTableEntry *entry = insertSymbolEntry(context, identifier_token); // insert symbol in symbol table
     ASTNode *idNode = createASTNode(identifier_token);                      // consume "id"
     consume(context);
@@ -129,7 +130,7 @@ void dec_stmt(Context *context, FILE *fp)
     }
     // DEC_STMT := { "var" "IDENTFIER" "=" exp }
     expect(context, ASSIGN);
-    ASTNode *assignNode = createASTNode(context->current);
+    ASTNode *assignNode = createASTNode(getCurrentToken(context));
     consume(context); // consume "="
     assignNode->left = idNode;
     assignNode->right = exp(context);
@@ -152,7 +153,7 @@ void selc_stmt(Context *context, FILE *fp)
     }
     if (match(context, IF))
     {
-        ASTNode *ifNode = createASTNode(context->current);
+        ASTNode *ifNode = createASTNode(getCurrentToken(context));
         char *labelElse = label_generate();
         char *labelFalse = label_generate();
         Token ifConToken = {.lexeme = "", .value = YES};
@@ -160,7 +161,7 @@ void selc_stmt(Context *context, FILE *fp)
         ifNode->left = createASTNode(ifConToken);
 
         consume(context);
-        
+
         expect(context, OPEN_PAREN);
         consume(context);
         ASTNode *exp_node = exp(context);
@@ -192,7 +193,7 @@ void selc_stmt(Context *context, FILE *fp)
             Token elseConToken = {.lexeme = "", .value = YES};
             strcpy(elseConToken.lexeme, labelElse);
             ASTNode *elseConNode = createASTNode(elseConToken);
-            ASTNode *elseNode = createASTNode(context->current);
+            ASTNode *elseNode = createASTNode(getCurrentToken(context));
             elseNode->left = elseConNode;
             translate(elseNode, context, fp);
             consume(context);
@@ -245,7 +246,7 @@ void iter_stmt(Context *context, FILE *fp)
     if (match(context, WHILE))
     {
         context->loopStack += 1;
-        ASTNode *whileNode = createASTNode(context->current);
+        ASTNode *whileNode = createASTNode(getCurrentToken(context));
         char *labelTrue = label_generate();
         char *labelFalse = label_generate();
 
@@ -299,7 +300,7 @@ void jump_stmt(Context *context, FILE *fp)
 {
     if (match(context, RETURN))
     {
-        ASTNode *returnNode = createASTNode(context->current);
+        ASTNode *returnNode = createASTNode(getCurrentToken(context));
         consume(context);
         if (match(context, SEMI_COLAN))
         {
@@ -358,7 +359,7 @@ void parseAsm(Context *context, FILE *fp)
 {
     if (match(context, ASM))
     {
-        ASTNode *asmNode = createASTNode(context->current);
+        ASTNode *asmNode = createASTNode(getCurrentToken(context));
         consume(context); // consume asm token
 
         expect(context, OPEN_PAREN);
@@ -385,7 +386,7 @@ ASTNode *parseASTString(Context *context, FILE *fp)
         return NULL;
     }
     expect(context, STRING_CONSTANT);
-    ASTNode *node = createASTNode(context->current);
+    ASTNode *node = createASTNode(getCurrentToken(context));
     consume(context); // consume "string"
     if (match(context, CLOSE_SQ_PARAN))
     {

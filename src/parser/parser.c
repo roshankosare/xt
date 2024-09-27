@@ -8,9 +8,19 @@
 #include "../../include/parser/program.h"
 #include "../../include/parser/helper.h"
 #include "../../include/tokens/tokenizer.h"
+#include "../../include/lexer/lexer.h"
 
-void parseProgram(Context *context, Token *tokens, FILE *fp)
+void parseProgram(Context *context, FILE *fp)
 {
+    fillEntrys(context->tokenTable);
+    if (compile_token_patterns())
+    {
+
+        fprintf(stderr, "Failed to compile token patterns\n");
+        exit(-1);
+    }
+    getCurrentToken(context);
+
     fprintf(fp, "section .data                        ;; Section for initialized data\n");
     fprintf(fp, "    condition dd 5 dup(0)\n");
     fprintf(fp, "    RETURN_VALUE dd 5 dup(0)\n");
@@ -62,7 +72,6 @@ void parseProgram(Context *context, Token *tokens, FILE *fp)
 
     print_stakcs_operations(fp);
     print_system_functions(fp);
-
 }
 
 void printAST(ASTNode *node, int depth)

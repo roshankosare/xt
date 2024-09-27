@@ -1,76 +1,197 @@
-
 #include <stdio.h>
-#include <stdlib.h>
+#include <regex.h>
 #include <string.h>
 #include <ctype.h>
+#include <stdlib.h>
 #include "../../include/tokens/tokens.h"
 #include "../../include/tokens/tokenizer.h"
 #include "../../include/lexer/lexer.h"
 
-Token *lexer(Context *context, FILE *fp, int *tokenCount)
+#define MAX_TOKEN_LENGTH 500
+
+#define INITIAL_CAPACITY 200
+
+typedef struct
+{
+    regex_t regex;
+    const char *name;
+    const char *pattern;
+} TokenPattern;
+
+TokenPattern token_patterns[] = {
+    {{0}, "KEYWORD", "\\b(var|if|else|while|return|function|asm|char|int|float|string|continue|break|typeof)\\b"}, // KEYWORDS
+    {{0}, "IDENTIFIER", "[a-zA-Z_][a-zA-Z0-9_]*"},                                                                 // IDENTIFIER
+    {{0}, "SINGLE_LINE_COMMENT", "\\/\\/[^\\n]*"},                                                                 // Single-line comments
+    // {{0}, "MULTI_LINE_COMMENT", "/\\*([^*]|\\*+[^/*])*\\*+/"}  ,                  // Multi-line comments                                           // NUMBER
+    {{0}, "INVALID_IDENTIFIER", "[0-9]+\\.[a-zA-Z]+"},
+    {{0}, "HEX", "0[x][0-9a-fA-F]+"},
+    {{0}, "INCREMENT_OPERATOR", "\\+\\+|--"},                                // INC/DEC
+    {{0}, "FLOAT", "[+-]?([0-9]+\\.[0-9]*|\\.[0-9]+)([eE][+-]?[0-9]+)\\b)"}, // FLOAT
+    {{0}, "INTEGER", "[+-]?[0-9]+"},
+
+    {{0}, "CONDITIONAL_OPERATOR", "==|!=|<=|>=|<|>"},
+    {{0}, "OPERATOR", "[%&|!@+*/=-]"},                     // OPERATOR                                                       // CONDITIONAL OPERATORS
+    {{0}, "PUNCTUATION", "\\(|\\)|\\{|\\}|\\[|\\]|:|;|,"}, // PUNCTUATION
+    {{0}, "STRING_CONSTANT", "\"[^\"]*\"|'[^']*'"},        // STRING CONSTANT
+
+};
+
+#define NUM_PATTERNS (sizeof(token_patterns) / sizeof(token_patterns[0]))
+
+int compile_token_patterns()
 {
 
-    fillEntrys(context->tokenTable);
-    Token *tokens = tokenizeFile(fp, tokenCount);
-    for (int i = 0; i < *tokenCount; i++)
+    for (int i = 0; i < NUM_PATTERNS; i++)
     {
-        int TOKEN_INT_CODE = getTokenIntCodeValue(context->tokenTable, tokens[i].lexeme);
-        tokens[i].value = (TokenValue)TOKEN_INT_CODE;
-    }
-
-    return tokens;
-}
-void printTokens(Token *tokens, int tokenCount)
-{
-
-    for (int i = 0; i <= tokenCount; i++)
-    {
-        printf("\nLexme: %s ", tokens[i].lexeme);
-        printf("\nValue: %s", getTokenStringValue(tokens[i].value));
-        printf("\npos: line %d  col %d ", tokens[i].pos.line, tokens[i].pos.col);
-        printf("\n----------------------------------------------------------");
-    }
-
-    for (int i = 0; i <= tokenCount; i++)
-    {
-        if (tokens[i].value == UNKNOWN)
+        int result = regcomp(&token_patterns[i].regex, token_patterns[i].pattern, REG_EXTENDED);
+        if (result)
         {
-            printf("\nERROR:- unkown token at line %d and col %d", tokens[i].pos.line, tokens[i].pos.col);
+            char error_buf[100];
+            regerror(result, &token_patterns[i].regex, error_buf, sizeof(error_buf));
+            fprintf(stderr, "Could not compile regex for %s: %s\n", token_patterns[i].name, error_buf);
+            exit(1);
         }
     }
+    return 0;
 }
 
-// Token *getCurrentToken(FILE *fp)
-// {
-//     // Save the current file pointer position
-//     long original_position = ftell(fp);
-//     if (original_position == -1)
-//     {
-//         // Error in getting position
-//         return NULL;
-//     }
+Token *getNextToken(Context *context, int unconsume)
+{
+    static char buffer[MAX_TOKEN_LENGTH] = "";
+    static TokenizerState state = {0};
+    state.file_pointer = ftell(context->ip);
 
-//     // Call getNextToken which will modify the file pointer
-//     Token *t = getNextToken(fp);
+    if (unconsume)
+    {
 
-//     // Reset the file pointer to the original position
-//     if (fseek(fp, original_position, SEEK_SET) != 0)
-//     {
-//         // Error in resetting position
-//         return NULL;
-//     }
+        TokenizerState s = popTokenizerState(context->tokenizerStateStack);
+        state = s;
+        state.buffer_pos = 0;
+        state.buffer_len = 0;
+        fseek(context->ip, s.file_pointer, SEEK_SET);
+        return;
+    }
 
-//     return t;
-// }
-// void consume(FILE *fp)
-// {
-//     return;
-// }
-// int match(FILE *fp, TokenValue t)
-// {
-//     return;
-// }
-// int expect(FILE *fp, TokenValue t)
-// {
-//     return;
-// }
+    Token *token = (Token *)malloc(sizeof(Token));
+    if (token == NULL)
+    {
+        fprintf(stderr, "Memory allocation failed\n");
+        return NULL;
+    }
+
+    // Fill buffer if empty
+    if (state.buffer_pos >= state.buffer_len)
+    {
+
+        state.buffer_pos = 0;
+        if (fgets(buffer, MAX_TOKEN_LENGTH, context->ip) == NULL)
+        {
+            free(token);
+            return NULL; // Return NULL at EOF
+        }
+        state.buffer_len = strlen(buffer);
+        state.current_row++;
+        state.current_col++;
+    }
+    // printf("\n%s\n", buffer);
+
+    while (state.buffer_pos < state.buffer_len)
+    {
+
+        int matched = 0;
+        for (int i = 0; i < NUM_PATTERNS; i++)
+        {
+
+            regmatch_t match;
+
+            if (regexec(&token_patterns[i].regex, &buffer[state.buffer_pos], 1, &match, 0) == 0 && match.rm_so == 0)
+            {
+
+                int token_length = match.rm_eo;
+                state.file_pointer = ftell(context->ip) - state.buffer_len + state.buffer_pos;
+                pushTokenizerState(context->tokenizerStateStack, state);
+
+                if (strcmp(token_patterns[i].name, "SINGLE_LINE_COMMENT") == 0
+                    //  || 1
+                    // strcmp(token_patterns[i].name, "MULTI_LINE_COMMENT") == 0)
+                )
+                {
+                    // Move the buffer position past the comment
+                    state.buffer_pos += token_length;
+                    state.current_col += token_length;
+
+                    // For single-line comments, move to the next line
+                    if (strcmp(token_patterns[i].name, "SINGLE_LINE_COMMENT") == 0)
+                    {
+                        state.buffer_pos = state.buffer_len; // Force reading a new line
+                    }
+                    continue; // Break out of the for loop and continue
+                }
+                // Check if the character following the FLOAT is alphanumeric or an unders  ascore
+
+                strncpy(token->lexeme, &buffer[state.buffer_pos], token_length);
+                token->lexeme[token_length] = '\0';
+                state.buffer_pos += token_length;
+                token->pos.col = state.current_col + match.rm_so;
+                token->pos.line = state.current_row;
+                matched = 1;
+                state.current_col += token_length;
+
+                token->value = getTokenIntCodeValue(context->tokenTable, token->lexeme);
+
+                return token;
+            }
+        }
+
+        if (!matched)
+        {
+            state.buffer_pos++;
+            state.current_col++;
+        }
+
+        // If the end of the buffer is reached and no token is matched, read the next line
+        if (state.buffer_pos >= state.buffer_len)
+        {
+            state.buffer_pos = 0;
+            if (fgets(buffer, MAX_TOKEN_LENGTH, context->ip) == NULL)
+            {
+                token->value = TEOF;
+                return token; // Return NULL at EOF
+            }
+            state.buffer_len = strlen(buffer);
+            state.current_row++;
+            state.current_col = 0;
+        }
+    }
+
+    free(token);
+    return NULL; // Return NULL if no match is found
+}
+
+Token getCurrentToken(Context *context)
+{
+    if (context->current.value == START)
+    {
+        Token *token = getNextToken(context, 0);
+        context->current = *token;
+        free(token);
+       
+        return context->current;
+    }
+    return context->current;
+}
+void consume(Context *context)
+{
+    Token *token = getNextToken(context, 0);
+    context->current = *token;
+    free(token);
+    return;
+}
+void unconsume(Context *context)
+{
+    getNextToken(context, 1);
+    getNextToken(context, 1);
+    context->current.value = START;
+    getCurrentToken(context);
+    return;
+}

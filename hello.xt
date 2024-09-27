@@ -10,7 +10,7 @@ var TYPE_STRING = 3;
 var TYPE_REF = 4;
 
 function memalloc(size) {
-   MSIZE = size;
+MSIZE = size;
    asm(["mov eax , [MSIZE]",
       "mov ecx , eax",
       "call malloc",
@@ -135,10 +135,10 @@ function print_series(x) {
    var k = 0;
    while (i > 0) {
       if (i % 2 == 0) { 
-         print("even\n");
+         print("e\n");
       }
       else {
-         print("odd\n");
+         print("o\n");
       }
       i--;
    }

@@ -132,6 +132,7 @@ typedef enum
     MODULAS,
     YES,
     NO,
+    START,
     TEOF
     
 } TokenValue;

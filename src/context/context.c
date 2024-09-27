@@ -11,10 +11,10 @@ Context *initContext()
     context->tokenTable = initTokenTable();
     // context->tokens = tokens;
     context->index = 0;
-    // context->current = tokens[0];
+    context->current.value = START;
     // context->lookahed = tokens[1];
     context->loopStack = -1;
-
+    context->tokenizerStateStack = initTokenizerStateStack();
     context->asmContext = initASMContext();
 
     initSymbolTableStack(context->symbolTableStack);

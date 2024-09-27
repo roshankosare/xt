@@ -55,35 +55,19 @@ int main(int argc, char *argv[])
         }
     }
 
-    FILE *fp;
     int tokenCount = 0;
 
     // Open file for reading
-    fp = fopen(inputfile, "r");
-    if (fp == NULL)
+
+    Context *context = initContext();
+
+    context->ip = fopen(inputfile, "r");
+    if (context->ip == NULL)
     {
         printf("\nERROR: %s file not found\n", inputfile);
         exit(1);
     }
 
-    Context *context = initContext();
-
-    Token *tokens = lexer(context, fp, &tokenCount);
-    fclose(fp);
-    // Token *tokens = tokenize(fp, &tokenCount);
-    // for (int i = 0; i < tokenCount; i++)
-    // {
-    //     if (tokens[i].value == UNKNOWN)
-    //     {
-    //         printf("\nERROR: at line %d and col %d [unknown token]-> '%s'\n", tokens[i].pos.line, tokens[i].pos.col, tokens[i].lexeme);
-    //         exit(1);
-    //     }
-    // }
-
-    int index = 0;
-    context->tokens = tokens;
-    context->lookahed = tokens[1];
-    context->current = tokens[0];
     // printTokens(tokens, tokenCount);
 #ifdef FLAG
     SymbolTable *symbolTable = initSymbolTable();
@@ -95,10 +79,8 @@ int main(int argc, char *argv[])
     snprintf(asmFile, 50, "%s.asm", outputfile);
 
     op = fopen(asmFile, "w+");
-    parseProgram(context, tokens, op);
+    parseProgram(context, op);
     fclose(op);
-
-
 
     char *asmCommand = malloc(50 * sizeof(char));
     char *linkCommand = malloc(50 * sizeof(char));

@@ -6,201 +6,6 @@
 #include "../../include/tokens/tokenizer.h"
 #include "../../include/tokens/tokens.h"
 
-#define MAX_TOKEN_LENGTH 500
-
-#define INITIAL_CAPACITY 200
-
-typedef struct
-{
-    regex_t regex;
-    const char *name;
-    const char *pattern;
-} TokenPattern;
-
-TokenPattern token_patterns[] = {
-    {{0}, "KEYWORD", "\\b(var|if|else|while|return|function|asm|char|int|float|string|continue|break|typeof)\\b"}, // KEYWORDS
-    {{0}, "IDENTIFIER", "[a-zA-Z_][a-zA-Z0-9_]*"},                                                                 // IDENTIFIER
-    {{0}, "SINGLE_LINE_COMMENT", "\\/\\/[^\\n]*"},                                                                 // Single-line comments
-    // {{0}, "MULTI_LINE_COMMENT", "/\\*([^*]|\\*+[^/*])*\\*+/"}  ,                  // Multi-line comments                                           // NUMBER
-    {{0}, "INVALID_IDENTIFIER", "[0-9]+\\.[a-zA-Z]+"},
-    {{0}, "HEX", "0[x][0-9a-fA-F]+"},
-    {{0}, "INCREMENT_OPERATOR", "\\+\\+|--"},                                // INC/DEC
-    {{0}, "FLOAT", "[+-]?([0-9]+\\.[0-9]*|\\.[0-9]+)([eE][+-]?[0-9]+)\\b)"}, // FLOAT
-    {{0}, "INTEGER", "[+-]?[0-9]+"},
-
-    {{0}, "CONDITIONAL_OPERATOR", "==|!=|<=|>=|<|>"},
-    {{0}, "OPERATOR", "[%&|!@+*/=-]"},                     // OPERATOR                                                       // CONDITIONAL OPERATORS
-    {{0}, "PUNCTUATION", "\\(|\\)|\\{|\\}|\\[|\\]|:|;|,"}, // PUNCTUATION
-    {{0}, "STRING_CONSTANT", "\"[^\"]*\"|'[^']*'"},        // STRING CONSTANT
-
-};
-
-#define NUM_PATTERNS (sizeof(token_patterns) / sizeof(token_patterns[0]))
-
-int compile_token_patterns()
-{
-
-    for (int i = 0; i < NUM_PATTERNS; i++)
-    {
-        int result = regcomp(&token_patterns[i].regex, token_patterns[i].pattern, REG_EXTENDED);
-        if (result)
-        {
-            char error_buf[100];
-            regerror(result, &token_patterns[i].regex, error_buf, sizeof(error_buf));
-            fprintf(stderr, "Could not compile regex for %s: %s\n", token_patterns[i].name, error_buf);
-            exit(1);
-        }
-    }
-    return 0;
-}
-
-Token *getNextToken(FILE *file)
-{
-    static char buffer[MAX_TOKEN_LENGTH] = "";
-    static int buffer_pos = 0;
-    static int buffer_len = 0;
-    static int current_row = 0;
-    static int current_col = 0;
-
-    Token *token = (Token *)malloc(sizeof(Token));
-    if (token == NULL)
-    {
-        fprintf(stderr, "Memory allocation failed\n");
-        return NULL;
-    }
-
-    // Fill buffer if empty
-    if (buffer_pos >= buffer_len)
-    {
-        buffer_pos = 0;
-        if (fgets(buffer, MAX_TOKEN_LENGTH, file) == NULL)
-        {
-            free(token);
-            return NULL; // Return NULL at EOF
-        }
-        buffer_len = strlen(buffer);
-        current_row++;
-        current_col++;
-    }
-
-    while (buffer_pos < buffer_len)
-    {
-        int matched = 0;
-        for (int i = 0; i < NUM_PATTERNS; i++)
-        {
-            regmatch_t match;
-            if (regexec(&token_patterns[i].regex, &buffer[buffer_pos], 1, &match, 0) == 0 && match.rm_so == 0)
-            {
-
-                int token_length = match.rm_eo;
-                if (strcmp(token_patterns[i].name, "SINGLE_LINE_COMMENT") == 0
-                    //  || 1
-                    // strcmp(token_patterns[i].name, "MULTI_LINE_COMMENT") == 0)
-                )
-                {
-                    // Move the buffer position past the comment
-                    buffer_pos += token_length;
-                    current_col += token_length;
-
-                    // For single-line comments, move to the next line
-                    if (strcmp(token_patterns[i].name, "SINGLE_LINE_COMMENT") == 0)
-                    {
-                        buffer_pos = buffer_len; // Force reading a new line
-                    }
-                    continue; // Break out of the for loop and continue
-                }
-                // Check if the character following the FLOAT is alphanumeric or an unders  ascore
-
-                strncpy(token->lexeme, &buffer[buffer_pos], token_length);
-                token->lexeme[token_length] = '\0';
-                buffer_pos += token_length;
-                token->pos.col = current_col + match.rm_so;
-                token->pos.line = current_row;
-                matched = 1;
-                current_col += token_length;
-                return token;
-            }
-        }
-
-        if (!matched)
-        {
-            buffer_pos++;
-            current_col++;
-        }
-
-        // If the end of the buffer is reached and no token is matched, read the next line
-        if (buffer_pos >= buffer_len)
-        {
-            buffer_pos = 0;
-            if (fgets(buffer, MAX_TOKEN_LENGTH, file) == NULL)
-            {
-                free(token);
-                return NULL; // Return NULL at EOF
-            }
-            buffer_len = strlen(buffer);
-            current_row++;
-            current_col = 0;
-        }
-    }
-
-    free(token);
-    return NULL; // Return NULL if no match is found
-}
-
-Token *tokenizeFile(FILE *fp, int *tokenCount)
-{
-
-    if (compile_token_patterns())
-    {
-        fprintf(stderr, "Failed to compile token patterns\n");
-        return NULL;
-    }
-
-    // Initialize token storage
-    int capacity = INITIAL_CAPACITY;
-    Token *tokens = (Token *)malloc(capacity * sizeof(Token));
-    if (tokens == NULL)
-    {
-        fprintf(stderr, "Memory allocation failed\n");
-        return NULL;
-    }
-
-    Token *currentToken;
-    int count = 0;
-
-    while ((currentToken = getNextToken(fp)) != NULL)
-    {
-        // Expand the tokens array if needed
-        if (count >= capacity)
-        {
-            capacity *= 2;
-            tokens = (Token *)realloc(tokens, capacity * sizeof(Token));
-            if (tokens == NULL)
-            {
-                fprintf(stderr, "Memory allocation failed\n");
-                return NULL;
-            }
-        }
-
-        // Add the token to the array
-        tokens[count++] = *currentToken;
-        free(currentToken); // Free the memory allocated for the token
-    }
-
-    tokens[count].value = TEOF;
-    strcpy(tokens[count].lexeme, "EOF");
-    *tokenCount = count;
-    return tokens;
-}
-
-void free_token_patterns()
-{
-    for (int i = 0; i < NUM_PATTERNS; i++)
-    {
-        regfree(&token_patterns[i].regex);
-    }
-}
-
 int isIdentifierChar(char ch)
 {
     return isalnum(ch) || ch == '_';
@@ -451,8 +256,6 @@ char *getTokenStringValue(int token)
     }
 }
 
-
-
 int getTokenIntCodeValue(TokenTable *table, char *token)
 {
     int value = 0;
@@ -463,12 +266,54 @@ int getTokenIntCodeValue(TokenTable *table, char *token)
         free(entry);
         return value;
     }
-    if(isHexNumber(token))               return HEX_CONSTANT; 
-    if (isIdentifierToken(token))        return IDENTIFIER;
-    if (isIntegerConstant(token))        return INTEGER_CONSTANT;  
-    if (isFloatConstant(token))          return FLOAT_CONSTANT; 
-    if (isStringConstant(token))         return STRING_CONSTANT;
-    
+    if (isHexNumber(token))
+        return HEX_CONSTANT;
+    if (isIdentifierToken(token))
+        return IDENTIFIER;
+    if (isIntegerConstant(token))
+        return INTEGER_CONSTANT;
+    if (isFloatConstant(token))
+        return FLOAT_CONSTANT;
+    if (isStringConstant(token))
+        return STRING_CONSTANT;
+
     return UNKNOWN;
     // clang-format on
+}
+
+TokenizerStateStack *initTokenizerStateStack()
+{
+    TokenizerStateStack *stack = (TokenizerStateStack *)malloc(sizeof(TokenizerStateStack));
+    for (int i = 0; i < MAX_TOKEN_STATE; i++)
+    {
+        stack[i].data->isEmpty = 1;
+    }
+    return stack;
+}
+void pushTokenizerState(TokenizerStateStack *stack, TokenizerState state)
+{
+
+    (stack->top)++;
+    if (stack->top >= MAX_TOKEN_STATE)
+    {
+        stack->top = 0;
+    }
+    stack->data[stack->top] = state;
+    return;
+}
+TokenizerState popTokenizerState(TokenizerStateStack *stack)
+{
+    if (stack->top < 0)
+    {
+        stack->top = MAX_TOKEN_STATE - 1;
+        if (stack->data[stack->top].isEmpty == 1)
+        {
+            printf("\nERROR: tokenizer state stack underflow\n");
+            exit(1);
+        }
+    }
+
+    TokenizerState state = stack->data[stack->top];
+    (stack->top)--;
+    return state;
 }

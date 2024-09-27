@@ -2,6 +2,7 @@
 #include "../../include/parser/helper.h"
 #include "../../include/parser/stmt.h"
 #include "../../include/asm/asm.h"
+#include "../../include/lexer/lexer.h"
 
 ASTNode *parse_fun_def_param(Context *context, Token funtion_name)
 {
@@ -13,7 +14,7 @@ ASTNode *parse_fun_def_param(Context *context, Token funtion_name)
     if (match(context, IDENTIFIER))
     {
 
-        Token identifier_token = context->current;
+        Token identifier_token = getCurrentToken(context);
         insertParamSymbol(context, funtion_name, identifier_token);
         ASTNode *node = createASTNode(identifier_token);
         consume(context);
@@ -45,7 +46,7 @@ ASTNode *parse_fun(Context *context, FILE *fp)
     ASTNode *functionKeywordNode = createASTNode(functionKeywordToken);
     consume(context);
     expect(context, IDENTIFIER);
-    Token functionNameToken = context->current;
+    Token functionNameToken = getCurrentToken(context);
     consume(context);
     insertFuntionEntry(context, functionNameToken);
     FunctionTableEntry *funtionEntry = checkFuntionEntry(context, functionNameToken);

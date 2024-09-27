@@ -6,11 +6,12 @@
 #include <stdlib.h>
 
 // Function declarations
-Token *lexer(Context *context, FILE *fp, int *tokenCount);
-void printTokens(Token *tokens, int tokenCount);
 
-// Token *getCurrentToken(FILE *fp);
-// void consume(FILE *fp);
+Token *getNextToken(Context *context,int unconsume);
+Token getCurrentToken(Context *context);
+void consume(Context *context);
+void unconsume(Context *context);
+
 // int match(FILE *fp,TokenValue t);
 // int expect(FILE *fp,TokenValue t);
 

@@ -6,6 +6,7 @@
         "lexer.h": "c",
         "symboltable.h": "c",
         "context.h": "c",
-        "tokens.h": "c"
+        "tokens.h": "c",
+        "tokenizer.h": "c"
     }
 }

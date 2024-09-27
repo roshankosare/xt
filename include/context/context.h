@@ -5,6 +5,9 @@
 #include "../tokens/tokens.h"
 #include "../parser/ast.h"
 #include "../asm/asmcontext.h"
+#include "../tokens/tokenizer.h"
+#include<stdio.h>
+#include<stdlib.h>
 
 
 typedef struct Context
@@ -13,6 +16,8 @@ typedef struct Context
     FunctionTable *functionTable;
     ASMContext *asmContext;
     TokenTable *tokenTable;
+    FILE *ip;
+    TokenizerStateStack *tokenizerStateStack;
     Token *tokens;
     Token current;
     Token lookahed;

@@ -66,9 +66,9 @@ section .rodata
 
     label_278722862: db " hello\t world \n", 0
 
-    label_861021530: db "odd\n", 0
+    label_861021530: db "o\n", 0
 
-    label_336465782: db "even\n", 0
+    label_336465782: db "e\n", 0
 
     INT_TYPE: db 1
     FLOAT_TYPE: db 2
